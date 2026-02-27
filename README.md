@@ -40,6 +40,12 @@ Code quality and separability review for the current feature branch. Analyzes al
 
 - `/refactor` — review-only by default, offers to apply fixes if issues are found
 
+#### `/push-claude`
+
+Commit and push all pending changes in the `~/.claude/` config repo. Automatically generates a commit message based on the diff.
+
+- `/push-claude` — stages everything, commits, and pushes
+
 #### `/allow [prompt]`
 
 Parse a blocked permission prompt and add a generalized allow rule to `settings.json`. Accepts input in many formats: paste the full prompt text, a tool call like `Bash(wt new-tab ...)`, a raw command, a path like `Write(.vscode/settings.json)`, or a plain English description. Asks for confirmation before adding.
@@ -77,6 +83,7 @@ This section documents the architecture in detail so that another user (or Claud
     code.md
     rebase-on-main.md
     refactor.md
+    push-claude.md
     worktree.md
   scripts/                               # PowerShell automation (mechanical execution)
     get-worktrees.ps1
