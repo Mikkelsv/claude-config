@@ -4,6 +4,19 @@
 
 Scripts directory: `~/.claude/scripts`
 
+## Worktree Escape
+
+Before anything else, run the worktree escape check:
+
+```bash
+powershell.exe -NoProfile -File "$HOME/.claude/scripts/escape-worktree.ps1"
+```
+
+Returns JSON: `{"isWorktree": true, "mainRepoRoot": "C:\\path\\to\\repo", "branch": "feature-x"}`
+
+- If `isWorktree` is true: `cd` into `mainRepoRoot`, then `git checkout <branch>` to get on the same branch. Inform the user you moved out of the worktree.
+- If `isWorktree` is false: continue normally from the current directory.
+
 ## Pre-flight
 
 Run the pre-flight check:

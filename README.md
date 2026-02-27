@@ -86,6 +86,7 @@ This section documents the architecture in detail so that another user (or Claud
     push-claude.md
     worktree.md
   scripts/                               # PowerShell automation (mechanical execution)
+    escape-worktree.ps1                   # Detect linked worktree, return main repo path
     get-worktrees.ps1
     create-worktree.ps1
     remove-worktree.ps1
@@ -143,6 +144,7 @@ This separation means:
 
 | Script | Params | Output | Used by |
 |--------|--------|--------|---------|
+| `escape-worktree.ps1` | (none) | `{isWorktree, mainRepoRoot, branch}` | `/rebase-on-main` |
 | `git-preflight.ps1` | (none) | `{branch, isMain, hasChanges, staged, unstaged, untracked}` | `/rebase-on-main` |
 | `git-branch-scope.ps1` | `-BaseBranch` (default: main) | `{branch, base, hasMergeBase, isAhead, commitCount, commits[], files[]}` | `/refactor` |
 | `git-merge-rename.ps1` | `-Branch` | `{merged, pushed, renamed, originalBranch, mergedBranch, worktreeRemoved, worktreeName}` | `/rebase-on-main` |
@@ -183,13 +185,17 @@ For long-running scripts (e.g., `launch-vscode.ps1` which waits 5 seconds), use 
 
 Glob patterns for auto-accepted tool calls. The `allow` array uses `ToolName(glob)` format:
 
-**Bash commands** — `Bash(*)` auto-accepts all bash commands. For a more conservative setup, approve by category:
+**Bash commands** — approved by category to auto-accept workflow commands while gating destructive/network/package operations:
 
-- **Git**: `Bash(git *)`, plus chained variants (`Bash(cd * && git *)`)
-- **Build tools**: `Bash(dotnet *)`, `Bash(npm *)`
-- **File ops**: `Bash(ls *)`, `Bash(mkdir *)`, `Bash(cp *)`, `Bash(mv *)`, `Bash(rm *)`
-- **Search**: `Bash(grep *)`, `Bash(find *)`
-- **System**: `Bash(powershell.exe *)`
+- **Git**: `Bash(git *)`, `Bash(cd * && git *)`
+- **Build tools**: `Bash(dotnet *)`
+- **Scripts**: `Bash(powershell.exe -NoProfile -File *)`, `Bash(powershell.exe -NoProfile -ExecutionPolicy *)`
+- **Windows Terminal**: `Bash(wt *)`
+- **Launchers**: `Bash(start *)`, `Bash(code *)`
+- **GitHub CLI**: `Bash(gh *)`
+- **Utilities**: `Bash(echo *)`, `Bash(ls *)`, `Bash(mkdir *)`, `Bash(sleep *)`
+
+**What still prompts**: `rm`/`del` (file deletion), `curl`/`wget` (downloads), `npm install`/`pip install` (packages), `powershell.exe -Command` (arbitrary PowerShell), and anything else unexpected.
 
 **File operations** — use `**` globs for portability (no absolute paths needed):
 
@@ -240,6 +246,7 @@ Rules in `~/.claude/rules/` are always loaded into every Claude session:
 
 - **user-config.md** — Check for existing user-level config before creating project-local duplicates. Prefer PowerShell scripts over inline shell commands. Keep this README up to date.
 - **worktree-cleanup.md** — After any merge into main, auto-detect and remove associated worktrees.
+- **auto-mode-for-config.md** — When a task involves multiple `.claude/` edits, offer to temporarily switch to auto mode to skip permission prompts, then switch back when done.
 
 ### How to Add a New Command
 

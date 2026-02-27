@@ -1,7 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "Bash(*)",
+      "Bash(git *)",
+      "Bash(cd * && git *)",
+      "Bash(dotnet *)",
+      "Bash(powershell.exe -NoProfile -File *)",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy *)",
+      "Bash(wt *)",
+      "Bash(start *)",
+      "Bash(code *)",
+      "Bash(gh *)",
+      "Bash(echo *)",
+      "Bash(ls *)",
+      "Bash(mkdir *)",
+      "Bash(sleep *)",
       "Edit(*/.vscode/*)",
       "Edit(**/.claude/*)",
       "Edit(**/.claude/**)",
