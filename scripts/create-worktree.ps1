@@ -24,6 +24,14 @@ if ($LASTEXITCODE -ne 0) {
 
 $commit = git rev-parse --short HEAD 2>$null
 
+# Copy user-level settings into worktree so Claude picks up permissions
+$userSettings = Join-Path $env:USERPROFILE ".claude\settings.json"
+if (Test-Path $userSettings) {
+    $wtClaudeDir = Join-Path $wtPath ".claude"
+    New-Item -ItemType Directory -Path $wtClaudeDir -Force | Out-Null
+    Copy-Item $userSettings (Join-Path $wtClaudeDir "settings.json")
+}
+
 @{
     path   = $wtPath
     branch = $Branch
