@@ -89,6 +89,7 @@ This section documents the architecture in detail so that another user (or Claud
     kill-port.ps1
     launch-dev-server.ps1
     settings-add-rule.ps1
+    sync-config.ps1                    # Stage, commit, push all config changes
     git-branch-scope.ps1
     git-preflight.ps1
     git-merge-rename.ps1
@@ -144,6 +145,12 @@ This separation means:
 | Script | Params | Output | Used by |
 |--------|--------|--------|---------|
 | `notify.ps1` | (none) | (none, side-effects only) | `Stop` and `Notification` hooks |
+
+#### Config Sync
+
+| Script | Params | Output | Used by |
+|--------|--------|--------|---------|
+| `sync-config.ps1` | `-Message` | `{committed, pushed, hash, message}` | Any command editing `~/.claude/` |
 
 #### Settings
 
