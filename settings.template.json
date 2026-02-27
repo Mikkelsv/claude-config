@@ -1,0 +1,48 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Edit(*/.vscode/*)",
+      "Edit(**/.claude/*)",
+      "Edit(**/.claude/**)",
+      "Edit(**/.gitignore_global)",
+      "Edit(**/Code/**)",
+      "Write(*/.vscode/*)",
+      "Write(**/.claude/*)",
+      "Write(**/.claude/**)",
+      "Write(**/.gitignore_global)",
+      "Write(**/Code/**)",
+      "Read(**)",
+      "Glob(**)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "mcp__ide__getDiagnostics(*)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"<USERPROFILE>/.claude/notify.ps1\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "permission_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"<USERPROFILE>/.claude/notify.ps1\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  },
+  "defaultMode": "acceptEdits"
+}
