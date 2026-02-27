@@ -22,13 +22,15 @@ Returns: `[{"name": "...", "path": "...", "branch": "...", "commit": "...", "col
 
 If `$ARGUMENTS` matches the `name` or `branch` of an existing worktree, skip to **Enter Existing Worktree** with that worktree selected.
 
-Otherwise, use `AskUserQuestion` to present options:
+If `$ARGUMENTS` is non-empty but doesn't match an existing worktree, skip straight to **Create New Worktree** — no question, no listing.
+
+If `$ARGUMENTS` is empty, use `AskUserQuestion` to present options:
 
 1. **One option per existing worktree**. Label: `name (branch)`. Description: the path.
 2. **Second-to-last: "Create new worktree"** — description: "Create a new worktree with a new branch"
 3. **Last: "Remove a worktree"** — description: "Remove an existing worktree and optionally delete its branch"
 
-If no worktrees exist, skip the question and go straight to **Create New Worktree**.
+If `$ARGUMENTS` is empty and no worktrees exist, prompt for a feature name/description, then go to **Create New Worktree**.
 
 ---
 
