@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"<USERPROFILE>/.claude/notify.ps1\"",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"<USERPROFILE>/.claude/scripts/notify.ps1\"",
             "timeout": 30
           }
         ]
@@ -37,7 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"<USERPROFILE>/.claude/notify.ps1\"",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"<USERPROFILE>/.claude/scripts/notify.ps1\"",
             "timeout": 30
           }
         ]

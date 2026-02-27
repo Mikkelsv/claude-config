@@ -53,7 +53,7 @@ Config is a git repo at <https://github.com/Mikkelsv/claude-config.git>, cloned 
 
 ### Notifications
 
-When Claude finishes a task or hits a permission prompt, Windows Terminal flashes its taskbar icon and plays a notification sound (`notify.ps1`). Behavior adapts: if the terminal is in the foreground, it flashes 3 times briefly; if in the background, it flashes continuously until focused.
+When Claude finishes a task or hits a permission prompt, Windows Terminal flashes its taskbar icon and plays a notification sound (`scripts/notify.ps1`). Behavior adapts: if the terminal is in the foreground, it flashes 3 times briefly; if in the background, it flashes continuously until focused.
 
 ---
 
@@ -71,7 +71,6 @@ This section documents the architecture in detail so that another user (or Claud
   README.md                              # This file
   CLAUDE.md                              # Global instructions (loaded into every session)
   settings.json                          # Permissions, hooks, defaultMode (gitignored, machine-specific)
-  notify.ps1                             # Notification hook (taskbar flash + sound)
   commands/                              # Slash commands (Claude orchestration)
     allow.md
     build.md
@@ -86,6 +85,7 @@ This section documents the architecture in detail so that another user (or Claud
     launch-vscode.ps1
     launch-claude-tab.ps1
     launch-worktree.ps1                  # Inner launcher (clears env, starts claude)
+    notify.ps1                           # Notification hook (taskbar flash + sound)
     kill-port.ps1
     launch-dev-server.ps1
     settings-add-rule.ps1
@@ -139,6 +139,12 @@ This separation means:
 | `git-branch-scope.ps1` | `-BaseBranch` (default: main) | `{branch, base, hasMergeBase, isAhead, commitCount, commits[], files[]}` | `/refactor` |
 | `git-merge-rename.ps1` | `-Branch` | `{merged, pushed, renamed, originalBranch, mergedBranch, worktreeRemoved, worktreeName}` | `/rebase-on-main` |
 
+#### Notifications
+
+| Script | Params | Output | Used by |
+|--------|--------|--------|---------|
+| `notify.ps1` | (none) | (none, side-effects only) | `Stop` and `Notification` hooks |
+
 #### Settings
 
 | Script | Params | Output | Used by |
@@ -191,8 +197,8 @@ Shell commands triggered on events:
 ```json
 {
   "hooks": {
-    "Stop": [{"hooks": [{"type": "command", "command": "powershell.exe ... notify.ps1"}]}],
-    "Notification": [{"matcher": "permission_prompt", "hooks": [{"type": "command", "command": "powershell.exe ... notify.ps1"}]}]
+    "Stop": [{"hooks": [{"type": "command", "command": "powershell.exe ... scripts/notify.ps1"}]}],
+    "Notification": [{"matcher": "permission_prompt", "hooks": [{"type": "command", "command": "powershell.exe ... scripts/notify.ps1"}]}]
   }
 }
 ```
@@ -209,7 +215,7 @@ To sync: `git pull` to update, `git commit` and `git push` after changes.
 
 ### Notification Hook
 
-`notify.ps1` uses P/Invoke (`FlashWindowEx`) to flash the Windows Terminal taskbar icon and `SystemSounds.Asterisk` to play a sound. Behavior adapts: foreground windows flash 3 times briefly; background windows flash continuously until focused. It fires on:
+`scripts/notify.ps1` uses P/Invoke (`FlashWindowEx`) to flash the Windows Terminal taskbar icon and `SystemSounds.Asterisk` to play a sound. Behavior adapts: foreground windows flash 3 times briefly; background windows flash continuously until focused. It fires on:
 
 - `Stop` — when Claude finishes a task
 - `Notification` with `permission_prompt` matcher — when Claude needs user approval
