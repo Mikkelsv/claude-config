@@ -46,6 +46,12 @@ Commit and push all pending changes in the `~/.claude/` config repo. Automatical
 
 - `/push-claude` — stages everything, commits, and pushes
 
+#### `/pull-claude`
+
+Pull the latest changes from the remote `~/.claude/` config repo (fast-forward only). Use this to pick up changes made on another machine.
+
+- `/pull-claude` — pulls and reports new commits, or "already up to date"
+
 #### `/allow [prompt]`
 
 Parse a blocked permission prompt and add a generalized allow rule to `settings.json`. Accepts input in many formats: paste the full prompt text, a tool call like `Bash(wt new-tab ...)`, a raw command, a path like `Write(.vscode/settings.json)`, or a plain English description. Asks for confirmation before adding.
@@ -83,6 +89,7 @@ This section documents the architecture in detail so that another user (or Claud
     code.md
     rebase-on-main.md
     refactor.md
+    pull-claude.md
     push-claude.md
     worktree.md
   scripts/                               # PowerShell automation (mechanical execution)
@@ -97,6 +104,7 @@ This section documents the architecture in detail so that another user (or Claud
     kill-port.ps1
     launch-dev-server.ps1
     settings-add-rule.ps1
+    pull-config.ps1                     # Pull latest config from remote
     sync-config.ps1                    # Stage, commit, push all config changes
     git-branch-scope.ps1
     git-preflight.ps1
@@ -160,6 +168,7 @@ This separation means:
 | Script | Params | Output | Used by |
 |--------|--------|--------|---------|
 | `sync-config.ps1` | `-Message` | `{committed, pushed, hash, message}` | Any command editing `~/.claude/` |
+| `pull-config.ps1` | (none) | `{pulled, before, after, commits}` | `/pull-claude` |
 
 #### Settings
 
