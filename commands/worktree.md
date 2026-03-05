@@ -8,7 +8,13 @@ Scripts directory: `~/.claude/scripts`
 
 ## Quick Entry Check
 
-**First**, check if the session is already inside a worktree (the current working directory is under `.claude/worktrees/`). If so, `cd` back to the main repo root (the worktree's parent path above `.claude/worktrees/`) so the session is no longer inside the worktree. Then continue to **Step 1** as normal — do NOT skip to Launch.
+**First**, check if the current working directory contains `.claude/worktrees/` in its path. If so, extract the main repo root (everything before `.claude/worktrees/`) and `cd` to it:
+
+```bash
+cd /path/to/main/repo
+```
+
+**Do NOT** run `escape-worktree.ps1`, `git checkout`, or any other git commands. Just `cd`. Then continue to **Step 1** as normal.
 
 ## Step 1: List & Choose
 
