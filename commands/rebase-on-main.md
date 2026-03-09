@@ -60,23 +60,7 @@ Use `AskUserQuestion` to ask if the user wants to merge, test first, or cancel. 
 
 ### Build & test flow
 
-When the user picks **Build & test**:
-
-1. Kill any existing server:
-
-   ```bash
-   powershell.exe -NoProfile -File "$HOME/.claude/scripts/kill-port.ps1" -Port 5163
-   ```
-
-2. Build: `dotnet build GridPreviewPoc.slnx`
-3. If the build fails, attempt one fix. If still failing, report the error and loop back to the prompt.
-4. If the build succeeds, launch the dev server:
-
-   ```bash
-   powershell.exe -NoProfile -File "$HOME/.claude/scripts/launch-dev-server.ps1" -Project GridPreviewPoc -Port 5163
-   ```
-
-5. Report "Build OK. Dev server running at http://localhost:5163" and loop back to the Merge / Build & test / Cancel prompt.
+When the user picks **Build & test**, invoke the project's `/build` command (if one exists) or fall back to the same build command used in the "Verify & Push" step. Once the build completes (or the dev server is running), loop back to the Merge / Build & test / Cancel prompt.
 
 ### Merge flow
 
