@@ -46,9 +46,9 @@ Returns JSON: `{"branch": "...", "isMain": false, "hasChanges": true, "staged": 
 1. Run the project's build command (e.g., `dotnet build`, `npm run build`, etc.). If it fails, attempt one fix. If still failing, `git rebase --abort`.
 2. `git push --force-with-lease` the feature branch. Never use `--force`.
 
-## Conflict Summary
+## Summary
 
-Only report **medium/high risk** conflicts (file, what happened, how it was resolved, risk level). Silently count low-risk ones in a single line. If no medium/high risk conflicts, state that and move on.
+Summarize: branch name, conflict count (only detail medium/high risk — file, what happened, resolution, risk level; silently count low-risk in one line), and build status.
 
 ## Optional: Merge into Main
 
@@ -82,4 +82,4 @@ Returns JSON:
 
 ## Final Report
 
-Summarize: branch name, conflict count, build status, remote updated, merged into main, worktree removed (if applicable).
+If merged: report remote updated, worktree removed (if applicable). If cancelled: confirm no merge was performed.
