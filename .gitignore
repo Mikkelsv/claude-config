@@ -16,8 +16,10 @@ tasks/
 telemetry/
 todos/
 
-# Machine-specific (copy settings.template.json to settings.json)
+# Machine-specific
 settings.json
+chrome/
+policy-limits.json
 
 # Legacy
 setup-claude-sync.ps1

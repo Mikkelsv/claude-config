@@ -52,7 +52,35 @@ Only report **medium/high risk** conflicts (file, what happened, how it was reso
 
 ## Optional: Merge into Main
 
-Use `AskUserQuestion` to ask if user wants to merge the feature branch into main and push. If yes, run the merge script:
+Use `AskUserQuestion` to ask if the user wants to merge, test first, or cancel. Offer three options:
+
+- **Merge** — merge the feature branch into main and push.
+- **Build & test** — run the project's build/serve to let the user verify the result, then loop back to this same prompt (Merge / Build & test / Cancel).
+- **Cancel** — stop without merging.
+
+### Build & test flow
+
+When the user picks **Build & test**:
+
+1. Kill any existing server:
+
+   ```bash
+   powershell.exe -NoProfile -File "$HOME/.claude/scripts/kill-port.ps1" -Port 5163
+   ```
+
+2. Build: `dotnet build GridPreviewPoc.slnx`
+3. If the build fails, attempt one fix. If still failing, report the error and loop back to the prompt.
+4. If the build succeeds, launch the dev server:
+
+   ```bash
+   powershell.exe -NoProfile -File "$HOME/.claude/scripts/launch-dev-server.ps1" -Project GridPreviewPoc -Port 5163
+   ```
+
+5. Report "Build OK. Dev server running at http://localhost:5163" and loop back to the Merge / Build & test / Cancel prompt.
+
+### Merge flow
+
+When the user picks **Merge**, run the merge script:
 
 ```bash
 powershell.exe -NoProfile -File "$HOME/.claude/scripts/git-merge-rename.ps1" -Branch "<branch-name>"
