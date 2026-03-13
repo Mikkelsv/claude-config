@@ -87,12 +87,17 @@ This section documents the architecture in detail so that another user (or Claud
     allow.md
     build.md
     code.md
-    rebase-on-main.md
     refactor.md
     pull-claude.md
     push-claude.md
     worktree.md
-  scripts/                               # PowerShell automation (mechanical execution)
+  skills/                                # Skills (command + co-located scripts)
+    rebase-on-main/
+      SKILL.md                           # Orchestration prompt
+      scripts/
+        git-rebase-onto.ps1              # Preflight + fetch + rebase in one shot
+        git-merge-cleanup.ps1            # FF merge into main, push, delete branch, cleanup worktree
+  scripts/                               # PowerShell automation (shared, mechanical execution)
     escape-worktree.ps1                   # Detect linked worktree, return main repo path
     get-worktrees.ps1
     create-worktree.ps1
@@ -114,19 +119,21 @@ This section documents the architecture in detail so that another user (or Claud
     worktree-cleanup.md                  # Auto-remove worktrees after merge
 ```
 
-### Design Pattern: Commands + Scripts
+### Design Pattern: Commands / Skills + Scripts
 
-The core principle: **commands are Claude orchestration, scripts are mechanical execution**.
+The core principle: **prompts are Claude orchestration, scripts are mechanical execution**.
 
-- **Commands** (`.md` files in `commands/`) contain decision logic, user interaction (`AskUserQuestion`), and flow control. They tell Claude *when* and *why* to do things.
-- **Scripts** (`.ps1` files in `scripts/`) contain shell operations: git commands, file I/O, process management, launching applications. They do the *what*.
+- **Commands** (`.md` files in `commands/`) — simple orchestration prompts for flows using only shared scripts.
+- **Skills** (directories in `skills/<name>/` with `SKILL.md`) — complex orchestration with co-located scripts. Use `${CLAUDE_SKILL_DIR}` to reference files within the skill directory.
+- **Scripts** (`.ps1` files) — shell operations: git commands, file I/O, process management. Live either in `scripts/` (shared) or `skills/<name>/scripts/` (skill-local).
 - **Communication** is via JSON on stdout. Every script outputs a JSON object so Claude can parse the result and make decisions based on it. Non-zero exit codes signal errors.
 
 This separation means:
 
 1. Claude spends tokens on decisions, not on constructing shell commands.
 2. Scripts are testable independently of Claude.
-3. Common operations (launching VS Code, managing worktrees) are reused across multiple commands.
+3. Common operations (launching VS Code, managing worktrees) are reused across multiple commands/skills.
+4. Complex workflows keep their scripts co-located for cohesion.
 
 ### Script Catalog
 
@@ -152,10 +159,17 @@ This separation means:
 
 | Script | Params | Output | Used by |
 |--------|--------|--------|---------|
-| `escape-worktree.ps1` | (none) | `{isWorktree, mainRepoRoot, branch}` | `/rebase-on-main` |
-| `git-preflight.ps1` | (none) | `{branch, isMain, hasChanges, staged, unstaged, untracked}` | `/rebase-on-main` |
+| `escape-worktree.ps1` | (none) | `{isWorktree, mainRepoRoot, branch}` | `/worktree` |
+| `git-preflight.ps1` | (none) | `{branch, isMain, hasChanges, staged, unstaged, untracked}` | (shared utility) |
 | `git-branch-scope.ps1` | `-BaseBranch` (default: main) | `{branch, base, hasMergeBase, isAhead, commitCount, commits[], files[]}` | `/refactor` |
-| `git-merge-rename.ps1` | `-Branch` | `{merged, pushed, renamed, originalBranch, mergedBranch, worktreeRemoved, worktreeName}` | `/rebase-on-main` |
+| `git-merge-rename.ps1` | `-Branch` | `{merged, pushed, renamed, originalBranch, mergedBranch, worktreeRemoved, worktreeName}` | (legacy, kept for compatibility) |
+
+#### Rebase (skill-local: `skills/rebase-on-main/scripts/`)
+
+| Script | Params | Output | Used by |
+|--------|--------|--------|---------|
+| `git-rebase-onto.ps1` | `-BaseBranch` (default: main) | `{status, branch, ...}` — status: `worktree`/`error`/`dirty`/`up-to-date`/`success`/`conflicts` | `/rebase-on-main` |
+| `git-merge-cleanup.ps1` | `-Branch` | `{merged, pushed, branch, localDeleted, remoteDeleted, worktreeRemoved, worktreeName}` | `/rebase-on-main` |
 
 #### Notifications
 
@@ -257,24 +271,30 @@ Rules in `~/.claude/rules/` are always loaded into every Claude session:
 - **worktree-cleanup.md** — After any merge into main, auto-detect and remove associated worktrees.
 - **auto-mode-for-config.md** — When a task involves multiple `.claude/` edits, offer to temporarily switch to auto mode to skip permission prompts, then switch back when done.
 
-### How to Add a New Command
+### How to Add a New Command or Skill
 
-1. **Create the script** in `~/.claude/scripts/`:
-   - Accept params via `param()` block
-   - Output JSON to stdout via `ConvertTo-Json -Compress`
-   - Use non-zero exit codes for errors
+**Choose the right format:**
+
+- **Command** (`commands/<name>.md`) — for simple flows that only reference shared global scripts.
+- **Skill** (`skills/<name>/SKILL.md`) — for complex flows that benefit from co-located scripts. Use `${CLAUDE_SKILL_DIR}/scripts/...` to reference skill-local scripts.
+
+**Steps:**
+
+1. **Create scripts**:
+   - **Shared scripts** → `~/.claude/scripts/` (reusable across commands/skills)
+   - **Skill-local scripts** → `~/.claude/skills/<name>/scripts/` (specific to one skill)
+   - Accept params via `param()` block, output JSON via `ConvertTo-Json -Compress`, non-zero exit for errors
    - Use `git rev-parse --path-format=absolute --git-common-dir` instead of `--show-toplevel` if the script might run from inside a worktree
 
-2. **Create the command** in `~/.claude/commands/`:
-   - Add `Scripts directory: ~/.claude/scripts` near the top
-   - Document the script call with the full `powershell.exe -NoProfile -File ...` invocation
+2. **Create the command or skill**:
+   - Document each script call with the full `powershell.exe -NoProfile -File ...` invocation
    - Show the expected JSON output format so Claude knows what to parse
-   - Keep decision logic (user questions, flow control) in the command
-   - Keep mechanical execution (git, file I/O, process management) in the script
+   - Keep decision logic (user questions, flow control) in the prompt
+   - Keep mechanical execution (git, file I/O, process management) in scripts
 
 3. **Add permission rules** if the script touches paths not already covered by the allow list.
 
-4. **Update this README** — add the command to the human section and the script to the catalog.
+4. **Update this README** — add to the human section and the script catalog.
 
 ### Key Conventions
 
