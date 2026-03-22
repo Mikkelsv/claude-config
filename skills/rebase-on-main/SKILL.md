@@ -23,8 +23,8 @@ Returns JSON with `status`:
 
 - **"worktree"** → `cd` into `mainRepoRoot`, `git checkout <branch>`, inform user, then **re-run this script**.
 - **"error"** → Report the `reason`. Stop.
-- **"dirty"** → List the dirty files and tell the user to commit or stash them. Then use `AskUserQuestion` with two options:
-  - **Continue** — Re-run this script from the top.
+- **"dirty"** → List the dirty files and tell the user: "Uncommitted changes found. Please commit or stash these before rebasing." Then use `AskUserQuestion` with two options:
+  - **Retry** — I've handled it, rebase now (re-run this script from the top)
   - **Cancel** — Stop entirely.
 - **"up-to-date"** → Inform user, skip to Phase 2.
 - **"success"** → Continue to Phase 2.
@@ -55,11 +55,11 @@ Use `AskUserQuestion` with three options:
 
 ### Build & Test
 
-Invoke the project's `/build` command if one exists, otherwise fall back to the project's build command (e.g., `dotnet build`). Once running, loop back to the same three-option prompt (Merge / Build & test / Cancel).
+Invoke the project's `/build` skill if one exists. If no `/build` skill is available, ask the user for the build command. Once running, loop back to the same three-option prompt (Merge / Build & test / Cancel).
 
 ### Build & Merge
 
-1. Run the project's build command (e.g., `dotnet build`).
+1. Invoke the project's `/build` skill. If no `/build` skill exists, ask the user for the build command.
    - **Build fails** → Attempt one fix. If still failing, report and stop. Do NOT abort the rebase — the code is rebased and valid, only the build broke.
    - **Build succeeds** → Continue to merge.
 
