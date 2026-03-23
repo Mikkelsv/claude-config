@@ -1,4 +1,4 @@
-# Flash the Windows Terminal taskbar icon and play a notification sound.
+# Flash the Claude desktop app taskbar icon and play a notification sound.
 Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
@@ -43,8 +43,8 @@ public class WindowFlasher {
 }
 "@
 
-# Flash all Windows Terminal windows
-$procs = Get-Process -Name "WindowsTerminal" -ErrorAction SilentlyContinue |
+# Flash all Claude desktop app windows
+$procs = Get-Process -Name "claude" -ErrorAction SilentlyContinue |
     Where-Object { $_.MainWindowHandle -ne [IntPtr]::Zero }
 foreach ($p in $procs) {
     [WindowFlasher]::Flash($p.MainWindowHandle)

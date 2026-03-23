@@ -7,6 +7,12 @@ description: Build, serve, and run tests with optional performance tracking
 
 Build the project, start the server, and run tests.
 
+## Invocation Modes
+
+**Standard mode** (default): Runs the full test cycle inline and reports the verdict. Use when you need to gate on the result before continuing.
+
+**Background mode**: When `$ARGUMENTS` contains `background`, wrap the entire test cycle (all phases) in a single background Agent call and return immediately with "Tests running in background." The agent executes all phases and reports the verdict on completion. Use for fire-and-forget testing when you want to continue working (e.g., reading ahead to the next task) while tests run. The caller should check the agent's completion notification before proceeding with any step that depends on test results.
+
 ## Notes
 
 - `preview_eval` does not support top-level `await`. Always wrap async calls in an IIFE: `(async () => { ... })()`
@@ -113,3 +119,5 @@ When scaffolding this skill for a project, replace these placeholders:
 If performance tracking is **not** needed, remove Phase 3 entirely and simplify Phase 4 to just test pass/fail.
 
 Also generate `scripts/smoke-test.js` with the project's test execution script (the JS expression that runs in `preview_eval`).
+
+Background mode (see Invocation Modes) uses the Agent tool for async test execution. No additional configuration needed.

@@ -27,6 +27,16 @@ Never use absolute user paths in commands, scripts, rules, or docs. Use portable
 
 The only exception is `settings.json` hook commands, which need real paths — these are gitignored and machine-specific.
 
+## Keep templates and project skills in sync
+
+Project-level skills (in `<project>/.claude/skills/`) are scaffolded from global templates (in `~/.claude/templates/skills/`). When improving a project-level skill:
+
+1. **Propagate improvements back to the global template** — if the change is generic (not project-specific), apply the same edit to `~/.claude/templates/skills/<name>/`.
+2. **Update `/setup-project`** — if a new skill is added that should be available for all projects, add a template and register it in `~/.claude/commands/setup-project.md`.
+3. **Project-specific customizations stay local** — changes tied to a specific project's build system, test framework, or architecture stay in the project skill only.
+
+When in doubt, check the global template before finishing. The global template is the source of truth for new projects.
+
 ## Keep the README up to date
 
 When adding, removing, or modifying commands, scripts, rules, or other config in `~/.claude/`, update `~/.claude/README.md` to reflect the change. Both the human section (command descriptions) and the Claude section (script catalog, directory layout) must stay accurate.

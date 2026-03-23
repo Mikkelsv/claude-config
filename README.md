@@ -8,7 +8,7 @@ Personal Claude Code configuration with slash commands, skills, and PowerShell a
 
 #### `/setup-project [skills]`
 
-Scaffold project-level skills from global templates. Interactively asks about your project (build system, test approach, architecture) and generates customized `.claude/skills/` directories. Available skills: build, test, refactor, ralph.
+Scaffold project-level skills from global templates. Interactively asks about your project (build system, test approach, architecture) and generates customized `.claude/skills/` directories. Available skills: build, test, refactor, plan, implement.
 
 - `/setup-project` — asks which skills to scaffold
 - `/setup-project all` — scaffolds everything
@@ -68,7 +68,11 @@ Build, start the dev server, and run browser-based smoke tests with performance 
 
 Code quality and architecture review for uncommitted changes or the current branch. Evaluates against CLAUDE.md principles and produces a verdict (Ship it / Minor tweaks / Refactor recommended / Rethink).
 
-#### `/ralph [plan-file]`
+#### `/plan [feature idea]`
+
+Collaborative feature discovery and planning. Takes a rough feature idea, explores it through questions, evaluates scope (splitting bloated features into multiple plans), and produces structured implementation plans compatible with `/implement`.
+
+#### `/implement [plan-file]`
 
 Autonomous development loop that works through a structured plan, implementing one task at a time with build, refactor, and test gates. Each completed task is committed as a single commit.
 
@@ -118,9 +122,11 @@ This section documents the architecture in detail so that another user (or Claud
         browser-throttling.md            # Chrome background tab throttling notes
       refactor/
         SKILL.md                         # Code quality review template
-      ralph/
+      plan/
+        SKILL.md                         # Feature discovery & planning template
+      implement/
         SKILL.md                         # Autonomous dev loop template
-        plan-template.md                 # Template for ralph plan files
+        plan-template.md                 # Template for implementation plan files
   scripts/                               # PowerShell automation (shared, mechanical execution)
     escape-worktree.ps1                  # Detect linked worktree, return main repo path
     get-worktrees.ps1
@@ -146,6 +152,7 @@ This section documents the architecture in detail so that another user (or Claud
     no-commit.md                         # Never commit (user manages commits)
     no-pipes.md                          # Avoid chained shell commands
     plans-location.md                    # Plan files go in project root plans/
+    prefer-clickable-prompts.md          # Use clickable options over free-text questions
 ```
 
 ### Design Pattern: Global vs Project-Level
@@ -158,7 +165,8 @@ This section documents the architecture in detail so that another user (or Claud
 - `/build` — build command, server config, port
 - `/test` — test execution, baselines, patterns
 - `/refactor` — architecture review against project's CLAUDE.md
-- `/ralph` — autonomous loop using project's build/test/refactor
+- `/plan` — feature discovery, scope splitting, plan creation
+- `/implement` — autonomous loop using project's build/test/refactor
 
 Project skills are **self-contained**: scripts live in `.claude/skills/<name>/scripts/` alongside the SKILL.md. No dependency on `~/.claude/scripts/` — this keeps project skills portable and platform-aware.
 
@@ -316,6 +324,7 @@ Rules in `~/.claude/rules/` are always loaded into every Claude session:
 - **no-commit.md** — Never commit (user manages commits). Exception: commits inside `~/.claude/`.
 - **no-pipes.md** — Avoid chaining shell commands; use dedicated tools or separate Bash calls.
 - **plans-location.md** — Plan files go in project root `plans/`, never `.claude/plans/`.
+- **prefer-clickable-prompts.md** — Prefer `AskUserQuestion` with 2–3 clickable options over open-ended questions. Include an escape hatch for custom input.
 
 ### How to Add a New Command or Skill
 

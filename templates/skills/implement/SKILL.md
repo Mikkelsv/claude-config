@@ -1,9 +1,9 @@
 ---
-name: ralph
+name: implement
 description: Autonomous development loop — implements a plan task-by-task with build/refactor/test gates
 ---
 
-# Ralph Loop
+# Implementation Loop
 
 Autonomous development loop that works through a structured plan, implementing one task at a time with build, refactor, and test gates between each. Each completed task is committed as a single commit for a clean git history.
 
@@ -15,10 +15,11 @@ Autonomous development loop that works through a structured plan, implementing o
 
 Before touching any code:
 
-1. Check if we're on `main`. If so, create and checkout a new branch: `ralph/{plan-name}` (derive from plan filename, e.g. `ralph/add-depth-coloring`).
+1. Check if we're on `main`. If so, create and checkout a new branch: `implement/{plan-name}` (derive from plan filename, e.g. `implement/add-depth-coloring`).
 2. If already on a non-main branch, use it as-is.
 3. Verify clean working tree (`git status`). If dirty, ask the user whether to stash or continue.
 4. Read the plan file. Find the first task where `- [ ] Done` is unchecked — this is where to resume. Skip any fully checked-off tasks (they were completed in a previous session).
+5. Print a one-line progress summary: "Resuming at Task N. M/T tasks done." This orients both you and the user on where things stand.
 
 ## Plan Format
 
@@ -31,24 +32,54 @@ The plan must have tasks as markdown checkboxes. Each task should be atomic and 
 - [ ] Docs & tests
 - [ ] Done
 
-Context: what this task does and why
-Files: likely files to touch
-Acceptance: what "done" looks like
-Test: how to verify (new test, existing tests pass, visual check)
-Dependencies: Task N (if this task builds on a previous one)
+**Context:** what this task does and why
+**Files:** likely files to touch
+**Acceptance:** what "done" looks like
+**Test:** how to verify (new test, existing tests pass, visual check)
+**Dependencies:** Task N (if this task builds on a previous one)
+**Parallel group:** A (tasks in the same group may execute simultaneously; — means sequential)
 ```
 
-If a task has a **Dependencies** field and the dependency was skipped, log a note in **Decisions & Review Items** and attempt the task anyway. If it fails because of the missing dependency, skip it with a note.
+**Dependencies:** If a task's dependency was skipped, log a note in **Decisions & Review Items** and attempt the task anyway. If it fails because of the missing dependency, skip it with a note.
+
+**Parallel group:** Assigned during `/plan` and validated by the user. Tasks in the same group (e.g., `A`, `B`) have disjoint file sets and no dependency relationship, so they can safely run in parallel. A value of `—` means the task runs sequentially. See "Parallel Group Dispatch" in the Loop for execution details.
 
 ## Loop
 
 For each unchecked task in order:
+
+### Parallel Group Dispatch
+
+Before starting a task, check its `**Parallel group:**` field. If it is `—` (or absent), proceed to Step 1 below as normal.
+
+If it has a group letter (e.g., `A`), collect **all unchecked tasks in the same group**. These tasks were validated as safe to parallelize during `/plan` (disjoint files, no shared dependencies). Execute them as follows:
+
+1. **Main thread** takes one task from the group — prefer the one with the most downstream dependents (to unblock future tasks earliest). Run the full sequential cycle (Steps 1–6) for this task.
+
+2. **Background agents** take the remaining tasks in the group. For each, launch a background Agent with `isolation: "worktree"` and these instructions:
+   - Read the task's Context, Files, and Acceptance
+   - Implement the task following all project conventions from CLAUDE.md
+   - Run `{BUILD_COMMAND}` to verify compilation. If it fails, fix and retry (max 3 attempts).
+   - Run `/refactor` on the changes (reviews the worktree diff)
+   - Do **not** run `/test` (no preview server access in a worktree)
+   - Do **not** commit
+   - Report back: what was implemented, build result, refactor verdict, any issues
+
+3. **After all agents return**, merge each worktree branch into the working branch one at a time (`git merge --no-ff <branch>`):
+   - If a merge conflict occurs: attempt auto-resolution. If unresolvable, log in **Decisions & Review Items** and re-implement that task sequentially after the group completes.
+   - After all successful merges: run `/test` once on the combined result.
+   - If tests fail: diagnose which task's changes broke things. Fix the issue or revert that task's merge and re-queue it for sequential execution. Max 3 fix attempts on the combined result.
+   - Commit each task separately (one commit per task, same format as Step 6).
+
+4. Check off all completed tasks in the group, then proceed to the next unchecked task in the plan.
 
 ### 1. Read & Understand
 
 Read the current task **and scan the remaining tasks** in the plan. Every implementation decision should account for what's coming next — don't paint yourself into a corner that a later task will undo. If the current task could be implemented in multiple ways, prefer the approach that aligns with or enables future tasks.
 
 Read all files listed under `Files:`. Understand the existing code before changing anything.
+
+**Visual baseline:** If the task touches UI (pages, components, styles), take a `preview_screenshot` before making any changes. This is the "before" image for comparison later. Skip for backend-only tasks (models, services, APIs with no UI impact).
 
 ### 2. Implement
 
@@ -75,11 +106,13 @@ Run `/test`. Check the verdict:
 
 Check off `- [x] Implement`. Do not commit yet.
 
-### 4. Refactor Pass
+### 4. Refactor Pass (with read-ahead)
 
-Run `/refactor` on the uncommitted changes. All implementation work is still uncommitted at this point, so `/refactor` sees the full task diff.
+Launch `/refactor` as a **background Agent** on the uncommitted changes. All implementation work is still uncommitted at this point, so `/refactor` sees the full task diff.
 
-Based on the verdict:
+**While refactor runs**, start reading ahead to the next task: read its `**Context:**`, `**Files:**`, and `**Acceptance:**` fields, and read all files listed under `**Files:**`. This loads context so you're ready to implement as soon as the current task is fully committed. If this is the **last task** in the plan, skip the read-ahead and wait for refactor inline.
+
+**When refactor returns**, process the verdict:
 
 - **Ship it** — no changes needed, continue to docs
 - **Minor tweaks** or **Refactor recommended** — before applying, `git stash` the current working state as a safe point. Apply the suggested fixes, then re-run `/test`:
@@ -89,13 +122,25 @@ Based on the verdict:
 
 The refactor/test cycle repeats until `/refactor` returns "Ship it" or "Minor tweaks" applied cleanly (max 3 refactor iterations per task).
 
-**Feature parity check:** Before moving on, re-read the task's **Acceptance** criteria and verify every listed behavior still works. Refactoring must not accidentally remove or alter intended functionality.
+> **Important:** Never start *implementing* the next task while the current task's refactor is still pending. Read-ahead is read-only preparation. Implementation of the next task only begins after the current task is fully committed in Step 6.
 
 Check off `- [x] Refactor`. Do not commit yet.
 
+> **Feature parity gate:** Before moving to Step 5, re-read the task's **Acceptance** criteria and verify every listed behavior still works. If refactoring broke or altered intended functionality, fix it now and re-run `/test`. Do not proceed until acceptance is met.
+
+**Visual diff:** If a baseline screenshot was taken in Step 1, take an "after" `preview_screenshot` now and compare the two images. Check for:
+
+- Unintended layout shifts or broken styling
+- Missing or displaced elements
+- Visual regressions unrelated to the task's intended changes
+
+If something looks wrong that isn't an intentional change, fix it and re-run `/test`. Note any intentional visual changes in **Decisions & Review Items**.
+
 ### 5. Docs & Test Hygiene
 
-Review what should be documented or tested:
+**For trivial tasks** (rename, small fix, config change): skim the checklist below. If nothing applies, check off and move on — don't force busywork.
+
+**For substantial tasks**, review what should be documented or tested:
 
 **Docs** — check if any of these need updating based on what changed:
 
@@ -138,7 +183,9 @@ Always keep moving forward. The user reviews decisions after the full loop compl
 
 ## Guard Rails
 
-- **One task at a time.** Never start the next task before the current one passes `/test` (or is explicitly skipped).
+- **One task at a time (sequential).** Never start the next task before the current one passes `/test` (or is explicitly skipped). Exception: tasks in the same parallel group run concurrently — but all must pass `/test` before the next group or sequential task starts.
+- **Agents build, main thread tests.** Background agents verify compilation and run `/refactor`, but only the main thread runs `/test`. The preview server is a singleton.
+- **Merge sequentially.** When a parallel group completes, merge each agent's worktree one at a time. Run `/test` after all merges, not after each.
 - **Revert on failure.** If stuck after 3 attempts: `git stash` to save work and restore clean state.
 - **Small drive-bys are OK.** If you're in a file and notice something clearly wrong (dead import, stale comment), fix it. Don't go hunting.
 - **Test the right thing.** Tests should test observable behavior, not implementation internals.
@@ -153,7 +200,7 @@ At the end of the plan file, maintain a section:
 ```markdown
 ## Decisions & Review Items
 
-Items logged during the ralph loop for user review.
+Items logged during the implementation loop for user review.
 
 - **Task 3 — skipped**: failed after 3 attempts, stash ref `abc1234`. Error: ...
 - **Task 5 — ambiguity**: spec said "toggle coloring" but didn't specify scope. Implemented as global. Revisit if per-viewport is needed.
@@ -167,12 +214,13 @@ This section is the handoff to the user. They review it after the loop exits and
 
 When all tasks are processed, report:
 
-- Branch: `ralph/{name}` with N commits
+- Branch: `implement/{name}` with N commits
 - Tasks completed: X/Y
 - Tasks skipped (with brief reason each)
 - New tests added
 - Refactor passes: how many tasks needed refactoring, how many iterations total
 - Perf trend: faster/same/slower than baseline
+- Parallel execution: N tasks parallelized across M groups, K merge conflicts resolved (if any parallel groups were used)
 - Number of decisions/review items logged — remind user to check the plan
 
 ---
@@ -185,3 +233,4 @@ When scaffolding this skill for a project, customize:
 - **Commit prefix convention**: Default is `FEAT:`/`FIX:`/`REFACTOR:`. Adjust if the project uses a different format.
 - **Plan directory**: Default looks in project root `plans/`. Change if different.
 - **Doc files to check** (Step 5): List the project's specific doc files that might need updating.
+- **Parallel group build command**: The Parallel Group Dispatch uses `{BUILD_COMMAND}` for worktree agents. Ensure this matches the project's build command.

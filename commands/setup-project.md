@@ -13,7 +13,8 @@ Templates directory: `~/.claude/templates/skills/`
 | **build** | Build & serve with auto-build after code changes | None |
 | **test** | Browser-based smoke tests with optional perf tracking | build, preview tools |
 | **refactor** | Code quality & architecture review | None (uses CLAUDE.md) |
-| **ralph** | Autonomous dev loop (plan → implement → test → refactor) | build, test, refactor |
+| **plan** | Collaborative feature discovery and structured plan creation | implement (for plan format) |
+| **implement** | Autonomous dev loop (plan → implement → test → refactor) | build, test, refactor |
 
 ## Process
 
@@ -29,9 +30,10 @@ Use `AskUserQuestion` with multiSelect:
 - build (Recommended)
 - test
 - refactor
-- ralph (requires build + test + refactor)
+- plan (requires implement for plan format)
+- implement (requires build + test + refactor)
 
-If ralph is selected, ensure build, test, and refactor are also selected (they're prerequisites).
+If implement is selected, ensure build, test, and refactor are also selected (they're prerequisites). If plan is selected, ensure implement is also selected.
 
 ### Step 3 — Gather Project Info
 
@@ -57,7 +59,11 @@ Then ask the user for skill-specific info using `AskUserQuestion`:
 - Architecture principles — can often be derived from CLAUDE.md. Ask only if CLAUDE.md is missing or sparse.
 - Specific quality goals or review criteria beyond CLAUDE.md
 
-**For ralph:**
+**For plan:**
+- Feature board file — does the project use a feature tracker? If yes, path (e.g., `plans/FEATURES.md`)
+- Plan directory location (default: `plans/`)
+
+**For implement:**
 - Commit message prefix convention (default: `FEAT:`/`FIX:`/`REFACTOR:`)
 - How to create tests for new features (test framework, patterns, file locations)
 - Any doc files that should stay updated (list them)

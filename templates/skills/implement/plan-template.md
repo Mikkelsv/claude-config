@@ -17,6 +17,8 @@
 **Files:** {likely files to touch}
 **Acceptance:** {what "done" looks like}
 **Test:** {new test? existing tests sufficient? visual check?}
+**Dependencies:** None
+**Parallel group:** —
 
 ### Task 2: {short description}
 
@@ -29,7 +31,9 @@
 **Files:**
 **Acceptance:**
 **Test:**
+**Dependencies:**
+**Parallel group:** —
 
 ## Decisions & Review Items
 
-Items logged during the ralph loop for user review.
+Items logged during the implementation loop for user review.
