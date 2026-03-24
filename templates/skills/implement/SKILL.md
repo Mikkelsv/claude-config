@@ -19,7 +19,8 @@ Before touching any code:
 2. If already on a non-main branch, use it as-is.
 3. Verify clean working tree (`git status`). If dirty, ask the user whether to stash or continue.
 4. Read the plan file. Find the first task where `- [ ] Done` is unchecked — this is where to resume. Skip any fully checked-off tasks (they were completed in a previous session).
-5. Print a one-line progress summary: "Resuming at Task N. M/T tasks done." This orients both you and the user on where things stand.
+5. **Pre-implementation snapshot:** If the project has a `/db-save` skill and the plan touches database models, schema files, or migration-related code, run `/db-save` before starting implementation. This ensures data can be restored if schema changes break the database.
+6. Print a one-line progress summary: "Resuming at Task N. M/T tasks done." This orients both you and the user on where things stand.
 
 ## Plan Format
 
@@ -45,6 +46,8 @@ The plan must have tasks as markdown checkboxes. Each task should be atomic and 
 **Parallel group:** Assigned during `/plan` and validated by the user. Tasks in the same group (e.g., `A`, `B`) have disjoint file sets and no dependency relationship, so they can safely run in parallel. A value of `—` means the task runs sequentially. See "Parallel Group Dispatch" in the Loop for execution details.
 
 ## Loop
+
+**This loop runs until every task is completed or skipped. After each checkpoint (Step 6), return here and pick up the next unchecked task.**
 
 For each unchecked task in order:
 
@@ -168,6 +171,8 @@ Check off `- [x] Docs & tests`. Do not commit yet.
 
 - Check off `- [x] Done` in the plan
 - Brief one-line status to the user: "Task 3 done: added depth coloring toggle. 5/12 complete."
+
+**→ Return to the top of the Loop and begin the next unchecked task. Do NOT stop here.**
 
 ### 7. When Stuck
 

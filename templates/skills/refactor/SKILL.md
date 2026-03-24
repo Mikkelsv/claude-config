@@ -13,7 +13,13 @@ Check for uncommitted changes first:
 
 1. Run `git diff --stat` (unstaged) and `git diff --cached --stat` (staged).
 2. If there are uncommitted changes: use those as the scope. Get the full diff with `git diff` and `git diff --cached`.
-3. If no uncommitted changes: fall back to branch diff vs main (`git diff main...HEAD`).
+3. If no uncommitted changes: run the branch scope script to get the full branch diff vs main:
+
+   ```bash
+   powershell.exe -NoProfile -File "$HOME/.claude/scripts/git-branch-scope.ps1"
+   ```
+
+   Returns JSON: `{branch, base, hasMergeBase, isAhead, commitCount, commits[], files[]}`. Use `files` as the scope and `git diff main...HEAD` for the full diff.
 
 If neither produces changes, abort — nothing to review.
 

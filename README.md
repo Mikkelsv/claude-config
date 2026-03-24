@@ -26,6 +26,12 @@ Full rebase workflow: checks for uncommitted changes, fetches and rebases onto m
 
 - `/rebase-on-main` — walks through the full flow with prompts at decision points
 
+#### `/claude-refactor`
+
+Audit all skills, commands, scripts, rules, and templates across the global config and the current project. Checks for bugs, stale references, misplaced items, missing permissions, script extraction opportunities, template drift, and underused parallelization. Runs 3 review agents in parallel, fixes low-risk issues directly, and asks about architectural decisions.
+
+- `/claude-refactor` — full audit with parallel review agents, auto-fixes, and summary
+
 #### `/push-claude`
 
 Commit and push all pending changes in the `~/.claude/` config repo. Automatically generates a commit message based on the diff.
@@ -44,6 +50,18 @@ Capture a question, prompt, or to-do item for Claude to remember and surface in 
 
 - `/todo check if horizon normals are flipped` — saves the item and continues without derailing
 - `/todo` (no args) — shows the current list, lets you check off or remove items
+
+#### `/handoff`
+
+Write a session handoff summary to project memory so the next session can pick up where this one left off. Useful when a session gets stuck (e.g., stale worktree CWD) or when you want to continue work in a fresh session without losing context.
+
+- `/handoff` — summarizes current session's work, decisions, and open items into project memory
+
+#### `/pickup`
+
+Resume from a previous session's handoff. Reads the handoff context, summarizes it, cleans up the handoff file, and asks what to work on next. If multiple handoffs exist, lets you choose which to pick up.
+
+- `/pickup` — loads handoff context and orients you on where things stand
 
 #### `/allow [prompt]`
 
@@ -103,6 +121,8 @@ This section documents the architecture in detail so that another user (or Claud
   commands/                              # Slash commands (Claude orchestration)
     allow.md
     code.md
+    handoff.md
+    pickup.md
     pull-claude.md
     push-claude.md
     setup-project.md                     # Scaffold project-level skills from templates
@@ -113,6 +133,8 @@ This section documents the architecture in detail so that another user (or Claud
       scripts/
         git-rebase-onto.ps1              # Preflight + fetch + rebase in one shot
         git-merge-cleanup.ps1            # FF merge into main, push, delete branch, cleanup worktree
+    claude-refactor/
+      SKILL.md                           # Config audit with parallel review agents
   templates/                             # Templates for project-level skills
     skills/
       build/
@@ -144,6 +166,10 @@ This section documents the architecture in detail so that another user (or Claud
     git-branch-scope.ps1
     git-preflight.ps1
     git-merge-rename.ps1
+    remove-path.ps1                    # Safe file/directory removal with JSON output
+    move-path.ps1                      # Safe file/directory move with JSON output
+    npm-command.ps1                    # Run npm commands with JSON output
+    node-run.ps1                       # Run node scripts with JSON output
   rules/                                 # Global rules (always active)
     user-config.md                       # Config conventions, prefer scripts, keep README updated
     todo-surfacing.md                    # Surface /todo items at natural moments
@@ -158,8 +184,8 @@ This section documents the architecture in detail so that another user (or Claud
 ### Design Pattern: Global vs Project-Level
 
 **Global** (in `~/.claude/`) — truly generic utilities that work in any project:
-- Commands: `/allow`, `/code`, `/setup-project`, `/todo`, `/push-claude`, `/pull-claude`
-- Skills: `/rebase-on-main` (generic git workflow, delegates to project's `/build`)
+- Commands: `/allow`, `/code`, `/handoff`, `/pickup`, `/setup-project`, `/todo`, `/push-claude`, `/pull-claude`
+- Skills: `/rebase-on-main` (generic git workflow, delegates to project's `/build`), `/claude-refactor` (config audit with parallel review agents)
 
 **Project-level** (in `<project>/.claude/skills/`) — context-dependent, scaffolded by `/setup-project`:
 - `/build` — build command, server config, port
@@ -214,7 +240,7 @@ This separation means:
 |--------|--------|--------|---------|
 | `escape-worktree.ps1` | (none) | `{isWorktree, mainRepoRoot, branch}` | (available for manual use) |
 | `git-preflight.ps1` | (none) | `{branch, isMain, hasChanges, staged, unstaged, untracked}` | (shared utility) |
-| `git-branch-scope.ps1` | `-BaseBranch` (default: main) | `{branch, base, hasMergeBase, isAhead, commitCount, commits[], files[]}` | project `/refactor` |
+| `git-branch-scope.ps1` | `-BaseBranch` (default: main) | `{branch, base, hasMergeBase, isAhead, commitCount, commits[], files[]}` | `/refactor` (template + project) |
 | `git-merge-rename.ps1` | `-Branch` | `{merged, pushed, renamed, ...}` | (legacy, kept for compatibility) |
 
 #### Rebase (skill-local: `skills/rebase-on-main/scripts/`)
@@ -223,6 +249,15 @@ This separation means:
 |--------|--------|--------|---------|
 | `git-rebase-onto.ps1` | `-BaseBranch` (default: main) | `{status, branch, ...}` — status: `worktree`/`error`/`dirty`/`up-to-date`/`success`/`conflicts` | `/rebase-on-main` |
 | `git-merge-cleanup.ps1` | `-Branch` | `{merged, pushed, branch, localDeleted, remoteDeleted, worktreeRemoved, worktreeName}` | `/rebase-on-main` |
+
+#### File & Process Operations
+
+| Script | Params | Output | Used by |
+| --- | --- | --- | --- |
+| `remove-path.ps1` | `-Path`, `-Force` (switch) | `{removed, path, type}` | (replaces `rm -rf`) |
+| `move-path.ps1` | `-Source`, `-Destination`, `-Force` (switch) | `{moved, source, destination}` | (replaces `mv`) |
+| `npm-command.ps1` | `-Command`, `-WorkingDirectory` (optional) | `{success, exitCode, output}` | (replaces `npm ...`) |
+| `node-run.ps1` | `-Script`, `-WorkingDirectory` (optional) | `{success, exitCode, output}` | (replaces `node ...`) |
 
 #### Notifications
 
@@ -269,13 +304,14 @@ Glob patterns for auto-accepted tool calls. The `allow` array uses `ToolName(glo
 - **Windows Terminal**: `Bash(wt *)`
 - **Launchers**: `Bash(start *)`, `Bash(code *)`
 - **GitHub CLI**: `Bash(gh *)`
-- **Utilities**: `Bash(echo *)`, `Bash(ls *)`, `Bash(mkdir *)`, `Bash(sleep *)`
+- **Utilities**: `Bash(echo *)`, `Bash(ls *)`, `Bash(mkdir *)`, `Bash(sleep *)`, `Bash(npm *)`
 
-**What still prompts**: `rm`/`del` (file deletion), `npm install`/`pip install` (packages), `powershell.exe -Command` (arbitrary PowerShell), and anything else unexpected.
+**What still prompts**: `rm`/`del` (file deletion), `pip install` (packages), `powershell.exe -Command` (arbitrary PowerShell), and anything else unexpected.
 
 **File operations** — use `**` globs for portability (no absolute paths needed):
 
-- `Edit(**/Code/**)` — edits in any `Code/` directory
+- `Edit(**/Code/**)`, `Edit(**/Documents/**)` — edits in `Code/` or `Documents/` directories
+- `Edit(**/plans/**)`, `Write(**/plans/**)` — plan files (created by `/plan`)
 - `Edit(**/.claude/**)`, `Write(**/.claude/**)` — claude config
 - `Read(**)`, `Glob(**)` — unrestricted reads and file search
 

@@ -28,7 +28,10 @@
       "Glob(**)",
       "WebFetch(*)",
       "WebSearch(*)",
-      "mcp__ide__getDiagnostics(*)"
+      "mcp__ide__getDiagnostics(*)",
+      "Bash(npm *)",
+      "Edit(**/plans/**)",
+      "Write(**/plans/**)"
     ]
   },
   "hooks": {

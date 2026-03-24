@@ -21,7 +21,7 @@ powershell.exe -NoProfile -File "${CLAUDE_SKILL_DIR}/scripts/git-rebase-onto.ps1
 
 Returns JSON with `status`:
 
-- **"worktree"** → `cd` into `mainRepoRoot`, `git checkout <branch>`, inform user, then **re-run this script**.
+- **"worktree"** → Call `ExitWorktree` (action: `"keep"`) to leave the worktree and return to the main repo. Then `git checkout <branch>`, inform user, and **re-run this script**.
 - **"error"** → Report the `reason`. Stop.
 - **"dirty"** → List the dirty files and tell the user: "Uncommitted changes found. Please commit or stash these before rebasing." Then use `AskUserQuestion` with two options:
   - **Retry** — I've handled it, rebase now (re-run this script from the top)
@@ -72,7 +72,8 @@ powershell.exe -NoProfile -File "${CLAUDE_SKILL_DIR}/scripts/git-merge-cleanup.p
 Returns JSON: `{"merged": true, "pushed": true, "branch": "...", "localDeleted": true, "remoteDeleted": true, "worktreeRemoved": false, "worktreeName": null}`
 
 - **merged = false** → Not a fast-forward. Inform user. Stop.
-- **merged = true** → Report:
+- **pushed = false** → Merge succeeded but push failed. Report the `reason`. The branch is merged locally but not pushed — tell user to push manually or retry.
+- **merged = true, pushed = true** → Report:
   - Main updated and pushed.
   - Branch `<branch>` deleted (local + remote).
   - If `worktreeRemoved = true`: worktree `<worktreeName>` cleaned up.

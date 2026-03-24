@@ -19,21 +19,17 @@ If no instructions were provided, skip to Phase 2.
 
 Once the task is complete (or immediately if no task was given):
 
-1. Kill any existing server:
+1. Stop any existing preview server (use `preview_stop` if one is running, check with `preview_list` first).
+2. Kill any orphaned processes on port {SERVER_PORT}:
 
    ```bash
    powershell.exe -NoProfile -File "${CLAUDE_SKILL_DIR}/scripts/kill-port.ps1" -Port {SERVER_PORT}
    ```
 
-2. Build: `{BUILD_COMMAND}` (can run in parallel with step 1)
-3. If the build **fails**, fix the errors and rebuild. If it still fails after 2 attempts, stop and report.
-4. If the build **succeeds**, launch the dev server:
-
-   ```bash
-   powershell.exe -NoProfile -File "${CLAUDE_SKILL_DIR}/scripts/launch-dev-server.ps1" -Project {PROJECT_NAME} -Port {SERVER_PORT}
-   ```
-
-   Report: "Build OK. Dev server running at {SERVER_URL}"
+3. Build: `{BUILD_COMMAND}` (can run in parallel with steps 1–2)
+4. If the build **fails**, fix the errors and rebuild. If it still fails after 2 attempts, stop and report.
+5. If the build **succeeds**, start the dev server via `preview_start` with name `"{PREVIEW_SERVER_NAME}"` (uses `.claude/launch.json`).
+6. Report: "Build OK. Dev server running in preview."
 
 ## Auto-build Rule
 
@@ -49,16 +45,14 @@ When scaffolding this skill for a project, replace these placeholders:
 |---|---|---|
 | `{BUILD_COMMAND}` | `dotnet build MySolution.slnx` | Command to compile the project |
 | `{SERVER_PORT}` | `5163` | Dev server port |
-| `{PROJECT_NAME}` | `GridPreviewPoc` | Project name for server launch |
-| `{SERVER_URL}` | `http://localhost:5163` | Dev server URL |
+| `{PREVIEW_SERVER_NAME}` | `my-app` | Name from `.claude/launch.json` |
 
 Scripts in `scripts/` must also be generated for the target platform. See `/setup-project` for automated scaffolding.
 
 ### Required Scripts
 
 | Script | Purpose | Platform-specific |
-|---|---|---|
-| `scripts/kill-port.ps1` | Kill process on a given port | Yes — PowerShell/Windows |
-| `scripts/launch-dev-server.ps1` | Start dev server in a new terminal tab | Yes — Windows Terminal |
+| --- | --- | --- |
+| `scripts/kill-port.ps1` | Kill orphaned process on a given port | Yes — PowerShell/Windows |
 
-On non-Windows platforms, replace these with equivalent bash scripts or inline commands.
+On non-Windows platforms, replace with an equivalent bash script or inline command.

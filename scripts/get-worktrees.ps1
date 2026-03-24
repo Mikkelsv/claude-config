@@ -55,4 +55,10 @@ foreach ($wt in $worktrees) {
     }
 }
 
-$results | ConvertTo-Json -Compress
+if ($results.Count -eq 0) {
+    "[]"
+} elseif ($results.Count -eq 1) {
+    "[$($results[0] | ConvertTo-Json -Compress)]"
+} else {
+    $results | ConvertTo-Json -Compress
+}
