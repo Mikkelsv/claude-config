@@ -6,13 +6,13 @@ Personal Claude Code configuration with slash commands, skills, and PowerShell a
 
 ### Commands
 
-#### `/setup-project [skills]`
+#### `/claude-setup [skills]`
 
 Scaffold project-level skills from global templates. Interactively asks about your project (build system, test approach, architecture) and generates customized `.claude/skills/` directories. Available skills: build, test, refactor, plan, implement.
 
-- `/setup-project` — asks which skills to scaffold
-- `/setup-project all` — scaffolds everything
-- `/setup-project build test` — scaffolds specific skills
+- `/claude-setup` — asks which skills to scaffold
+- `/claude-setup all` — scaffolds everything
+- `/claude-setup build test` — scaffolds specific skills
 
 #### `/code`
 
@@ -32,17 +32,17 @@ Audit all skills, commands, scripts, rules, and templates across the global conf
 
 - `/claude-refactor` — full audit with parallel review agents, auto-fixes, and summary
 
-#### `/push-claude`
+#### `/claude-push`
 
 Commit and push all pending changes in the `~/.claude/` config repo. Automatically generates a commit message based on the diff.
 
-- `/push-claude` — stages everything, commits, and pushes
+- `/claude-push` — stages everything, commits, and pushes
 
-#### `/pull-claude`
+#### `/claude-pull`
 
 Pull the latest changes from the remote `~/.claude/` config repo (fast-forward only). Use this to pick up changes made on another machine.
 
-- `/pull-claude` — pulls and reports new commits, or "already up to date"
+- `/claude-pull` — pulls and reports new commits, or "already up to date"
 
 #### `/todo [text]`
 
@@ -70,9 +70,9 @@ Parse a blocked permission prompt and add a generalized allow rule to `settings.
 - `/allow Write(~/.claude/scripts/*)` — generalizes and adds a rule
 - `/allow` (no args) — prompts you to paste the blocked action
 
-### Project-Level Skills (via /setup-project)
+### Project-Level Skills (via /claude-setup)
 
-These skills are scaffolded per-project using `/setup-project`. Each uses global templates but is customized with project-specific build commands, test scripts, and architecture rules. Skills are self-contained — scripts are co-located, no dependency on `~/.claude/scripts/`.
+These skills are scaffolded per-project using `/claude-setup`. Each uses global templates but is customized with project-specific build commands, test scripts, and architecture rules. Skills are self-contained — scripts are co-located, no dependency on `~/.claude/scripts/`.
 
 #### `/build [task]`
 
@@ -123,9 +123,9 @@ This section documents the architecture in detail so that another user (or Claud
     code.md
     handoff.md
     pickup.md
-    pull-claude.md
-    push-claude.md
-    setup-project.md                     # Scaffold project-level skills from templates
+    claude-pull.md
+    claude-push.md
+    claude-setup.md                      # Scaffold project-level skills from templates
     todo.md
   skills/                                # Global skills (work in any project)
     rebase-on-main/
@@ -143,7 +143,15 @@ This section documents the architecture in detail so that another user (or Claud
         SKILL.md                         # Test with perf tracking template
         browser-throttling.md            # Chrome background tab throttling notes
       refactor/
-        SKILL.md                         # Code quality review template
+        SKILL.md                         # Code quality review orchestrator template
+      refactor-code/
+        SKILL.md                         # Code review sub-skill template
+      refactor-docs/
+        SKILL.md                         # Documentation sync sub-skill template
+      refactor-tests/
+        SKILL.md                         # Test coverage review sub-skill template
+      audit/
+        SKILL.md                         # Architecture audit template
       plan/
         SKILL.md                         # Feature discovery & planning template
       implement/
@@ -165,7 +173,6 @@ This section documents the architecture in detail so that another user (or Claud
     sync-config.ps1                      # Stage, commit, push all config changes
     git-branch-scope.ps1
     git-preflight.ps1
-    git-merge-rename.ps1
     remove-path.ps1                    # Safe file/directory removal with JSON output
     move-path.ps1                      # Safe file/directory move with JSON output
     npm-command.ps1                    # Run npm commands with JSON output
@@ -179,20 +186,25 @@ This section documents the architecture in detail so that another user (or Claud
     no-pipes.md                          # Avoid chained shell commands
     plans-location.md                    # Plan files go in project root plans/
     prefer-clickable-prompts.md          # Use clickable options over free-text questions
+    no-read-generated-css.md             # Never read Tailwind CSS output files
 ```
 
 ### Design Pattern: Global vs Project-Level
 
 **Global** (in `~/.claude/`) — truly generic utilities that work in any project:
-- Commands: `/allow`, `/code`, `/handoff`, `/pickup`, `/setup-project`, `/todo`, `/push-claude`, `/pull-claude`
+- Commands: `/allow`, `/claude-pull`, `/claude-push`, `/claude-setup`, `/code`, `/handoff`, `/pickup`, `/todo`
 - Skills: `/rebase-on-main` (generic git workflow, delegates to project's `/build`), `/claude-refactor` (config audit with parallel review agents)
 
-**Project-level** (in `<project>/.claude/skills/`) — context-dependent, scaffolded by `/setup-project`:
+**Project-level** (in `<project>/.claude/skills/`) — context-dependent, scaffolded by `/claude-setup`:
 - `/build` — build command, server config, port
-- `/test` — test execution, baselines, patterns
-- `/refactor` — architecture review against project's CLAUDE.md
+- `/test` — test execution, baselines, patterns (supports background mode)
+- `/refactor` — orchestrator spawning refactor-code, refactor-docs, refactor-tests
+- `/refactor-code` — code quality & architecture review
+- `/refactor-docs` — documentation sync
+- `/refactor-tests` — test coverage review
+- `/audit` — deep architecture review (overengineering, boundaries, alternatives)
 - `/plan` — feature discovery, scope splitting, plan creation
-- `/implement` — autonomous loop using project's build/test/refactor
+- `/implement` — autonomous loop using project's build/test/refactor/audit
 
 Project skills are **self-contained**: scripts live in `.claude/skills/<name>/scripts/` alongside the SKILL.md. No dependency on `~/.claude/scripts/` — this keeps project skills portable and platform-aware.
 
@@ -202,7 +214,7 @@ The core principle: **prompts are Claude orchestration, scripts are mechanical e
 
 - **Commands** (`.md` files in `commands/`) — simple orchestration prompts for flows using only shared scripts.
 - **Skills** (directories in `skills/<name>/` with `SKILL.md`) — complex orchestration with co-located scripts. Use `${CLAUDE_SKILL_DIR}` to reference files within the skill directory.
-- **Templates** (directories in `templates/skills/<name>/`) — generic skill skeletons with `{PLACEHOLDER}` markers. Read by `/setup-project` to generate project-level skills.
+- **Templates** (directories in `templates/skills/<name>/`) — generic skill skeletons with `{PLACEHOLDER}` markers. Read by `/claude-setup` to generate project-level skills.
 - **Scripts** (`.ps1` files) — shell operations: git commands, file I/O, process management. Live either in `scripts/` (shared) or `skills/<name>/scripts/` (skill-local).
 - **Communication** is via JSON on stdout. Every script outputs a JSON object so Claude can parse the result and make decisions based on it. Non-zero exit codes signal errors.
 
@@ -241,7 +253,7 @@ This separation means:
 | `escape-worktree.ps1` | (none) | `{isWorktree, mainRepoRoot, branch}` | (available for manual use) |
 | `git-preflight.ps1` | (none) | `{branch, isMain, hasChanges, staged, unstaged, untracked}` | (shared utility) |
 | `git-branch-scope.ps1` | `-BaseBranch` (default: main) | `{branch, base, hasMergeBase, isAhead, commitCount, commits[], files[]}` | `/refactor` (template + project) |
-| `git-merge-rename.ps1` | `-Branch` | `{merged, pushed, renamed, ...}` | (legacy, kept for compatibility) |
+
 
 #### Rebase (skill-local: `skills/rebase-on-main/scripts/`)
 
@@ -269,8 +281,8 @@ This separation means:
 
 | Script | Params | Output | Used by |
 |--------|--------|--------|---------|
-| `sync-config.ps1` | `-Message` | `{committed, pushed, hash, message}` | `/push-claude` |
-| `pull-config.ps1` | (none) | `{pulled, before, after, commits}` | `/pull-claude` |
+| `sync-config.ps1` | `-Message` | `{committed, pushed, hash, message}` | `/claude-push` |
+| `pull-config.ps1` | (none) | `{pulled, before, after, commits}` | `/claude-pull` |
 
 #### Settings
 
@@ -361,6 +373,7 @@ Rules in `~/.claude/rules/` are always loaded into every Claude session:
 - **no-pipes.md** — Avoid chaining shell commands; use dedicated tools or separate Bash calls.
 - **plans-location.md** — Plan files go in project root `plans/`, never `.claude/plans/`.
 - **prefer-clickable-prompts.md** — Prefer `AskUserQuestion` with 2–3 clickable options over open-ended questions. Include an escape hatch for custom input.
+- **no-read-generated-css.md** — Never read Tailwind CSS output files (`wwwroot/app.tailwind.css`). They are build artifacts — regenerate via `dotnet build` instead. During conflicts, accept either side and rebuild.
 
 ### How to Add a New Command or Skill
 
@@ -368,7 +381,7 @@ Rules in `~/.claude/rules/` are always loaded into every Claude session:
 
 - **Command** (`commands/<name>.md`) — for simple flows that only reference shared global scripts.
 - **Skill** (`skills/<name>/SKILL.md`) — for complex flows that benefit from co-located scripts. Use `${CLAUDE_SKILL_DIR}/scripts/...` to reference skill-local scripts.
-- **Template** (`templates/skills/<name>/SKILL.md`) — for skills that will be scaffolded per-project by `/setup-project`. Include `{PLACEHOLDER}` markers for project-specific values and a Customization Guide section.
+- **Template** (`templates/skills/<name>/SKILL.md`) — for skills that will be scaffolded per-project by `/claude-setup`. Include `{PLACEHOLDER}` markers for project-specific values and a Customization Guide section.
 
 **Steps:**
 
@@ -396,4 +409,4 @@ Rules in `~/.claude/rules/` are always loaded into every Claude session:
 - **VS Code new window** — Always use `code --new-window` to prevent hijacking existing VS Code instances.
 - **Delayed VS Code settings** — VS Code extensions (e.g., Ionide) rewrite `.vscode/settings.json` on workspace init. Write color settings after a 5-second delay to avoid being overwritten.
 - **Claude terminal isolation** — The inner launcher (`launch-worktree.ps1`) clears the `CLAUDECODE` environment variable before starting `claude` to prevent nested-session crashes from inherited parent sessions.
-- **Self-contained project skills** — Project-level skills (scaffolded by `/setup-project`) include their own scripts. No dependency on `~/.claude/scripts/` — this keeps them portable across machines and contributors.
+- **Self-contained project skills** — Project-level skills (scaffolded by `/claude-setup`) include their own scripts. No dependency on `~/.claude/scripts/` — this keeps them portable across machines and contributors.

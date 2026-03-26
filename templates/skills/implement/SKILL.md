@@ -18,9 +18,12 @@ Before touching any code:
 1. Check if we're on `main`. If so, create and checkout a new branch: `implement/{plan-name}` (derive from plan filename, e.g. `implement/add-depth-coloring`).
 2. If already on a non-main branch, use it as-is.
 3. Verify clean working tree (`git status`). If dirty, ask the user whether to stash or continue.
-4. Read the plan file. Find the first task where `- [ ] Done` is unchecked — this is where to resume. Skip any fully checked-off tasks (they were completed in a previous session).
-5. **Pre-implementation snapshot:** If the project has a `/db-save` skill and the plan touches database models, schema files, or migration-related code, run `/db-save` before starting implementation. This ensures data can be restored if schema changes break the database.
-6. Print a one-line progress summary: "Resuming at Task N. M/T tasks done." This orients both you and the user on where things stand.
+4. Read the plan file and **validate its format** against the Plan Format section below. Every task must have the required checkboxes (`Implement`, `Refactor`, `Docs & tests`, `Done`) and fields (`Context`, `Files`, `Acceptance`, `Test`). If the plan doesn't match the expected format, show the user what's missing and ask them to rewrite it.
+   - **Content review:** Also assess whether each task has enough detail to implement confidently. Flag tasks with vague or thin descriptions — e.g., a task that just says "add sharing" without specifying scope, behavior, or constraints. For each flagged task, ask the user targeted questions: what does the feature do, what are the inputs/outputs, what edge cases matter, etc. Collect the answers and let the user update the plan before proceeding.
+   - **Do not start implementation until the user has reviewed and approved the plan.**
+5. Find the first task where `- [ ] Done` is unchecked — this is where to resume. Skip any fully checked-off tasks (they were completed in a previous session).
+6. **Pre-implementation snapshot:** If the project has a `/db-save` skill and the plan touches database models, schema files, or migration-related code, run `/db-save` before starting implementation. This ensures data can be restored if schema changes break the database.
+7. Print a one-line progress summary: "Resuming at Task N. M/T tasks done." This orients both you and the user on where things stand.
 
 ## Plan Format
 
@@ -111,13 +114,13 @@ Check off `- [x] Implement`. Do not commit yet.
 
 ### 4. Refactor Pass (with read-ahead)
 
-Launch `/refactor` as a **background Agent** on the uncommitted changes. All implementation work is still uncommitted at this point, so `/refactor` sees the full task diff.
+Launch `/refactor` as a **background Agent** on the uncommitted changes. All implementation work is still uncommitted at this point, so `/refactor` sees the full task diff. `/refactor` spawns three parallel sub-skills: `refactor-code` (code quality), `refactor-docs` (documentation sync), and `refactor-tests` (test coverage).
 
 **While refactor runs**, start reading ahead to the next task: read its `**Context:**`, `**Files:**`, and `**Acceptance:**` fields, and read all files listed under `**Files:**`. This loads context so you're ready to implement as soon as the current task is fully committed. If this is the **last task** in the plan, skip the read-ahead and wait for refactor inline.
 
 **When refactor returns**, process the verdict:
 
-- **Ship it** — no changes needed, continue to docs
+- **Ship it** — no changes needed, continue
 - **Minor tweaks** or **Refactor recommended** — before applying, `git stash` the current working state as a safe point. Apply the suggested fixes, then re-run `/test`:
   - If tests pass: drop the stash (`git stash drop`), continue
   - If tests fail: restore the pre-refactor state (`git stash pop`), continue with the code that already passed. Note the failed refactor attempt in **Decisions & Review Items**.
@@ -139,29 +142,18 @@ Check off `- [x] Refactor`. Do not commit yet.
 
 If something looks wrong that isn't an intentional change, fix it and re-run `/test`. Note any intentional visual changes in **Decisions & Review Items**.
 
-### 5. Docs & Test Hygiene
+### 5. Design Decisions
 
-**For trivial tasks** (rename, small fix, config change): skim the checklist below. If nothing applies, check off and move on — don't force busywork.
+Documentation and test coverage are handled by `/refactor` (via its `refactor-docs` and `refactor-tests` sub-skills in Step 4). This step is for reflection only.
 
-**For substantial tasks**, review what should be documented or tested:
+Were any non-obvious choices made during implementation or refactoring? Things like:
 
-**Docs** — check if any of these need updating based on what changed:
+- Chose approach A over B — why?
+- Accepted a trade-off (performance vs simplicity, etc.)
+- Deviated from the plan's suggested approach
+- Noticed something that affects future tasks in the plan
 
-- `CLAUDE.md` — new patterns, structure, or conventions?
-- `.claude/docs/` or `.claude/rules/` — architecture docs affected?
-- Code comments — only where the logic isn't self-evident.
-
-Only update docs that are actually affected by the task.
-
-**Tests** — review existing tests in light of the new code:
-
-- Does the new functionality expose edge cases that existing tests don't cover?
-- Are existing tests still testing the right thing?
-- Could an existing test be strengthened?
-
-If changes are made here, re-run `/test` to confirm everything still passes.
-
-**Design decisions** — reflect on the task as a whole. Were any non-obvious choices made? Add them to the **Decisions & Review Items** section in the plan.
+If any, add them to the **Decisions & Review Items** section in the plan. Even small notes help — the user reads these to understand the "why" behind the code.
 
 Check off `- [x] Docs & tests`. Do not commit yet.
 
@@ -193,10 +185,16 @@ Always keep moving forward. The user reviews decisions after the full loop compl
 - **Merge sequentially.** When a parallel group completes, merge each agent's worktree one at a time. Run `/test` after all merges, not after each.
 - **Revert on failure.** If stuck after 3 attempts: `git stash` to save work and restore clean state.
 - **Small drive-bys are OK.** If you're in a file and notice something clearly wrong (dead import, stale comment), fix it. Don't go hunting.
-- **Test the right thing.** Tests should test observable behavior, not implementation internals.
+- **Test the right thing.** New tests should test the feature's observable behavior, not implementation internals. A test that breaks on a valid refactor is a bad test.
 - **Don't game the tests.** If a test fails, fix the code, not the test (unless the test itself is buggy).
 - **Refactor is bounded.** Max 3 refactor iterations per task.
 - **One commit per task.** All work for a task is committed together at the checkpoint.
+
+## Final Audit
+
+After all tasks are processed (before the report), run `/audit` on the full branch diff. This is a holistic architecture review across all committed tasks — it catches overengineering, boundary violations, and structural issues that only become visible when you see the changes together.
+
+Include the audit findings verbatim in the report under **Architecture Audit**.
 
 ## Decisions & Review Items
 
@@ -227,6 +225,7 @@ When all tasks are processed, report:
 - Perf trend: faster/same/slower than baseline
 - Parallel execution: N tasks parallelized across M groups, K merge conflicts resolved (if any parallel groups were used)
 - Number of decisions/review items logged — remind user to check the plan
+- **Architecture Audit** — full `/audit` findings across the branch diff (boundary violations, overengineering, alternative approaches)
 
 ---
 
@@ -237,5 +236,4 @@ When scaffolding this skill for a project, customize:
 - **Test creation** (Step 2): How to add new tests — file locations, test framework patterns, registration. Reference the project's test conventions.
 - **Commit prefix convention**: Default is `FEAT:`/`FIX:`/`REFACTOR:`. Adjust if the project uses a different format.
 - **Plan directory**: Default looks in project root `plans/`. Change if different.
-- **Doc files to check** (Step 5): List the project's specific doc files that might need updating.
 - **Parallel group build command**: The Parallel Group Dispatch uses `{BUILD_COMMAND}` for worktree agents. Ensure this matches the project's build command.

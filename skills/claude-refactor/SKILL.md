@@ -259,6 +259,6 @@ If `settings.template.json` was updated, list the changes for cross-machine sync
 
 Use `AskUserQuestion` to prompt:
 
-- **Push now** — run `/push-claude` to commit and sync changes
+- **Push now** — run `/claude-push` to commit and sync changes
 - **Review first** — stop here so you can review before pushing
 - **Done** — no push needed

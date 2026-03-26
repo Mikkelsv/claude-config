@@ -34,7 +34,9 @@ Returns JSON with `status`:
 
 Main's code is the foundation. Start from main's version, integrate the feature branch's intent on top.
 
-1. Read each conflicted file, understand both sides.
+**Generated file shortcut**: If a conflicted file is a build artifact (e.g., `wwwroot/app.tailwind.css` or any generated CSS output), do NOT read or manually resolve it. Instead: `git checkout --theirs <file>` (accept feature branch version — will be regenerated anyway), stage it, and move on. The build step in Phase 2 will regenerate the correct output.
+
+1. Read each conflicted file, understand both sides. (Skip reading for generated files — see above.)
 2. Resolve: favor main's structure, apply the feature's changes on top.
 3. Stage resolved files, `git rebase --continue`.
 4. If new conflicts appear on subsequent commits, repeat.
@@ -47,15 +49,16 @@ After all conflicts resolved → Continue to Phase 2.
 
 ## Phase 2: Merge Prompt
 
-Use `AskUserQuestion` with three options:
+Use `AskUserQuestion` with four options (no "Other" escape hatch needed — user can dismiss the prompt and type freely):
 
 - **Merge** → Go to Build & Merge.
 - **Build & test** → Go to Build & Test.
-- **Cancel** → Report "No merge performed." Done.
+- **Done** → Report "Rebase complete. Branch left as-is." Done.
+- **Revert** → `git reset --hard ORIG_HEAD`, report "Rebase reverted." Done.
 
 ### Build & Test
 
-Invoke the project's `/build` skill if one exists. If no `/build` skill is available, ask the user for the build command. Once running, loop back to the same three-option prompt (Merge / Build & test / Cancel).
+Invoke the project's `/build` skill if one exists. If no `/build` skill is available, ask the user for the build command. Once running, loop back to the same prompt (Merge / Build & test / Done / Revert).
 
 ### Build & Merge
 

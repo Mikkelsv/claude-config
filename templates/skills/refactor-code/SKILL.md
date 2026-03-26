@@ -1,9 +1,9 @@
 ---
-name: refactor
+name: refactor-code
 description: Review code changes for architecture, quality, and simplicity
 ---
 
-# Refactor Review
+# Code Review
 
 Review code changes for architecture, quality, and simplicity. This is a review-only command — no changes are made unless explicitly requested.
 
@@ -13,13 +13,13 @@ Check for uncommitted changes first:
 
 1. Run `git diff --stat` (unstaged) and `git diff --cached --stat` (staged).
 2. If there are uncommitted changes: use those as the scope. Get the full diff with `git diff` and `git diff --cached`.
-3. If no uncommitted changes: run the branch scope script to get the full branch diff vs main:
+3. If no uncommitted changes: fall back to branch diff. Run:
 
-   ```bash
-   powershell.exe -NoProfile -File "$HOME/.claude/scripts/git-branch-scope.ps1"
-   ```
+```bash
+powershell.exe -NoProfile -File "$HOME/.claude/scripts/git-branch-scope.ps1"
+```
 
-   Returns JSON: `{branch, base, hasMergeBase, isAhead, commitCount, commits[], files[]}`. Use `files` as the scope and `git diff main...HEAD` for the full diff.
+Then get the diff: `git diff {base}..HEAD`
 
 If neither produces changes, abort — nothing to review.
 
@@ -34,24 +34,20 @@ Group changes by concern:
 
 ## Step 3: Architecture Review
 
-Evaluate changes against the project's core principles from CLAUDE.md:
+Start with the big picture. Evaluate changes against the project's core principles (from CLAUDE.md):
 
-- Do changes respect the intended architecture boundaries and layering?
-- Is logic in the right layer/module?
-- Are there dependency direction violations?
-- Is domain logic leaking into layers that should be thin or infrastructure-only?
-- Could this be simpler? Fewer moving parts? Less indirection?
+{PROJECT_ARCHITECTURE_CHECKS}
 
-{If the project defines specific architecture rules in CLAUDE.md or .claude/rules/, check against those explicitly.}
+- **Could this be simpler?** Is there a more straightforward approach? Fewer moving parts? Less indirection?
 
 ## Step 4: Code Quality Review
 
-Evaluate the diff against project conventions (from CLAUDE.md):
+Evaluate the diff against project conventions:
 
-- **Naming**: Do types, functions, and variables follow the project's naming conventions?
+- **Naming**: Do types, functions, and variables follow project naming conventions?
 - **Abstractions**: Are there premature abstractions or missing ones? Is complexity justified?
 - **Duplication**: Is there copy-paste code that should be consolidated?
-- **Performance**: Are there obvious optimization opportunities? Unnecessary allocations in hot paths?
+- **Performance**: Are there obvious optimization opportunities? Unnecessary allocations in hot paths? Large buffers held longer than needed?
 - **Dead code**: Unused imports, functions, or commented-out code?
 - **Consistency**: Do new patterns match existing codebase patterns?
 
@@ -62,7 +58,7 @@ Look specifically for:
 - Code that does more than it needs to
 - Abstractions with only one consumer
 - Indirection that doesn't pay for itself
-- Idiomatic improvements for the project's language(s)
+- Language patterns that could be more idiomatic
 - Configuration or feature flags where a direct approach would work
 
 ## Step 6: Report
@@ -75,7 +71,7 @@ One paragraph: what the changes do, how many files/lines changed, overall assess
 
 ### Architecture
 
-Any concerns about boundaries, layering, or structural decisions. Skip if nothing to flag.
+Any concerns about structural boundaries, layering, or design decisions. Skip if nothing to flag.
 
 ### Quality Issues
 
@@ -108,22 +104,8 @@ If the verdict is not "Ship it", use `AskUserQuestion` to ask if the user wants 
 
 ## Customization Guide
 
-When scaffolding this skill for a project, replace the `{...}` section in Step 3 with the project's specific architecture rules. These typically come from CLAUDE.md but can be made explicit for faster review. Example:
+When scaffolding this skill for a project, replace `{PROJECT_ARCHITECTURE_CHECKS}` in Step 3 with the project's specific architecture review points. Derive these from CLAUDE.md's core principles. Examples:
 
-```
-- **F# ownership**: Domain logic must stay in F#, JS is thin infrastructure
-- **Dependency direction**: DomainModel → App → View3D → Client (never reverse)
-- **Minimal C#**: Blazor layer stays thin, never imports domain types
-```
-
-Step 4 conventions also come from CLAUDE.md. If the project has detailed coding standards, reference them explicitly.
-
-### Sub-Skill Orchestration (Optional)
-
-For larger projects, split `/refactor` into an orchestrator that spawns sub-skills as parallel background agents:
-
-- **refactor-code** — the core code review (this template's Steps 2–6)
-- **refactor-docs** — reviews and updates `CLAUDE.md` and `.claude/docs/` to match the code changes
-- **refactor-tests** — checks test coverage against the changes, flags gaps
-
-Each sub-skill lives in its own `.claude/skills/<name>/SKILL.md` and is independently runnable. The orchestrator reads all three and spawns them via the Agent tool, then presents a unified report.
+- Language ownership checks
+- Layer dependency direction
+- Technology boundary enforcement

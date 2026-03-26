@@ -1,4 +1,4 @@
-# Setup Project Skills
+# Claude Setup — Project Skills
 
 Scaffold project-level skills from global templates. Creates `.claude/skills/` directories with customized skill files for this project.
 
@@ -12,9 +12,13 @@ Templates directory: `~/.claude/templates/skills/`
 |---|---|---|
 | **build** | Build & serve with auto-build after code changes | None |
 | **test** | Browser-based smoke tests with optional perf tracking | build, preview tools |
-| **refactor** | Code quality & architecture review | None (uses CLAUDE.md) |
+| **refactor** | Orchestrator: spawns refactor-code, refactor-docs, refactor-tests in parallel | refactor-code, refactor-docs, refactor-tests |
+| **refactor-code** | Code quality & architecture review | None (uses CLAUDE.md) |
+| **refactor-docs** | Review and update documentation to match code changes | None |
+| **refactor-tests** | Review test coverage against code changes | test framework files |
+| **audit** | Deep architecture review (overengineering, boundaries, alternatives) | None (uses CLAUDE.md) |
 | **plan** | Collaborative feature discovery and structured plan creation | implement (for plan format) |
-| **implement** | Autonomous dev loop (plan → implement → test → refactor) | build, test, refactor |
+| **implement** | Autonomous dev loop (plan → implement → test → refactor → audit) | build, test, refactor, audit |
 
 ## Process
 
@@ -29,11 +33,12 @@ If `$ARGUMENTS` specifies skills, use those. If "all", scaffold everything. If e
 Use `AskUserQuestion` with multiSelect:
 - build (Recommended)
 - test
-- refactor
+- refactor (includes refactor-code, refactor-docs, refactor-tests)
+- audit
 - plan (requires implement for plan format)
-- implement (requires build + test + refactor)
+- implement (requires build + test + refactor + audit)
 
-If implement is selected, ensure build, test, and refactor are also selected (they're prerequisites). If plan is selected, ensure implement is also selected.
+If implement is selected, ensure build, test, refactor, and audit are also selected (they're prerequisites). If refactor is selected, ensure refactor-code, refactor-docs, and refactor-tests are also created. If plan is selected, ensure implement is also selected.
 
 ### Step 3 — Gather Project Info
 
@@ -55,9 +60,18 @@ Then ask the user for skill-specific info using `AskUserQuestion`:
 - If yes: perf baseline path (where to store the JSON baseline, should be gitignored)
 - Any testing conventions or patterns (file for new tests, registration, cleanup)
 
-**For refactor:**
+**For refactor / refactor-code:**
 - Architecture principles — can often be derived from CLAUDE.md. Ask only if CLAUDE.md is missing or sparse.
 - Specific quality goals or review criteria beyond CLAUDE.md
+- The refactor template is the orchestrator; refactor-code, refactor-docs, and refactor-tests are the sub-skills it spawns
+
+**For refactor-tests:**
+- Test framework files to read (patterns, conventions, existing test implementations)
+- Existing test mapping (which tests cover which features)
+
+**For audit:**
+- Architecture boundary rules — derive from CLAUDE.md's core principles
+- Specific layering or dependency direction rules
 
 **For plan:**
 - Feature board file — does the project use a feature tracker? If yes, path (e.g., `plans/FEATURES.md`)

@@ -32,7 +32,7 @@ The only exception is `settings.json` hook commands, which need real paths — t
 Project-level skills (in `<project>/.claude/skills/`) are scaffolded from global templates (in `~/.claude/templates/skills/`). When improving a project-level skill:
 
 1. **Propagate improvements back to the global template** — if the change is generic (not project-specific), apply the same edit to `~/.claude/templates/skills/<name>/`.
-2. **Update `/setup-project`** — if a new skill is added that should be available for all projects, add a template and register it in `~/.claude/commands/setup-project.md`.
+2. **Update `/claude-setup`** — if a new skill is added that should be available for all projects, add a template and register it in `~/.claude/commands/claude-setup.md`.
 3. **Project-specific customizations stay local** — changes tied to a specific project's build system, test framework, or architecture stay in the project skill only.
 
 When in doubt, check the global template before finishing. The global template is the source of truth for new projects.
