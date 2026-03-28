@@ -7,35 +7,45 @@ description: Deep architecture review — catches overengineering, boundary viol
 
 Step back from the code and evaluate the structural decisions. This is not a line-by-line code review — it's a critical look at whether the right things exist in the right places, and whether the approach itself is sound.
 
-## Step 1: Identify the Scope
+## Step 1: Determine Scope
 
-Check for uncommitted changes first:
+Check the arguments and conversation context to decide the review mode.
 
-1. Run `git diff --stat` (unstaged) and `git diff --cached --stat` (staged).
-2. If there are uncommitted changes: use those as the scope. Get the full diff with `git diff` and `git diff --cached`.
-3. If no uncommitted changes: fall back to branch diff. Run:
+**Mode A — Changes** (no arguments provided):
+
+Run the scope script:
 
 ```bash
-powershell.exe -NoProfile -File "$HOME/.claude/scripts/git-branch-scope.ps1"
+powershell.exe -NoProfile -File "$HOME/.claude/scripts/git-diff-scope.ps1"
 ```
 
-Then get the diff: `git diff {base}..HEAD`
+If `MODE: none`, abort — nothing to audit.
 
-If neither produces changes, abort — nothing to audit.
+**Mode B — Focused** (arguments are a path, module name, or description of an area):
+
+The arguments describe where to focus. Use Glob to find the relevant files and Grep to locate related references. Read those files in full. Do not run git-diff-scope — the user is pointing you at specific code regardless of what changed.
+
+**Mode C — General** (argument is `all`):
+
+Scan the full solution structure from CLAUDE.md. For each project/folder, use Glob to count files and identify large modules. Use your judgment to pick the 2–3 areas that would benefit most from architectural review (biggest folders, most complex modules, areas with the most coupling). Read those areas in full.
+
+**Conversation context**: In all modes, also consider what the user was working on or discussing in this conversation. If the conversation provides relevant context — recent edits, questions about a module, a bug being debugged — factor that into your scope even if it's not in the git diff or the explicit arguments.
 
 ## Step 2: Build the Full Picture
 
-Read all changed files **in full**. Then read their consumers and dependencies — the files that import them, the modules that call into them. You need the full context of where this code sits in the system.
+Read all in-scope files **in full**. Then read their consumers and dependencies — the files that import them, the modules that call into them. You need the full context of where this code sits in the system.
 
 Also read:
 
 - `CLAUDE.md` — core principles, solution structure, layering rules
-- Any `.claude/rules/` files relevant to the changed areas
-- Any `.claude/docs/` files that describe the architecture of the changed modules
+- Any `.claude/rules/` files relevant to the in-scope areas
+- Any `Claude/docs/` files that describe the architecture of the in-scope modules
 
-## Step 3: Architecture Boundaries
+## Step 3: Parallel Analysis
 
-Evaluate whether the changes respect the project's structural boundaries. Refer to CLAUDE.md for the project's core principles and layering rules. Common concerns:
+Launch **4 background agents** in a single message. Each agent receives a summary of the scope (list of in-scope files, the mode, and any conversation context) and performs its own file reading and analysis independently.
+
+**Agent A — Architecture Boundaries**: Evaluate whether the code respects the project's structural boundaries. Refer to CLAUDE.md for the project's core principles and layering rules. Check:
 
 - **Module responsibilities**: Is each module doing one thing? Is responsibility bleeding across boundaries?
 - **Dependency direction**: Do changes respect the project's layering? Any reverse dependencies or circular references?
@@ -44,9 +54,9 @@ Evaluate whether the changes respect the project's structural boundaries. Refer 
 
 {PROJECT_SPECIFIC_BOUNDARIES}
 
-## Step 4: Overengineering Check
+Report: list of boundary violations with file, line range, what, why, and fix.
 
-Look hard for unnecessary complexity:
+**Agent B — Overengineering Check**: Look hard for unnecessary complexity:
 
 - **Premature abstractions**: Interfaces, base classes, or generic helpers with only one consumer. If there's only one implementation, the abstraction is overhead.
 - **Unnecessary indirection**: Wrappers that just delegate, factories that create one thing, dispatchers with one case. Every layer of indirection must pay for itself.
@@ -56,9 +66,20 @@ Look hard for unnecessary complexity:
 
 Ask for each abstraction: **if I deleted this and inlined the logic, what would break?** If the answer is "nothing, it would just be more direct" — it's overengineered.
 
-## Step 5: Alternative Approaches
+Report: list of overengineering instances with file, line range, what, cost, and simpler alternative.
 
-For each significant piece of new functionality, ask:
+**Agent C — File Organization**: Evaluate whether files landed in the right place and whether the folder structure is clean:
+
+- **Folder size**: Folders should have **6 files or fewer**. If a file lands in a folder with 7+, flag it — the folder likely needs splitting by concern.
+- **File placement**: Does each new/moved file sit in the module it belongs to? Check against the solution structure in CLAUDE.md. A file in the wrong project or folder creates invisible coupling.
+- **Folder depth**: Deep nesting (4+ levels below the project root) usually means over-categorization. Prefer flat structures with clear names over deep hierarchies.
+- **Naming consistency**: Do new files follow the naming conventions of their neighbors? Inconsistent names make the folder harder to scan.
+
+For each folder in scope, count the files. Report any that exceed 6 and suggest how to split them.
+
+Report: list of folder issues (path, file count, suggested split) and misplaced files.
+
+**Agent D — Alternative Approaches**: For each significant piece of functionality in scope, ask:
 
 - **Could this be done with less code?** Not fewer lines for vanity — genuinely fewer moving parts, fewer types, fewer files.
 - **Is there a more idiomatic way?** Does the language/framework have patterns that could replace elaborate structures?
@@ -66,7 +87,11 @@ For each significant piece of new functionality, ask:
 - **Is the data model right?** Sometimes complexity comes from fighting the wrong data shape. A different representation might make the logic trivial.
 - **What would the lazy approach look like?** The simplest thing that could possibly work — would it actually be worse, or just less "elegant"?
 
-## Step 6: Report
+Report: list of alternatives with current approach, alternative, trade-off, and effort.
+
+**When all 4 agents return**, merge their findings into the report.
+
+## Step 4: Report
 
 ### Summary
 
@@ -91,6 +116,15 @@ Each instance of unnecessary complexity:
 - **What**: the unnecessary abstraction/indirection
 - **Cost**: what complexity it adds (extra types, files, indirection levels)
 - **Simpler alternative**: what to do instead
+
+### File Organization
+
+Folders touched by the changes that exceed 6 files, or files that appear misplaced:
+
+- **Folder**: path — N files — suggested split or reorganization
+- **Misplaced file**: path — belongs in X because Y
+
+Skip if all folders are clean.
 
 ### Alternative Approaches
 
@@ -118,8 +152,7 @@ If the verdict is not "Sound", use `AskUserQuestion` to ask if the user wants yo
 
 ## Customization Guide
 
-When scaffolding this skill for a project, replace `{PROJECT_SPECIFIC_BOUNDARIES}` in Step 3 with the project's specific boundary rules. Derive these from CLAUDE.md's core principles. Examples:
+When scaffolding this skill for a project:
 
-- Language ownership (e.g., "F# owns domain logic, JS is infrastructure only")
-- Layer dependencies (e.g., "DomainModel -> App -> View3D -> Client")
-- Technology boundaries (e.g., "Blazor layer stays thin, no domain imports")
+- Replace `{PROJECT_SPECIFIC_BOUNDARIES}` in Step 3 Agent A with the project's specific boundary rules. Derive these from CLAUDE.md's core principles. Examples: language ownership, layer dependencies, technology boundaries.
+- The `.claude/skills/audit/SKILL.md` shell **must include `$ARGUMENTS`** so standalone invocations (e.g., `/audit View3D/`) pass the focus area through to Mode B.

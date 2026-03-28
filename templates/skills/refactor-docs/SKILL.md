@@ -9,26 +9,30 @@ Check whether project documentation is still accurate given the current code cha
 
 ## Step 1: Identify the Scope
 
-Check for uncommitted changes first:
+If the orchestrator already provided a scope (diff output or scope summary), skip to Step 2.
 
-1. Run `git diff --stat` (unstaged) and `git diff --cached --stat` (staged).
-2. If there are uncommitted changes: use those as the scope. Get the full diff with `git diff` and `git diff --cached`.
-3. If no uncommitted changes: fall back to branch diff. Run:
+Otherwise, determine the mode from arguments and conversation context:
+
+**Mode A — Changes** (no arguments): Run the scope script:
 
 ```bash
-powershell.exe -NoProfile -File "$HOME/.claude/scripts/git-branch-scope.ps1"
+powershell.exe -NoProfile -File "$HOME/.claude/scripts/git-diff-scope.ps1"
 ```
 
-Then get the diff: `git diff {base}..HEAD`
+If `MODE: none`, abort — nothing to review.
 
-If neither produces changes, abort — nothing to review.
+**Mode B — Focused** (arguments describe a path or area): Use Glob to find the relevant files. Cross-reference those files against documentation.
+
+**Mode C — General** (argument is `all`): Read all documentation, then cross-reference against the full codebase for staleness.
+
+**Conversation context**: In all modes, factor in what the user was working on in this conversation.
 
 ## Step 2: Read All Documentation
 
 Read these files in full:
 
 - `CLAUDE.md` — project overview, structure, conventions, build instructions
-- Every file in `.claude/docs/` — architecture docs, API references, pipeline docs
+- Every file in `Claude/docs/` — architecture docs, API references, pipeline docs
 - Every file in `.claude/rules/` — coding rules, patterns, conventions
 
 ## Step 3: Cross-Reference Changes Against Docs
@@ -36,7 +40,7 @@ Read these files in full:
 For each changed file, check whether the changes affect anything documented:
 
 - **CLAUDE.md**: Solution structure, project descriptions, build commands, common issues, conventions
-- **Architecture docs** (`.claude/docs/`): Module responsibilities, data flow, API surfaces, type definitions
+- **Architecture docs** (`Claude/docs/`): Module responsibilities, data flow, API surfaces, type definitions
 - **Rules** (`.claude/rules/`): Coding patterns, naming conventions, pipeline invariants
 
 Specific things to look for:
@@ -70,3 +74,11 @@ Summarize what you updated (or that everything was already in sync):
 - Which files were updated and why
 - Any documentation gaps that need attention but weren't auto-fixable
 - Anything you left alone that's borderline stale
+
+---
+
+## Customization Guide
+
+When scaffolding this skill for a project:
+
+- The `.claude/skills/refactor-docs/SKILL.md` shell **must include `$ARGUMENTS`** so standalone invocations (e.g., `/refactor-docs View3D/`) pass the focus area through to Mode B.

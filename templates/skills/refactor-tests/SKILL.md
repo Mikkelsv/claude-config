@@ -17,19 +17,23 @@ Read the project's test patterns and conventions before doing anything:
 
 ## Step 2: Identify the Scope
 
-Check for uncommitted changes first:
+If the orchestrator already provided a scope (diff output or scope summary), skip to Step 3.
 
-1. Run `git diff --stat` (unstaged) and `git diff --cached --stat` (staged).
-2. If there are uncommitted changes: use those as the scope. Get the full diff with `git diff` and `git diff --cached`.
-3. If no uncommitted changes: fall back to branch diff. Run:
+Otherwise, determine the mode from arguments and conversation context:
+
+**Mode A — Changes** (no arguments): Run the scope script:
 
 ```bash
-powershell.exe -NoProfile -File "$HOME/.claude/scripts/git-branch-scope.ps1"
+powershell.exe -NoProfile -File "$HOME/.claude/scripts/git-diff-scope.ps1"
 ```
 
-Then get the diff: `git diff {base}..HEAD`
+If `MODE: none`, abort — nothing to review.
 
-If neither produces changes, abort — nothing to review.
+**Mode B — Focused** (arguments describe a path or area): Use Glob to find the relevant files. Map those files to testable behavior.
+
+**Mode C — General** (argument is `all`): Review the full test suite against the full codebase. Look for coverage gaps in any area, not just recent changes.
+
+**Conversation context**: In all modes, factor in what the user was working on in this conversation.
 
 ## Step 3: Map Changes to Testable Behavior
 
@@ -84,7 +88,8 @@ If the verdict is "Minor gaps" and the additions are trivial (adding a check to 
 
 ## Customization Guide
 
-When scaffolding this skill for a project, replace:
+When scaffolding this skill for a project:
 
-- `{TEST_FRAMEWORK_FILES}` — list of files to read for test patterns, conventions, and existing tests
-- `{EXISTING_TEST_MAPPING}` — list of existing tests and what they cover, so the review can cross-reference
+- Replace `{TEST_FRAMEWORK_FILES}` — list of files to read for test patterns, conventions, and existing tests
+- Replace `{EXISTING_TEST_MAPPING}` — list of existing tests and what they cover, so the review can cross-reference
+- The `.claude/skills/refactor-tests/SKILL.md` shell **must include `$ARGUMENTS`** so standalone invocations (e.g., `/refactor-tests View3D/`) pass the focus area through to Mode B.

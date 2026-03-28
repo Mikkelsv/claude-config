@@ -168,9 +168,9 @@ Phase 3.
 
 ## Phase 3 — Fix
 
-This phase will touch many files in `~/.claude/`. Per the auto-mode-for-config
-rule: use `AskUserQuestion` to ask the user if they want to temporarily switch
-to auto mode. If they agree, update `~/.claude/settings.json` to set
+This phase will touch many files in `~/.claude/`. Use `AskUserQuestion` to ask
+the user if they want to temporarily switch to auto mode to skip permission
+prompts. If they agree, update `~/.claude/settings.json` to set
 `"defaultMode": "auto"`.
 
 ### 3.1 Auto-fixes (apply directly)

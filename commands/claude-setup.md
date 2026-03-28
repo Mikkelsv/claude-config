@@ -1,6 +1,6 @@
 # Claude Setup — Project Skills
 
-Scaffold project-level skills from global templates. Creates `.claude/skills/` directories with customized skill files for this project.
+Scaffold project-level skills from global templates. Creates thin shells in `.claude/skills/` and full implementations in `Claude/skills/` for frictionless editing.
 
 Input: `$ARGUMENTS` (optional — skill names to scaffold, e.g., "build test", or "all")
 
@@ -89,10 +89,11 @@ For each selected skill:
 
 1. Read the template from `~/.claude/templates/skills/{name}/`
 2. Generate a customized version with the user's project info filled in — replace all `{PLACEHOLDER}` markers with actual values
-3. Write to `.claude/skills/{name}/` in the current project
-4. Copy any supporting files (e.g., `browser-throttling.md`, `plan-template.md`)
+3. Write the **full implementation** to `Claude/skills/{name}/SKILL.md` (outside the protected `.claude/` folder)
+4. Write a **thin shell** to `.claude/skills/{name}/SKILL.md` containing only the frontmatter (name, description) and a redirect: `Read and follow Claude/skills/{name}/SKILL.md.` Include `$ARGUMENTS` in the shell for skills that accept user arguments (build, test, plan, implement, db-restore).
+5. Copy any supporting files to `Claude/skills/{name}/` (e.g., `browser-throttling.md`, `plan-template.md`)
 
-**For build specifically:** Also generate self-contained scripts in `.claude/skills/build/scripts/`:
+**For build specifically:** Also generate scripts in `Claude/skills/build/scripts/`:
 - `kill-port.ps1` (or `.sh`) — kill process on the configured port
 - `launch-dev-server.ps1` (or `.sh`) — start dev server in a new terminal tab
 
@@ -100,7 +101,9 @@ Detect the user's platform from the environment and generate appropriate scripts
 - Windows: PowerShell scripts using Windows Terminal
 - macOS/Linux: Bash scripts
 
-**For test specifically:** Also generate `.claude/skills/test/scripts/smoke-test.js` with the user's test execution script.
+**For test specifically:** Also generate `Claude/skills/test/scripts/smoke-test.js` with the user's test execution script.
+
+**Important:** In the full implementations written to `Claude/skills/`, replace any `${CLAUDE_SKILL_DIR}` references with `Claude/skills/{name}/` since `${CLAUDE_SKILL_DIR}` only expands in `.claude/skills/` shell files.
 
 ### Step 5 — Create launch.json (if needed)
 
@@ -123,6 +126,9 @@ If the user selected test and configured a preview server, check if `.claude/lau
 ### Step 6 — Report
 
 List all created files and remind the user:
+- Thin shells in `.claude/skills/` (rarely need editing)
+- Full implementations in `Claude/skills/` (edit these freely — no permission prompts)
+- Architecture docs go in `Claude/docs/` (not `.claude/docs/`)
 - Review the generated skills and adjust if needed
 - Add the baseline path to `.gitignore` if using test with performance tracking
 - CLAUDE.md should document the project's architecture for `/refactor` to reference

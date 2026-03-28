@@ -8,17 +8,11 @@ Personal Claude Code configuration with slash commands, skills, and PowerShell a
 
 #### `/claude-setup [skills]`
 
-Scaffold project-level skills from global templates. Interactively asks about your project (build system, test approach, architecture) and generates customized `.claude/skills/` directories. Available skills: build, test, refactor, plan, implement.
+Scaffold project-level skills from global templates. Creates thin shells in `.claude/skills/` (for skill discovery) and full implementations in `Claude/skills/` (for frictionless editing). Also creates `Claude/docs/` for architecture documentation. Available skills: build, test, refactor, plan, implement.
 
 - `/claude-setup` — asks which skills to scaffold
 - `/claude-setup all` — scaffolds everything
 - `/claude-setup build test` — scaffolds specific skills
-
-#### `/code`
-
-Opens a fresh VS Code window and Claude Code terminal at the current directory, both with a random color theme from a palette of 8 dark colors. Useful for spinning up a new colored workspace quickly.
-
-- `/code` — picks a random color, opens VS Code + Claude terminal, exits the current session
 
 #### `/rebase-on-main`
 
@@ -82,9 +76,9 @@ Build and serve the application. Optionally execute a coding task first, then au
 
 Build, start the dev server, and run browser-based smoke tests with performance tracking. Manages a perf baseline and reports verdicts (ALL GOOD / REGRESSION / etc.).
 
-#### `/refactor`
+#### `/refactor [focus]`
 
-Code quality and architecture review for uncommitted changes or the current branch. Evaluates against CLAUDE.md principles and produces a verdict (Ship it / Minor tweaks / Refactor recommended / Rethink).
+Code quality and architecture review. Three modes: no args reviews uncommitted changes or branch diff, a path/area focuses on that part of the codebase, `all` does a general sweep. Spawns parallel sub-agents (refactor-code, refactor-docs, refactor-tests) and produces a unified verdict.
 
 #### `/plan [feature idea]`
 
@@ -120,7 +114,6 @@ This section documents the architecture in detail so that another user (or Claud
   settings.json                          # Permissions, hooks, defaultMode (gitignored, machine-specific)
   commands/                              # Slash commands (Claude orchestration)
     allow.md
-    code.md
     handoff.md
     pickup.md
     claude-pull.md
@@ -172,6 +165,7 @@ This section documents the architecture in detail so that another user (or Claud
     pull-config.ps1                      # Pull latest config from remote
     sync-config.ps1                      # Stage, commit, push all config changes
     git-branch-scope.ps1
+    git-diff-scope.ps1                   # Full diff scope for refactor skills (stat + diff)
     git-preflight.ps1
     remove-path.ps1                    # Safe file/directory removal with JSON output
     move-path.ps1                      # Safe file/directory move with JSON output
@@ -181,7 +175,7 @@ This section documents the architecture in detail so that another user (or Claud
     user-config.md                       # Config conventions, prefer scripts, keep README updated
     todo-surfacing.md                    # Surface /todo items at natural moments
     worktree-cleanup.md                  # Auto-remove worktrees after merge
-    auto-mode-for-config.md              # Offer auto mode for bulk .claude/ edits
+    claude-folder.md                       # Use Claude/ instead of .claude/ for editable content
     no-commit.md                         # Never commit (user manages commits)
     no-pipes.md                          # Avoid chained shell commands
     plans-location.md                    # Plan files go in project root plans/
@@ -192,17 +186,17 @@ This section documents the architecture in detail so that another user (or Claud
 ### Design Pattern: Global vs Project-Level
 
 **Global** (in `~/.claude/`) — truly generic utilities that work in any project:
-- Commands: `/allow`, `/claude-pull`, `/claude-push`, `/claude-setup`, `/code`, `/handoff`, `/pickup`, `/todo`
+- Commands: `/allow`, `/claude-pull`, `/claude-push`, `/claude-setup`, `/handoff`, `/pickup`, `/todo`
 - Skills: `/rebase-on-main` (generic git workflow, delegates to project's `/build`), `/claude-refactor` (config audit with parallel review agents)
 
 **Project-level** (in `<project>/.claude/skills/`) — context-dependent, scaffolded by `/claude-setup`:
 - `/build` — build command, server config, port
 - `/test` — test execution, baselines, patterns (supports background mode)
-- `/refactor` — orchestrator spawning refactor-code, refactor-docs, refactor-tests
-- `/refactor-code` — code quality & architecture review
-- `/refactor-docs` — documentation sync
-- `/refactor-tests` — test coverage review
-- `/audit` — deep architecture review (overengineering, boundaries, alternatives)
+- `/refactor` — orchestrator spawning refactor-code, refactor-docs, refactor-tests (3 modes: changes/focused/general)
+- `/refactor-code` — code quality & architecture review (3 modes: changes/focused/general)
+- `/refactor-docs` — documentation sync (3 modes: changes/focused/general)
+- `/refactor-tests` — test coverage review (3 modes: changes/focused/general)
+- `/audit` — deep architecture review with 4 parallel agents (boundaries, overengineering, file organization, alternatives)
 - `/plan` — feature discovery, scope splitting, plan creation
 - `/implement` — autonomous loop using project's build/test/refactor/audit
 
@@ -240,8 +234,8 @@ This separation means:
 
 | Script | Params | Output | Used by |
 |--------|--------|--------|---------|
-| `launch-vscode.ps1` | `-Path`, `-Color` | (none, run in background) | `/code` |
-| `launch-claude-tab.ps1` | `-Path`, `-Color` | (none) | `/code` |
+| `launch-vscode.ps1` | `-Path`, `-Color` | (none, run in background) | (manual use) |
+| `launch-claude-tab.ps1` | `-Path`, `-Color` | (none) | (manual use) |
 | `launch-worktree.ps1` | `-WorktreePath`, `-TabColor` | (inner launcher, no output) | `launch-claude-tab.ps1` |
 | `launch-dev-server.ps1` | `-Project`, `-Port` | `{launched, url}` | (template reference for project skills) |
 | `kill-port.ps1` | `-Port` | `{killed, pids}` or `{killed: false, reason}` | (template reference for project skills) |
@@ -252,7 +246,8 @@ This separation means:
 |--------|--------|--------|---------|
 | `escape-worktree.ps1` | (none) | `{isWorktree, mainRepoRoot, branch}` | (available for manual use) |
 | `git-preflight.ps1` | (none) | `{branch, isMain, hasChanges, staged, unstaged, untracked}` | (shared utility) |
-| `git-branch-scope.ps1` | `-BaseBranch` (default: main) | `{branch, base, hasMergeBase, isAhead, commitCount, commits[], files[]}` | `/refactor` (template + project) |
+| `git-branch-scope.ps1` | `-BaseBranch` (default: main) | `{branch, base, hasMergeBase, isAhead, commitCount, commits[], files[]}` | (legacy, replaced by `git-diff-scope.ps1` in templates) |
+| `git-diff-scope.ps1` | `-RepoPath`, `-BaseBranch` (default: main), `-StatOnly` | Text: `MODE: uncommitted/branch/none` + stat + diff sections | `/refactor`, `/audit` (templates + project) |
 
 
 #### Rebase (skill-local: `skills/rebase-on-main/scripts/`)
@@ -367,7 +362,7 @@ Rules in `~/.claude/rules/` are always loaded into every Claude session:
 
 - **user-config.md** — Check for existing user-level config before creating project-local duplicates. Prefer PowerShell scripts over inline shell commands. Keep this README up to date.
 - **worktree-cleanup.md** — After any merge into main, auto-detect and remove associated worktrees.
-- **auto-mode-for-config.md** — When a task involves multiple `.claude/` edits, offer to temporarily switch to auto mode to skip permission prompts, then switch back when done.
+- **claude-folder.md** — Use `Claude/` over `.claude/` for editable project content. Skills, docs, and scripts that get edited frequently live in `Claude/` at the project root to avoid permission prompts.
 - **todo-surfacing.md** — Surface unchecked `/todo` items at natural conversation moments without nagging.
 - **no-commit.md** — Never commit (user manages commits). Exception: commits inside `~/.claude/`.
 - **no-pipes.md** — Avoid chaining shell commands; use dedicated tools or separate Bash calls.

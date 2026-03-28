@@ -9,28 +9,32 @@ Review code changes for architecture, quality, and simplicity. This is a review-
 
 ## Step 1: Identify the Scope
 
-Check for uncommitted changes first:
+If the orchestrator already provided a scope (diff output or scope summary), skip to Step 2.
 
-1. Run `git diff --stat` (unstaged) and `git diff --cached --stat` (staged).
-2. If there are uncommitted changes: use those as the scope. Get the full diff with `git diff` and `git diff --cached`.
-3. If no uncommitted changes: fall back to branch diff. Run:
+Otherwise, determine the mode from arguments and conversation context:
+
+**Mode A — Changes** (no arguments): Run the scope script:
 
 ```bash
-powershell.exe -NoProfile -File "$HOME/.claude/scripts/git-branch-scope.ps1"
+powershell.exe -NoProfile -File "$HOME/.claude/scripts/git-diff-scope.ps1"
 ```
 
-Then get the diff: `git diff {base}..HEAD`
+If `MODE: none`, abort — nothing to review.
 
-If neither produces changes, abort — nothing to review.
+**Mode B — Focused** (arguments describe a path or area): Use Glob and Grep to find the relevant files. The arguments are the scope.
 
-## Step 2: Understand the Changes
+**Mode C — General** (argument is `all`): Scan the solution structure from CLAUDE.md. Pick the 2–3 areas most likely to have quality issues (largest modules, most coupling). Those are the scope.
 
-Read all modified/added files **in full** (not just diff hunks) to understand surrounding context. Also read any files that import or depend on the changed files.
+**Conversation context**: In all modes, factor in what the user was working on in this conversation.
 
-Group changes by concern:
+## Step 2: Understand the Code
 
-- What feature, fix, or refactor do these changes implement?
-- Which files were touched and why?
+Read all in-scope files **in full** (not just diff hunks) to understand surrounding context. Also read any files that import or depend on the in-scope files.
+
+Group by concern:
+
+- What feature, fix, or refactor do these files implement?
+- Which files are in scope and why?
 
 ## Step 3: Architecture Review
 
@@ -104,8 +108,7 @@ If the verdict is not "Ship it", use `AskUserQuestion` to ask if the user wants 
 
 ## Customization Guide
 
-When scaffolding this skill for a project, replace `{PROJECT_ARCHITECTURE_CHECKS}` in Step 3 with the project's specific architecture review points. Derive these from CLAUDE.md's core principles. Examples:
+When scaffolding this skill for a project:
 
-- Language ownership checks
-- Layer dependency direction
-- Technology boundary enforcement
+- Replace `{PROJECT_ARCHITECTURE_CHECKS}` in Step 3 with the project's specific architecture review points. Derive these from CLAUDE.md's core principles. Examples: language ownership checks, layer dependency direction, technology boundary enforcement.
+- The `.claude/skills/refactor-code/SKILL.md` shell **must include `$ARGUMENTS`** so standalone invocations (e.g., `/refactor-code View3D/`) pass the focus area through to Mode B.

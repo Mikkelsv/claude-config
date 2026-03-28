@@ -3,127 +3,66 @@ name: refactor
 description: Review code changes for architecture, quality, and simplicity
 ---
 
-# Refactor Review
+# Refactor Review (Orchestrator)
 
-Review code changes for architecture, quality, and simplicity. This is a review-only command — no changes are made unless explicitly requested.
+Runs three review passes in parallel: code review, documentation sync, and test coverage.
 
-## Step 1: Identify the Scope
+## Execution
 
-Check for uncommitted changes first:
+1. Determine the review mode from arguments and conversation context:
 
-1. Run `git diff --stat` (unstaged) and `git diff --cached --stat` (staged).
-2. If there are uncommitted changes: use those as the scope. Get the full diff with `git diff` and `git diff --cached`.
-3. If no uncommitted changes: run the branch scope script to get the full branch diff vs main:
+   **Mode A — Changes** (no arguments provided):
+
+   Run the scope script:
 
    ```bash
-   powershell.exe -NoProfile -File "$HOME/.claude/scripts/git-branch-scope.ps1"
+   powershell.exe -NoProfile -File "$HOME/.claude/scripts/git-diff-scope.ps1"
    ```
 
-   Returns JSON: `{branch, base, hasMergeBase, isAhead, commitCount, commits[], files[]}`. Use `files` as the scope and `git diff main...HEAD` for the full diff.
+   If `MODE: none`, abort — nothing to review.
 
-If neither produces changes, abort — nothing to review.
+   **Mode B — Focused** (arguments are a path, module name, or description of an area):
 
-## Step 2: Understand the Changes
+   The arguments describe where to focus. Use Glob to find the relevant files. Build a scope summary listing the target files and why they were selected.
 
-Read all modified/added files **in full** (not just diff hunks) to understand surrounding context. Also read any files that import or depend on the changed files.
+   **Mode C — General** (argument is `all`):
 
-Group changes by concern:
+   Scan the solution structure from CLAUDE.md. Use Glob to count files per folder and identify the largest/most complex areas. Pick the 2–3 areas that would benefit most from review. Build a scope summary listing the target files and areas.
 
-- What feature, fix, or refactor do these changes implement?
-- Which files were touched and why?
+   **Conversation context**: In all modes, also consider what the user was working on in this conversation. If recent edits or discussion provide relevant context, factor that into the scope.
 
-## Step 3: Architecture Review
+2. Read all three sub-skill files:
+   - `Claude/skills/refactor-code/SKILL.md`
+   - `Claude/skills/refactor-docs/SKILL.md`
+   - `Claude/skills/refactor-tests/SKILL.md`
 
-Evaluate changes against the project's core principles from CLAUDE.md:
+3. Spawn all three as **parallel background agents** using the Agent tool. Pass each skill's full contents as the agent prompt, **prepending the scope output** (for changes mode) or a **scope summary** (for focused/general mode) so they skip their scope identification step and start directly from the analysis step.
 
-- Do changes respect the intended architecture boundaries and layering?
-- Is logic in the right layer/module?
-- Are there dependency direction violations?
-- Is domain logic leaking into layers that should be thin or infrastructure-only?
-- Could this be simpler? Fewer moving parts? Less indirection?
+4. Wait for all three to complete.
 
-{If the project defines specific architecture rules in CLAUDE.md or .claude/rules/, check against those explicitly.}
+5. Present a unified report combining the results:
 
-## Step 4: Code Quality Review
+### Code Review
 
-Evaluate the diff against project conventions (from CLAUDE.md):
+Relay the refactor-code agent's findings: summary, architecture concerns, quality issues, simplifications, and verdict.
 
-- **Naming**: Do types, functions, and variables follow the project's naming conventions?
-- **Abstractions**: Are there premature abstractions or missing ones? Is complexity justified?
-- **Duplication**: Is there copy-paste code that should be consolidated?
-- **Performance**: Are there obvious optimization opportunities? Unnecessary allocations in hot paths?
-- **Dead code**: Unused imports, functions, or commented-out code?
-- **Consistency**: Do new patterns match existing codebase patterns?
+### Documentation Sync
 
-## Step 5: Simplification Opportunities
+Relay the refactor-docs agent's findings: what docs were updated, any gaps flagged.
 
-Look specifically for:
+### Test Coverage
 
-- Code that does more than it needs to
-- Abstractions with only one consumer
-- Indirection that doesn't pay for itself
-- Idiomatic improvements for the project's language(s)
-- Configuration or feature flags where a direct approach would work
+Relay the refactor-tests agent's findings: coverage verdict, gaps, stale tests.
 
-## Step 6: Report
+### Overall Verdict
 
-Present findings in this format:
-
-### Summary
-
-One paragraph: what the changes do, how many files/lines changed, overall assessment.
-
-### Architecture
-
-Any concerns about boundaries, layering, or structural decisions. Skip if nothing to flag.
-
-### Quality Issues
-
-List each issue with:
-
-- **File + line range**
-- **Severity**: low / medium / high
-- **What**: description of the issue
-- **Why**: why it matters
-- **Suggestion**: concrete fix (code snippet if helpful)
-
-Skip low-severity issues if there are more than 5 — summarize them in one line.
-
-### Simplifications
-
-Concrete opportunities to make the code simpler. Each with before/after or a description of the change.
-
-### Verdict
-
-One of:
-
-- **Ship it** — clean, no action needed
-- **Minor tweaks** — a few small fixes, then good to go
-- **Refactor recommended** — quality or architecture issues worth addressing
-- **Rethink** — fundamental approach should be reconsidered (explain why and suggest alternative)
-
-If the verdict is not "Ship it", use `AskUserQuestion` to ask if the user wants you to apply the suggested fixes.
+Synthesize across all three: is this ready to ship, or does it need work? If any sub-review flagged issues, use `AskUserQuestion` to ask if the user wants fixes applied.
 
 ---
 
 ## Customization Guide
 
-When scaffolding this skill for a project, replace the `{...}` section in Step 3 with the project's specific architecture rules. These typically come from CLAUDE.md but can be made explicit for faster review. Example:
+When scaffolding this skill for a project via `/claude-setup`:
 
-```
-- **F# ownership**: Domain logic must stay in F#, JS is thin infrastructure
-- **Dependency direction**: DomainModel → App → View3D → Client (never reverse)
-- **Minimal C#**: Blazor layer stays thin, never imports domain types
-```
-
-Step 4 conventions also come from CLAUDE.md. If the project has detailed coding standards, reference them explicitly.
-
-### Sub-Skill Orchestration (Optional)
-
-For larger projects, split `/refactor` into an orchestrator that spawns sub-skills as parallel background agents:
-
-- **refactor-code** — the core code review (this template's Steps 2–6)
-- **refactor-docs** — reviews and updates `CLAUDE.md` and `.claude/docs/` to match the code changes
-- **refactor-tests** — checks test coverage against the changes, flags gaps
-
-Each sub-skill lives in its own `.claude/skills/<name>/SKILL.md` and is independently runnable. The orchestrator reads all three and spawns them via the Agent tool, then presents a unified report.
+- Replace the scope script path with a project-local version (e.g., `Claude/scripts/git-diff-scope.ps1`) so the skill works without the global config.
+- Ensure the three sub-skills are also scaffolded: `refactor-code`, `refactor-docs`, `refactor-tests`.

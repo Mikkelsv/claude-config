@@ -19,7 +19,7 @@ Read the input and form an initial understanding of what the user wants. Then ex
 
 **For broad features** (touching multiple areas, or relevant code isn't immediately obvious), launch parallel explore agents to build context quickly:
 
-- **Agent 1 — Architecture context**: Read `CLAUDE.md` and any relevant `.claude/rules/` and `.claude/docs/` files. Summarize the conventions and constraints that apply to this feature.
+- **Agent 1 — Architecture context**: Read `CLAUDE.md` and any relevant `.claude/rules/` and `Claude/docs/` files. Summarize the conventions and constraints that apply to this feature.
 - **Agent 2 — Codebase exploration**: Identify which parts of the codebase are most relevant to the feature idea. Read those files. Report relevant files, current patterns, and extension points.
 - **Agent 3 — Existing plans**: Check the project's plans directory for existing plans that this feature overlaps with or depends on.
 

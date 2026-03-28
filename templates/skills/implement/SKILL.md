@@ -15,15 +15,18 @@ Autonomous development loop that works through a structured plan, implementing o
 
 Before touching any code:
 
-1. Check if we're on `main`. If so, create and checkout a new branch: `implement/{plan-name}` (derive from plan filename, e.g. `implement/add-depth-coloring`).
-2. If already on a non-main branch, use it as-is.
-3. Verify clean working tree (`git status`). If dirty, ask the user whether to stash or continue.
-4. Read the plan file and **validate its format** against the Plan Format section below. Every task must have the required checkboxes (`Implement`, `Refactor`, `Docs & tests`, `Done`) and fields (`Context`, `Files`, `Acceptance`, `Test`). If the plan doesn't match the expected format, show the user what's missing and ask them to rewrite it.
+1. **Worktree decision:** Ask the user with `AskUserQuestion` whether to work in a worktree or the current working directory:
+   - **Worktree (Recommended)** — isolated copy of the repo, keeps main branch clean. Use `EnterWorktree` with the plan name (e.g., `implement-add-depth-coloring`).
+   - **Current directory** — work directly in the current checkout.
+2. Check if we're on `main`. If so, create and checkout a new branch: `implement/{plan-name}` (derive from plan filename, e.g. `implement/add-depth-coloring`). Skip if using a worktree (it creates its own branch).
+3. If already on a non-main branch, use it as-is.
+4. Verify clean working tree (`git status`). If dirty, ask the user whether to stash or continue.
+5. Read the plan file and **validate its format** against the Plan Format section below. Every task must have the required checkboxes (`Implement`, `Refactor`, `Docs & tests`, `Done`) and fields (`Context`, `Files`, `Acceptance`, `Test`). If the plan doesn't match the expected format, show the user what's missing and ask them to rewrite it.
    - **Content review:** Also assess whether each task has enough detail to implement confidently. Flag tasks with vague or thin descriptions — e.g., a task that just says "add sharing" without specifying scope, behavior, or constraints. For each flagged task, ask the user targeted questions: what does the feature do, what are the inputs/outputs, what edge cases matter, etc. Collect the answers and let the user update the plan before proceeding.
    - **Do not start implementation until the user has reviewed and approved the plan.**
-5. Find the first task where `- [ ] Done` is unchecked — this is where to resume. Skip any fully checked-off tasks (they were completed in a previous session).
-6. **Pre-implementation snapshot:** If the project has a `/db-save` skill and the plan touches database models, schema files, or migration-related code, run `/db-save` before starting implementation. This ensures data can be restored if schema changes break the database.
-7. Print a one-line progress summary: "Resuming at Task N. M/T tasks done." This orients both you and the user on where things stand.
+6. Find the first task where `- [ ] Done` is unchecked — this is where to resume. Skip any fully checked-off tasks (they were completed in a previous session).
+7. **Pre-implementation snapshot:** If the project has a `/db-save` skill and the plan touches database models, schema files, or migration-related code, run `/db-save` before starting implementation. This ensures data can be restored if schema changes break the database.
+8. Print a one-line progress summary: "Resuming at Task N. M/T tasks done." This orients both you and the user on where things stand.
 
 ## Plan Format
 
