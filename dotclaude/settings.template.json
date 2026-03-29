@@ -1,0 +1,69 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(cd ** && git *)",
+      "Bash(dotnet *)",
+      "Bash(powershell.exe -NoProfile -File *)",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy *)",
+      "Bash(wt *)",
+      "Bash(start *)",
+      "Bash(code *)",
+      "Bash(gh *)",
+      "Bash(echo *)",
+      "Bash(ls *)",
+      "Bash(mkdir *)",
+      "Bash(sleep *)",
+      "Edit(*/.vscode/*)",
+      "Edit(**/.claude/*)",
+      "Edit(**/.claude/**)",
+      "Edit(**/.gitignore_global)",
+      "Edit(**/Code/**)",
+      "Write(*/.vscode/*)",
+      "Write(**/.claude/*)",
+      "Write(**/.claude/**)",
+      "Write(**/.gitignore_global)",
+      "Write(**/Code/**)",
+      "Read(**)",
+      "Glob(**)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "Bash(python *)",
+      "Bash(python3 *)",
+      "Bash(curl *)",
+      "Bash(find *)",
+      "Bash(cp *)",
+      "Bash(npm *)",
+      "Edit(**/Documents/**)",
+      "Write(**/Documents/**)",
+      "Edit(**/plans/**)",
+      "Write(**/plans/**)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"<USERPROFILE>/.claude/scripts/notify.ps1\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "permission_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"<USERPROFILE>/.claude/scripts/notify.ps1\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  },
+  "defaultMode": "acceptEdits"
+}
