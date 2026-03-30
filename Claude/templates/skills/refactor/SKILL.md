@@ -62,7 +62,7 @@ Synthesize across all three: is this ready to ship, or does it need work? If any
 
 ## Customization Guide
 
-When scaffolding this skill for a project via `/claude-setup`:
+When scaffolding this skill for a project via `/claude-sync`:
 
 - Replace the scope script path with a project-local version (e.g., `Claude/scripts/git-diff-scope.ps1`) so the skill works without the global config.
 - Ensure the three sub-skills are also scaffolded: `refactor-code`, `refactor-docs`, `refactor-tests`.

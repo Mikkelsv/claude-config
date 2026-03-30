@@ -2,13 +2,18 @@
 
 ## Git-Synced Config
 
-User-level Claude config is a git repo cloned directly as `~/.claude/`:
+User-level Claude config is a git repo at `~/claude-config/`:
 
 - **Repository**: <https://github.com/Mikkelsv/claude-config.git>
-- **Local path**: `~/.claude/`
-- **Setup script**: `setup.ps1` (for fresh machine setup only)
+- **Local path**: `~/claude-config/`
+- **Junction**: `~/.claude/` → `~/claude-config/dotclaude/`
+- **Setup script**: `Claude/setup.ps1` (for fresh machine setup only)
 
-Edit files in `~/.claude/` directly. Commit and push to sync changes across machines. Pull to pick up changes made elsewhere.
+The repo has two directories:
+- `dotclaude/` — maps to `~/.claude/` via junction. Rules, commands, skill shells, settings.
+- `Claude/` — freely editable. Scripts, templates, full skill implementations.
+
+Edit files through the real paths in `~/claude-config/`, not through `~/.claude/`. Use `/claude-push` to commit and sync. Use `/claude-pull` to pick up changes.
 
 ### Slash commands
 

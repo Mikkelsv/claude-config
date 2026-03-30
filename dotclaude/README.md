@@ -4,15 +4,15 @@ Personal Claude Code configuration with slash commands, skills, and PowerShell a
 
 ## For Humans
 
-### Commands
+### Skills (slash commands)
 
-#### `/claude-setup [skills]`
+#### `/claude-sync [skills|fresh]`
 
-Scaffold project-level skills from global templates. Creates thin shells in `.claude/skills/` (for skill discovery) and full implementations in `Claude/skills/` (for frictionless editing). Also creates `Claude/docs/` for architecture documentation. Available skills: build, test, refactor (+ refactor-code/docs/tests), audit, plan, implement.
+Pull global config, then scaffold or sync project skills. First run does full scaffolding; later runs detect template drift and offer targeted updates. Stores customization values in `Claude/local/` so syncs never re-ask questions.
 
-- `/claude-setup` — asks which skills to scaffold
-- `/claude-setup all` — scaffolds everything
-- `/claude-setup build test` — scaffolds specific skills
+- `/claude-sync` — pull + scaffold (first run) or pull + sync (later runs)
+- `/claude-sync fresh` — force full re-scaffold from scratch
+- `/claude-sync build test` — sync specific skills only
 
 #### `/rebase-on-main`
 
@@ -21,6 +21,16 @@ Full rebase workflow: checks for uncommitted changes, fetches and rebases onto m
 #### `/claude-refactor`
 
 Audit all skills, commands, scripts, rules, and templates across the global config and the current project. Checks for bugs, stale references, misplaced items, missing permissions, script extraction opportunities, template drift, and underused parallelization.
+
+#### `/allow [prompt]`
+
+Parse a blocked permission prompt and add a generalized allow rule to `settings.json`.
+
+#### `/build`
+
+Build and serve the application. Reads project-specific config from `Claude/local/skills/build/config.md`. Automatically runs after code changes when invoked.
+
+### Commands
 
 #### `/claude-push`
 
@@ -41,10 +51,6 @@ Write a session handoff summary to project memory so the next session can pick u
 #### `/pickup`
 
 Resume from a previous session's handoff.
-
-#### `/allow [prompt]`
-
-Parse a blocked permission prompt and add a generalized allow rule to `settings.json`.
 
 ### Setup
 
@@ -86,7 +92,7 @@ Claude Code protects `.claude/` — writes through the `dotclaude/` junction sti
 
 - **Edit config** through `~/claude-config/` paths (never `~/.claude/`).
 - **Sync changes** with `/claude-push` (commit + push) and `/claude-pull` (pull).
-- **Add project skills** with `/claude-setup` in any project directory.
+- **Add project skills** with `/claude-sync` in any project directory.
 
 ### Notifications
 
@@ -115,11 +121,15 @@ When Claude finishes a task or hits a permission prompt, the Claude desktop app 
   Claude/                                 # Freely editable (no permission prompts)
     config-version.json                   # Global config version tracking
     setup.ps1                             # Fresh machine bootstrap
-    scripts/                              # PowerShell automation (19 scripts)
+    CHANGELOG.md                          # Project action changelog
+    scripts/                              # PowerShell automation (17 scripts)
     templates/skills/                     # 9 skill templates
     skills/                               # Full global skill implementations
-      rebase-on-main/
+      allow/
+      build/
       claude-refactor/
+      claude-sync/
+      rebase-on-main/
 ```
 
 **Junctions:**
@@ -138,7 +148,7 @@ When Claude finishes a task or hits a permission prompt, the Claude desktop app 
 
 ### Version Tracking
 
-`Claude/config-version.json` tracks the global config version. The `/claude-push` command auto-bumps the patch version when changes touch rules, commands, skills, scripts, or templates. Projects track staleness via their own `Claude/config-version.json` — at session start, Claude compares the two and suggests `/claude-setup` if they differ.
+`Claude/config-version.json` tracks the global config version. The `/claude-push` command auto-bumps the patch version when changes touch rules, commands, skills, scripts, or templates. Projects track staleness via their own `Claude/local/config-version.json` (gitignored) — at session start, Claude compares the two and suggests `/claude-sync` if they differ.
 
 ### Global Rules
 
@@ -154,6 +164,7 @@ Rules in `dotclaude/rules/` are always loaded:
 - **worktree-cleanup.md** — Auto-remove worktrees after merge
 - **todo-surfacing.md** — Surface todo items at natural moments
 - **no-read-generated-css.md** — Never read Tailwind output files
+- **skill-tiers.md** — 3-tier skill placement (global, project, local config)
 
 ### Script Catalog
 
@@ -162,7 +173,7 @@ All scripts in `Claude/scripts/`, accessible via `~/.claude/scripts/` through ju
 | Category | Scripts |
 |----------|---------|
 | Worktree | `get-worktrees`, `create-worktree`, `remove-worktree`, `escape-worktree` |
-| Launching | `launch-vscode`, `launch-claude-tab`, `launch-worktree`, `launch-dev-server`, `kill-port` |
+| Launching | `launch-vscode`, `launch-dev-server`, `kill-port` |
 | Git | `git-preflight`, `git-branch-scope`, `git-diff-scope` |
 | File/Process | `remove-path`, `move-path`, `npm-command`, `node-run` |
 | Config | `sync-config`, `pull-config` |

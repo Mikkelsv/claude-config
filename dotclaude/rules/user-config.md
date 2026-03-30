@@ -50,14 +50,16 @@ The only exception is `settings.json` hook commands, which need real paths — t
 Project-level skills (in `<project>/.claude/skills/`) are scaffolded from global templates (in `~/.claude/templates/skills/`). When improving a project-level skill:
 
 1. **Propagate improvements back to the global template** — if the change is generic (not project-specific), apply the same edit to `~/claude-config/Claude/templates/skills/<name>/`.
-2. **Update `/claude-setup`** — if a new skill is added that should be available for all projects, add a template and register it in the claude-setup command.
+2. **Update `/claude-sync`** — if a new skill is added that should be available for all projects, add a template and register it in the claude-sync command.
 3. **Project-specific customizations stay local** — changes tied to a specific project's build system, test framework, or architecture stay in the project skill only.
 
 When in doubt, check the global template before finishing. The global template is the source of truth for new projects.
 
+**Important:** Not all skills are project-level. See `skill-tiers.md` for which skills are global-only, project-scaffolded, or local references.
+
 ## Version tracking
 
-Global config has a version in `~/claude-config/Claude/config-version.json`. Projects track which version they were scaffolded against in `Claude/config-version.json`. The `/claude-push` command (via `sync-config.ps1`) auto-bumps the global version when changes touch rules, commands, skills, scripts, or templates.
+Global config has a version in `~/claude-config/Claude/config-version.json`. Projects track which version they were scaffolded against in `Claude/local/config-version.json` (gitignored, per-developer). The `/claude-push` command (via `sync-config.ps1`) auto-bumps the global version when changes touch rules, commands, skills, scripts, or templates.
 
 ## Keep the README up to date
 

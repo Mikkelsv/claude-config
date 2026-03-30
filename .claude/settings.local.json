@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__mcp-registry__search_mcp_registry",
+      "Bash(grep -E \"\\\\.json$\")",
+      "Bash(grep -E \"\\\\.json$|settings\")",
+      "Read(**)",
+      "Bash(cmd /c \"dir /AL C:\\\\Users\\\\mikke\\\\claude-config\\\\Claude\\\\skills\")",
+      "Bash(cmd /c \"dir /AL C:\\\\Users\\\\mikke\\\\claude-config\\\\Claude\\\\skills\\\\rebase-on-main\")",
+      "Bash(cmd /c \"dir /AL C:\\\\Users\\\\mikke\\\\claude-config\\\\Claude\")",
+      "Bash(cmd /c \"fsutil reparsepoint query C:\\\\Users\\\\mikke\\\\claude-config\\\\Claude\\\\skills\\\\rebase-on-main\")"
+    ]
+  }
+}

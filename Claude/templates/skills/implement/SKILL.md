@@ -25,8 +25,7 @@ Before touching any code:
    - **Content review:** Also assess whether each task has enough detail to implement confidently. Flag tasks with vague or thin descriptions — e.g., a task that just says "add sharing" without specifying scope, behavior, or constraints. For each flagged task, ask the user targeted questions: what does the feature do, what are the inputs/outputs, what edge cases matter, etc. Collect the answers and let the user update the plan before proceeding.
    - **Do not start implementation until the user has reviewed and approved the plan.**
 6. Find the first task where `- [ ] Done` is unchecked — this is where to resume. Skip any fully checked-off tasks (they were completed in a previous session).
-7. **Pre-implementation snapshot:** If the project has a `/db-save` skill and the plan touches database models, schema files, or migration-related code, run `/db-save` before starting implementation. This ensures data can be restored if schema changes break the database.
-8. Print a one-line progress summary: "Resuming at Task N. M/T tasks done." This orients both you and the user on where things stand.
+7. Print a one-line progress summary: "Resuming at Task N. M/T tasks done." This orients both you and the user on where things stand.
 
 ## Plan Format
 

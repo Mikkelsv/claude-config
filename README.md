@@ -6,13 +6,13 @@ Personal Claude Code configuration with slash commands, skills, and PowerShell a
 
 ### Commands
 
-#### `/claude-setup [skills]`
+#### `/claude-sync [skills]`
 
 Scaffold project-level skills from global templates. Creates thin shells in `.claude/skills/` (for skill discovery) and full implementations in `Claude/skills/` (for frictionless editing). Also creates `Claude/docs/` for architecture documentation. Available skills: build, test, refactor, plan, implement.
 
-- `/claude-setup` — asks which skills to scaffold
-- `/claude-setup all` — scaffolds everything
-- `/claude-setup build test` — scaffolds specific skills
+- `/claude-sync` — asks which skills to scaffold
+- `/claude-sync all` — scaffolds everything
+- `/claude-sync build test` — scaffolds specific skills
 
 #### `/rebase-on-main`
 
@@ -64,9 +64,9 @@ Parse a blocked permission prompt and add a generalized allow rule to `settings.
 - `/allow Write(~/.claude/scripts/*)` — generalizes and adds a rule
 - `/allow` (no args) — prompts you to paste the blocked action
 
-### Project-Level Skills (via /claude-setup)
+### Project-Level Skills (via /claude-sync)
 
-These skills are scaffolded per-project using `/claude-setup`. Each uses global templates but is customized with project-specific build commands, test scripts, and architecture rules. Skills are self-contained — scripts are co-located, no dependency on `~/.claude/scripts/`.
+These skills are scaffolded per-project using `/claude-sync`. Each uses global templates but is customized with project-specific build commands, test scripts, and architecture rules. Skills are self-contained — scripts are co-located, no dependency on `~/.claude/scripts/`.
 
 #### `/build [task]`
 
@@ -118,7 +118,7 @@ This section documents the architecture in detail so that another user (or Claud
     pickup.md
     claude-pull.md
     claude-push.md
-    claude-setup.md                      # Scaffold project-level skills from templates
+    claude-sync.md                      # Scaffold project-level skills from templates
     todo.md
   skills/                                # Global skills (work in any project)
     rebase-on-main/
@@ -156,12 +156,9 @@ This section documents the architecture in detail so that another user (or Claud
     create-worktree.ps1
     remove-worktree.ps1
     launch-vscode.ps1
-    launch-claude-tab.ps1
-    launch-worktree.ps1                  # Inner launcher (clears env, starts claude)
     notify.ps1                           # Notification hook (taskbar flash + sound)
     kill-port.ps1
     launch-dev-server.ps1
-    settings-add-rule.ps1
     pull-config.ps1                      # Pull latest config from remote
     sync-config.ps1                      # Stage, commit, push all config changes
     git-branch-scope.ps1
@@ -186,10 +183,10 @@ This section documents the architecture in detail so that another user (or Claud
 ### Design Pattern: Global vs Project-Level
 
 **Global** (in `~/.claude/`) — truly generic utilities that work in any project:
-- Commands: `/allow`, `/claude-pull`, `/claude-push`, `/claude-setup`, `/handoff`, `/pickup`, `/todo`
+- Commands: `/allow`, `/claude-pull`, `/claude-push`, `/claude-sync`, `/handoff`, `/pickup`, `/todo`
 - Skills: `/rebase-on-main` (generic git workflow, delegates to project's `/build`), `/claude-refactor` (config audit with parallel review agents)
 
-**Project-level** (in `<project>/.claude/skills/`) — context-dependent, scaffolded by `/claude-setup`:
+**Project-level** (in `<project>/.claude/skills/`) — context-dependent, scaffolded by `/claude-sync`:
 - `/build` — build command, server config, port
 - `/test` — test execution, baselines, patterns (supports background mode)
 - `/refactor` — orchestrator spawning refactor-code, refactor-docs, refactor-tests (3 modes: changes/focused/general)
@@ -208,7 +205,7 @@ The core principle: **prompts are Claude orchestration, scripts are mechanical e
 
 - **Commands** (`.md` files in `commands/`) — simple orchestration prompts for flows using only shared scripts.
 - **Skills** (directories in `skills/<name>/` with `SKILL.md`) — complex orchestration with co-located scripts. Use `${CLAUDE_SKILL_DIR}` to reference files within the skill directory.
-- **Templates** (directories in `templates/skills/<name>/`) — generic skill skeletons with `{PLACEHOLDER}` markers. Read by `/claude-setup` to generate project-level skills.
+- **Templates** (directories in `templates/skills/<name>/`) — generic skill skeletons with `{PLACEHOLDER}` markers. Read by `/claude-sync` to generate project-level skills.
 - **Scripts** (`.ps1` files) — shell operations: git commands, file I/O, process management. Live either in `scripts/` (shared) or `skills/<name>/scripts/` (skill-local).
 - **Communication** is via JSON on stdout. Every script outputs a JSON object so Claude can parse the result and make decisions based on it. Non-zero exit codes signal errors.
 
@@ -235,8 +232,6 @@ This separation means:
 | Script | Params | Output | Used by |
 |--------|--------|--------|---------|
 | `launch-vscode.ps1` | `-Path`, `-Color` | (none, run in background) | (manual use) |
-| `launch-claude-tab.ps1` | `-Path`, `-Color` | (none) | (manual use) |
-| `launch-worktree.ps1` | `-WorktreePath`, `-TabColor` | (inner launcher, no output) | `launch-claude-tab.ps1` |
 | `launch-dev-server.ps1` | `-Project`, `-Port` | `{launched, url}` | (template reference for project skills) |
 | `kill-port.ps1` | `-Port` | `{killed, pids}` or `{killed: false, reason}` | (template reference for project skills) |
 
@@ -376,7 +371,7 @@ Rules in `~/.claude/rules/` are always loaded into every Claude session:
 
 - **Command** (`commands/<name>.md`) — for simple flows that only reference shared global scripts.
 - **Skill** (`skills/<name>/SKILL.md`) — for complex flows that benefit from co-located scripts. Use `${CLAUDE_SKILL_DIR}/scripts/...` to reference skill-local scripts.
-- **Template** (`templates/skills/<name>/SKILL.md`) — for skills that will be scaffolded per-project by `/claude-setup`. Include `{PLACEHOLDER}` markers for project-specific values and a Customization Guide section.
+- **Template** (`templates/skills/<name>/SKILL.md`) — for skills that will be scaffolded per-project by `/claude-sync`. Include `{PLACEHOLDER}` markers for project-specific values and a Customization Guide section.
 
 **Steps:**
 
@@ -403,5 +398,4 @@ Rules in `~/.claude/rules/` are always loaded into every Claude session:
 - **Worktree-safe repo root** — Use `git rev-parse --path-format=absolute --git-common-dir` and strip `/.git` to find the main repo root. `--show-toplevel` returns the worktree root when inside a worktree, which breaks path calculations.
 - **VS Code new window** — Always use `code --new-window` to prevent hijacking existing VS Code instances.
 - **Delayed VS Code settings** — VS Code extensions (e.g., Ionide) rewrite `.vscode/settings.json` on workspace init. Write color settings after a 5-second delay to avoid being overwritten.
-- **Claude terminal isolation** — The inner launcher (`launch-worktree.ps1`) clears the `CLAUDECODE` environment variable before starting `claude` to prevent nested-session crashes from inherited parent sessions.
-- **Self-contained project skills** — Project-level skills (scaffolded by `/claude-setup`) include their own scripts. No dependency on `~/.claude/scripts/` — this keeps them portable across machines and contributors.
+- **Self-contained project skills** — Project-level skills (scaffolded by `/claude-sync`) include their own scripts. No dependency on `~/.claude/scripts/` — this keeps them portable across machines and contributors.

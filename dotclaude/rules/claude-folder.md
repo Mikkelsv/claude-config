@@ -64,5 +64,5 @@ The Read tool checks the literal path, so reading via `claude-config/dotclaude/`
 
 - When creating or editing skills, always edit in `Claude/skills/`.
 - When creating or editing architecture docs, use `Claude/docs/`.
-- `/claude-setup` scaffolds into both locations automatically.
+- `/claude-sync` scaffolds into both locations automatically.
 - When referencing docs from skill templates, use `Claude/docs/` not `.claude/docs/`.

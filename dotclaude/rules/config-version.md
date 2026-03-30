@@ -3,7 +3,10 @@
 At session start in any project, compare global vs project config versions:
 
 1. Read `~/claude-config/Claude/config-version.json` for the global `version`.
-2. If the project has `Claude/config-version.json`, read its `globalConfigVersion`.
-3. If versions differ, mention it once: "Global config is vX.Y.Z but this project uses vX.Y.W. Run `/claude-setup` to sync."
+2. If the project has `Claude/local/config-version.json`, read its `globalConfigVersion`.
+3. If versions differ:
+   a. Read `~/claude-config/Claude/CHANGELOG.md` and summarize entries between the project version and the current global version. Focus on lines marked **Project action**.
+   b. If the version file has a `skills` map, compare each skill's `templateHash` against the current template's hash to identify which skills drifted.
+   c. Mention it once: "Global config is vX.Y.Z but this project uses vX.Y.W. N skills have template updates. Run `/claude-sync` to sync." followed by a brief changelog summary.
 4. Informational only — do not block work.
 5. If no project version file exists, skip silently.

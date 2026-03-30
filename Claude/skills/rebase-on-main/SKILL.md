@@ -7,7 +7,7 @@ description: Rebase current branch on main with conflict resolution, build verif
 
 **Execute every step below in order. No step may be skipped.** Stop and report to the user if any step fails unexpectedly.
 
-Skill scripts: `~/claude-config/Claude/skills/rebase-on-main/scripts`
+Skill scripts: `$HOME/claude-config/Claude/skills/rebase-on-main/scripts`
 
 ---
 
@@ -16,7 +16,7 @@ Skill scripts: `~/claude-config/Claude/skills/rebase-on-main/scripts`
 Run the rebase script (includes preflight checks):
 
 ```bash
-powershell.exe -NoProfile -File "~/claude-config/Claude/skills/rebase-on-main/scripts/git-rebase-onto.ps1"
+powershell.exe -NoProfile -File "$HOME/claude-config/Claude/skills/rebase-on-main/scripts/git-rebase-onto.ps1"
 ```
 
 Returns JSON with `status`:
@@ -81,7 +81,7 @@ Invoke the project's `/build` skill if one exists. If no `/build` skill is avail
 2. Run the merge script:
 
 ```bash
-powershell.exe -NoProfile -File "~/claude-config/Claude/skills/rebase-on-main/scripts/git-merge-cleanup.ps1" -Branch "<branch-name>"
+powershell.exe -NoProfile -File "$HOME/claude-config/Claude/skills/rebase-on-main/scripts/git-merge-cleanup.ps1" -Branch "<branch-name>"
 ```
 
 Returns JSON: `{"merged": true, "pushed": true, "branch": "...", "localDeleted": true, "remoteDeleted": true, "worktreeRemoved": false, "worktreeName": null}`

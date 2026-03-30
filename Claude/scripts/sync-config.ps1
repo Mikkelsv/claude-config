@@ -14,8 +14,9 @@ try {
 
     git add -A 2>$null
 
-    # Auto-bump config version if meaningful files changed
-    $trackedDirs = @("dotclaude/rules", "dotclaude/commands", "dotclaude/skills", "Claude/scripts", "Claude/skills", "Claude/templates")
+    # Auto-bump config version only when templates change (projects need re-sync).
+    # Global rules, skills, and scripts are picked up automatically via junction.
+    $trackedDirs = @("Claude/templates")
     $staged = git diff --cached --name-only 2>$null
     $meaningful = $staged | Where-Object { $f = $_; $trackedDirs | Where-Object { $f.StartsWith("$_/") } }
     if ($meaningful) {

@@ -1,60 +1,55 @@
 ---
 name: build
-description: Build and serve the application
+description: Template for scaffolding project build reference
 ---
 
-# Build & Serve
+# Build Template — Scaffolding Guide
 
-Execute user instructions, then build and serve the application.
+The build skill is **global** (lives in `~/claude-config/`). Projects provide a **build reference** at `Claude/local/skills/build/config.md` with project-specific config.
 
-## Phase 1 — User Task
+## What `/claude-sync` scaffolds for build
 
-If the user provided instructions after `/build`, execute them fully first:
+**Project file only** — no project-level skill shell or implementation:
 
-> $ARGUMENTS
+- `Claude/local/skills/build/config.md` — project-specific build config
 
-If no instructions were provided, skip to Phase 2.
+The global skill at `~/claude-config/Claude/skills/build/SKILL.md` reads this file at runtime.
 
-## Phase 2 — Build & Serve
+## Template for `Claude/local/skills/build/config.md`
 
-Once the task is complete (or immediately if no task was given):
+```markdown
+# Build Config
 
-1. Read the server port from `.claude/launch.json` (the `port` field of the first configuration).
-2. Stop any existing preview server (use `preview_stop` if one is running, check with `preview_list` first).
-3. Kill any orphaned processes on that port:
+## Build Command
 
-   ```bash
-   powershell.exe -NoProfile -File "${CLAUDE_SKILL_DIR}/scripts/kill-port.ps1" -Port <port>
-   ```
+\`\`\`
+{BUILD_COMMAND}
+\`\`\`
 
-4. Build: `{BUILD_COMMAND}` (can run in parallel with steps 2–3)
-5. If the build **fails**, fix the errors and rebuild. If it still fails after 2 attempts, stop and report.
-6. If the build **succeeds**, start the dev server via `preview_start` with name `"{PREVIEW_SERVER_NAME}"` (uses `.claude/launch.json`).
-7. Report: "Build OK. Dev server running in preview."
+## Preview Server
 
-## Auto-build Rule
+- **Name**: `{PREVIEW_SERVER_NAME}` (matches `.claude/launch.json`)
+- **Port**: Read from `.claude/launch.json`
+```
 
-Whenever you make code changes (bug fixes, feature additions, refactoring, etc.), **always build and serve automatically** using the Phase 2 steps above. Do not wait for the user to type `/build` — if you changed code, build it.
-
----
-
-## Customization Guide
-
-When scaffolding this skill for a project, replace these placeholders:
+## Placeholders
 
 | Placeholder | Example | Description |
 | --- | --- | --- |
-| `{BUILD_COMMAND}` | `dotnet build MySolution.slnx` | Command to compile the project |
-| `{PREVIEW_SERVER_NAME}` | `my-app` | Name from `.claude/launch.json` |
+| `{BUILD_COMMAND}` | `dotnet build` | Command to compile the project |
+| `{PREVIEW_SERVER_NAME}` | `gridpreview` | Name from `.claude/launch.json` |
 
-The server port is read at runtime from `.claude/launch.json` — no placeholder needed.
+## What to ask the user
 
-Scripts in `scripts/` must also be generated for the target platform. See `/claude-setup` for automated scaffolding.
+1. **Build command** — e.g., `dotnet build`, `npm run build`, `cargo build`
+2. **Dev server** — does the project use one? If yes:
+   - Launch command and port
+   - Preview server name (must match `.claude/launch.json`)
 
-### Required Scripts
+## Prerequisites
 
-| Script | Purpose | Platform-specific |
-| --- | --- | --- |
-| `scripts/kill-port.ps1` | Kill orphaned process on a given port | Yes — PowerShell/Windows |
+The global build skill and `kill-port.ps1` script must exist at:
+- `~/claude-config/Claude/skills/build/SKILL.md`
+- `~/claude-config/Claude/scripts/kill-port.ps1`
 
-On non-Windows platforms, replace with an equivalent bash script or inline command.
+If missing, the skill will fail at runtime. These are set up once per dev machine, not per project.
