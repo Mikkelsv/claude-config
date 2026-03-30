@@ -7,7 +7,7 @@ The global Claude config lives at `~/claude-config/` as a git repo with two dire
 - **`dotclaude/`** — maps to `~/.claude/` via a Windows junction. Contains rules, commands, skill shells, settings, and CLAUDE.md. Claude Code discovers these at `~/.claude/`.
 - **`Claude/`** — freely editable. Contains scripts, templates, and full skill implementations.
 
-Inner junctions (`dotclaude/scripts/` → `Claude/scripts/`, `dotclaude/templates/` → `Claude/templates/`) maintain backward compat so `~/.claude/scripts/...` paths still resolve.
+Scripts and templates live directly in `Claude/scripts/` and `Claude/templates/`. Reference them via `~/claude-config/Claude/scripts/...` paths.
 
 ## Check before duplicating
 
@@ -32,13 +32,13 @@ The setup script is at `~/claude-config/Claude/setup.ps1`. It is only needed for
 
 ## Prefer scripts over inline shell
 
-When a command or workflow involves mechanical shell work (git operations, file I/O, process management, launching applications), prefer creating or updating a PowerShell script in `~/claude-config/Claude/scripts/` rather than having Claude construct and run shell commands inline. Scripts are reusable, testable, and save tokens. See `~/.claude/README.md` for the full script catalog and conventions.
+When a command or workflow involves mechanical shell work (git operations, file I/O, process management, launching applications), prefer creating or updating a PowerShell script in `~/claude-config/Claude/scripts/` rather than having Claude construct and run shell commands inline. Scripts are reusable, testable, and save tokens. See `~/claude-config/Claude/README.md` for the full script catalog and conventions.
 
 ## No absolute paths
 
 Never use absolute user paths in commands, scripts, rules, or docs. Use portable alternatives:
 
-- **Bash (commands)**: `$HOME/.claude/scripts/...` (resolves through junction chain)
+- **Bash (commands)**: `$HOME/claude-config/Claude/scripts/...`
 - **PowerShell (scripts)**: `$env:USERPROFILE\claude-config\...` or `$PSScriptRoot` for inter-script references
 - **Permissions (settings)**: `**` globs like `**/Code/**`, `**/.claude/**`
 - **Documentation**: `~/` or `~/claude-config/` as shorthand
@@ -47,7 +47,7 @@ The only exception is `settings.json` hook commands, which need real paths — t
 
 ## Keep templates and project skills in sync
 
-Project-level skills (in `<project>/.claude/skills/`) are scaffolded from global templates (in `~/.claude/templates/skills/`). When improving a project-level skill:
+Project-level skills (in `<project>/.claude/skills/`) are scaffolded from global templates (in `~/claude-config/Claude/templates/skills/`). When improving a project-level skill:
 
 1. **Propagate improvements back to the global template** — if the change is generic (not project-specific), apply the same edit to `~/claude-config/Claude/templates/skills/<name>/`.
 2. **Update `/claude-sync`** — if a new skill is added that should be available for all projects, add a template and register it in the claude-sync command.
@@ -59,8 +59,8 @@ When in doubt, check the global template before finishing. The global template i
 
 ## Version tracking
 
-Global config has a version in `~/claude-config/Claude/config-version.json`. Projects track which version they were scaffolded against in `Claude/local/config-version.json` (gitignored, per-developer). The `/claude-push` command (via `sync-config.ps1`) auto-bumps the global version when changes touch rules, commands, skills, scripts, or templates.
+Global config has a version in `~/claude-config/Claude/config-version.json`. Projects track which version they were scaffolded against in `Claude/local/config-version.json` (gitignored, per-developer). The `/claude-push` command (via `sync-config.ps1`) auto-bumps the global version when changes touch templates.
 
 ## Keep the README up to date
 
-When adding, removing, or modifying commands, scripts, rules, or other config, update `~/.claude/README.md` to reflect the change. Both the human section (command descriptions) and the Claude section (script catalog, directory layout) must stay accurate.
+When adding, removing, or modifying commands, scripts, rules, or other config, update `~/claude-config/Claude/README.md` to reflect the change. Both the human section (command descriptions) and the Claude section (script catalog, directory layout) must stay accurate.

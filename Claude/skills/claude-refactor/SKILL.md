@@ -23,10 +23,10 @@ agents to speed up the read phase:
 
 - `~/.claude/skills/` — all SKILL.md files and co-located scripts
 - `~/.claude/commands/` — all command files
-- `~/.claude/scripts/` — all PowerShell scripts (read each, note params + output)
+- `~/claude-config/Claude/scripts/` — all PowerShell scripts (read each, note params + output)
 - `~/.claude/rules/` — all rule files
-- `~/.claude/templates/skills/` — all template SKILL.md files and supporting files
-- `~/.claude/README.md`
+- `~/claude-config/Claude/templates/skills/` — all template SKILL.md files and supporting files
+- `~/claude-config/Claude/README.md`
 - `~/.claude/settings.json` (permissions and hooks)
 - `~/.claude/settings.template.json`
 - `~/.claude/CLAUDE.md`
@@ -151,7 +151,7 @@ name):
 
 #### 2.7 README Accuracy
 
-Compare `~/.claude/README.md` against the actual inventory:
+Compare `~/claude-config/Claude/README.md` and `~/claude-config/README.md` against the actual inventory:
 
 - All commands, skills, scripts, and rules listed?
 - Descriptions accurate and up to date?
@@ -210,10 +210,12 @@ Apply confirmed changes immediately after each decision.
 
 After all fixes:
 
-1. Update `~/.claude/README.md` to reflect every change made in Phase 3:
-   new/removed skills, updated descriptions, directory layout, script catalog.
-2. If rules were added or modified, update the Global Rules section.
-3. If `settings.template.json` was modified, note changes for the user (they may
+1. Update `~/claude-config/Claude/README.md` (Claude-facing docs) to reflect every
+   change made in Phase 3: new/removed skills, updated descriptions, directory
+   layout, script catalog.
+2. Update `~/claude-config/README.md` (GitHub-facing) with matching changes.
+3. If rules were added or modified, update the Global Rules section.
+4. If `settings.template.json` was modified, note changes for the user (they may
    need to re-sync on other machines).
 
 ---

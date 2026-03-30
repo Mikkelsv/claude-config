@@ -194,7 +194,7 @@ Always keep moving forward. The user reviews decisions after the full loop compl
 
 ## Final Audit
 
-After all tasks are processed (before the report), run `/audit` on the full branch diff. This is a holistic architecture review across all committed tasks — it catches overengineering, boundary violations, and structural issues that only become visible when you see the changes together.
+After all tasks are processed (before the report), run `/audit-architecture` on the full branch diff. This is a holistic architecture review across all committed tasks — it catches overengineering, boundary violations, and structural issues that only become visible when you see the changes together.
 
 Include the audit findings verbatim in the report under **Architecture Audit**.
 
@@ -227,7 +227,7 @@ When all tasks are processed, report:
 - Perf trend: faster/same/slower than baseline
 - Parallel execution: N tasks parallelized across M groups, K merge conflicts resolved (if any parallel groups were used)
 - Number of decisions/review items logged — remind user to check the plan
-- **Architecture Audit** — full `/audit` findings across the branch diff (boundary violations, overengineering, alternative approaches)
+- **Architecture Audit** — full `/audit-architecture` findings across the branch diff (boundary violations, overengineering, alternative approaches)
 
 
 

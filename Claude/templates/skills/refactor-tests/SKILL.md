@@ -24,7 +24,7 @@ Otherwise, determine the mode from arguments and conversation context:
 **Mode A — Changes** (no arguments): Run the scope script:
 
 ```bash
-powershell.exe -NoProfile -File "$HOME/.claude/scripts/git-diff-scope.ps1"
+powershell.exe -NoProfile -File "$HOME/claude-config/Claude/scripts/git-diff-scope.ps1"
 ```
 
 If `MODE: none`, abort — nothing to review.

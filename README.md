@@ -25,6 +25,7 @@ Available in every project via the global config.
 | `/implement [plan]` | Autonomous dev loop with build/test/refactor/audit gates. |
 | `/refactor [focus]` | Code quality review orchestrator. |
 | `/refactor-docs [focus]` | Documentation sync. |
+| `/audit-architecture [focus]` | Deep architecture review. |
 
 ### Project Skills (via /claude-sync)
 
@@ -35,7 +36,6 @@ Scaffolded per-project from templates. Embed project-specific knowledge.
 | `/test` | Browser-based smoke tests with optional perf tracking. |
 | `/refactor-code [focus]` | Code quality & architecture review with project-specific criteria. |
 | `/refactor-tests [focus]` | Test coverage review. |
-| `/audit` | Deep architecture review. |
 
 ### Utility Commands
 
@@ -58,12 +58,7 @@ Claude Code expects its config at `~/.claude/`. Instead of editing there directl
                            ~/claude-config/Claude/       (editable: scripts, templates, skill implementations)
 ```
 
-Two inner junctions provide backward-compatible `~/.claude/scripts/` and `~/.claude/templates/` paths:
-
-```
-dotclaude/scripts/   ──junction──>  Claude/scripts/
-dotclaude/templates/ ──junction──>  Claude/templates/
-```
+Scripts and templates live directly in `Claude/scripts/` and `Claude/templates/` — no junctions needed.
 
 #### Fresh machine setup
 
@@ -132,19 +127,20 @@ When Claude finishes a task or hits a permission prompt, the Claude desktop app 
       rebase-on-main/
       refactor/
       refactor-docs/
+      audit-architecture/
 ```
 
 ### Design Pattern: Global vs Project-Level
 
 **Global** (in `~/claude-config/`) — generic workflows available in every project:
 - Config: `/claude-sync`, `/claude-refactor`, `/claude-push`, `/allow`
-- Workflow: `/build`, `/rebase-on-main`, `/plan`, `/implement`, `/refactor`, `/refactor-docs`
+- Workflow: `/build`, `/rebase-on-main`, `/plan`, `/implement`, `/refactor`, `/refactor-docs`, `/audit-architecture`
 - Utility: `/handoff`, `/pickup`, `/todo`
 
 **Project-level** (in `<project>/.claude/skills/`) — embed project-specific knowledge, scaffolded by `/claude-sync`:
-- `/test`, `/refactor-code`, `/refactor-tests`, `/audit`
+- `/test`, `/refactor-code`, `/refactor-tests`
 
-Global skills like `/plan`, `/implement`, `/refactor`, `/refactor-docs` can optionally be scaffolded as project copies for teammates via `/claude-sync`.
+Global workflow skills can optionally be scaffolded as project copies for teammates via `/claude-sync`.
 
 ### Design Pattern: Commands / Skills + Scripts
 

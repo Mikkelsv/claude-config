@@ -1,5 +1,5 @@
 ---
-name: audit
+name: audit-architecture
 description: Deep architecture review — catches overengineering, boundary violations, and considers simpler alternatives
 ---
 
@@ -52,7 +52,7 @@ Launch **4 background agents** in a single message. Each agent receives a summar
 - **Abstraction levels**: Are high-level modules depending on low-level details they shouldn't know about?
 - **Language/technology boundaries**: Is logic in the right language/layer per the project's conventions?
 
-{PROJECT_SPECIFIC_BOUNDARIES}
+If `Claude/local/skills/audit-architecture/config.md` exists, read it for project-specific boundary rules and include those checks here. Otherwise, derive boundary rules from CLAUDE.md's core principles.
 
 Report: list of boundary violations with file, line range, what, why, and fix.
 
@@ -148,11 +148,9 @@ One of:
 
 If the verdict is not "Sound", use `AskUserQuestion` to ask if the user wants you to apply fixes or explore the alternative approach.
 
----
 
-## Customization Guide
 
-When scaffolding this skill for a project:
+## Local Config
 
-- Replace `{PROJECT_SPECIFIC_BOUNDARIES}` in Step 3 Agent A with the project's specific boundary rules. Derive these from CLAUDE.md's core principles. Examples: language ownership, layer dependencies, technology boundaries.
-- The `.claude/skills/audit/SKILL.md` shell **must include `$ARGUMENTS`** so standalone invocations (e.g., `/audit View3D/`) pass the focus area through to Mode B.
+If `Claude/local/skills/audit-architecture/config.md` exists, read it for:
+- **Architecture boundary rules** (module responsibilities, dependency direction, layer ownership)

@@ -38,12 +38,13 @@ Project config: `Claude/local/` (gitignored, Tier 3)
 | `implement` | Generic workflow. Reads config from `Claude/local/skills/implement/config.md`. Invokes project-level `/test`, `/refactor`, `/audit`. |
 | `refactor` | Orchestrator — invokes refactor-code, refactor-docs, refactor-tests. No customization. |
 | `refactor-docs` | Generic doc sync — reads CLAUDE.md and `Claude/docs/`. No customization. |
+| `audit-architecture` | Architecture review. Reads boundary rules from `Claude/local/skills/audit-architecture/config.md`. |
 
 ## Tier 2 — Project skills (shared, committed to repo)
 
 Discovery: `<project>/.claude/skills/` (thin shell)
 Implementation: `<project>/Claude/skills/` (full skill)
-Scaffolded from global templates in `~/.claude/templates/skills/`.
+Scaffolded from global templates in `~/claude-config/Claude/templates/skills/`.
 
 **When to use:** The skill embeds project-specific knowledge (architecture rules, test patterns, boundary definitions) that all team members share.
 
@@ -52,13 +53,12 @@ Scaffolded from global templates in `~/.claude/templates/skills/`.
 | `test` | Smoke-test scripts, perf baselines, preview server config are deeply project-specific |
 | `refactor-code` | Architecture check criteria are project-specific (multi-line block content) |
 | `refactor-tests` | Test framework files and test mapping are project-specific |
-| `audit` | Architecture boundary rules are project-specific |
 
 ### Teammate copies of global skills
 
-Some global skills can optionally be scaffolded as project-level copies so teammates without the global config can use them. `/claude-sync` asks during initial setup and stores the choice in `Claude/local/skills/sync-config.md`. Templates for these exist in `~/.claude/templates/skills/`.
+Some global skills can optionally be scaffolded as project-level copies so teammates without the global config can use them. `/claude-sync` asks during initial setup and stores the choice in `Claude/local/skills/sync-config.md`. Templates for these exist in `~/claude-config/Claude/templates/skills/`.
 
-Candidates: `plan`, `implement`, `refactor`, `refactor-docs`.
+Candidates: `plan`, `implement`, `refactor`, `refactor-docs`, `audit-architecture`.
 
 ## Tier 3 — Local skill config (private, gitignored)
 
@@ -71,6 +71,7 @@ The local counterpart of a Tier 1 global skill. Lives in `Claude/local/skills/<n
 | `Claude/local/skills/build/config.md` | `build` | Build commands and server config may vary by dev setup |
 | `Claude/local/skills/plan/config.md` | `plan` | Plan directory, feature board path |
 | `Claude/local/skills/implement/config.md` | `implement` | Commit prefix, plan directory |
+| `Claude/local/skills/audit-architecture/config.md` | `audit-architecture` | Architecture boundary rules |
 | `Claude/local/skills/sync-config.md` | `claude-sync` | Which global skills to copy for teammates |
 
 **Important:** `Claude/local/` must be in `.gitignore`. If it's missing, `/claude-sync` should add it.

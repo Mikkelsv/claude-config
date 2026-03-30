@@ -25,6 +25,7 @@ Available to you in every project via the global config.
 | `/implement [plan]` | Autonomous dev loop — plan tasks with build/test/refactor/audit gates. |
 | `/refactor [focus]` | Code quality review orchestrator (spawns refactor-code, refactor-docs, refactor-tests). |
 | `/refactor-docs [focus]` | Documentation sync — checks docs match code changes. |
+| `/audit-architecture [focus]` | Deep architecture review (boundaries, overengineering, alternatives). |
 
 ### Project Skills (via /claude-sync)
 
@@ -35,7 +36,6 @@ Scaffolded per-project from templates. Embed project-specific knowledge (archite
 | `/test` | Browser-based smoke tests with optional perf tracking. |
 | `/refactor-code [focus]` | Code quality & architecture review with project-specific criteria. |
 | `/refactor-tests [focus]` | Test coverage review with project-specific framework knowledge. |
-| `/audit` | Deep architecture review (boundaries, overengineering, alternatives). |
 
 ### Utility Commands
 
@@ -58,12 +58,7 @@ Claude Code expects its config at `~/.claude/`. Instead of editing there directl
                            ~/claude-config/Claude/       (editable: scripts, templates, skill implementations)
 ```
 
-Two inner junctions provide backward-compatible `~/.claude/scripts/` and `~/.claude/templates/` paths:
-
-```
-dotclaude/scripts/   ──junction──>  Claude/scripts/
-dotclaude/templates/ ──junction──>  Claude/templates/
-```
+Scripts and templates live directly in `Claude/scripts/` and `Claude/templates/` — no junctions needed.
 
 #### Why two directories?
 
@@ -109,8 +104,6 @@ When Claude finishes a task or hits a permission prompt, the Claude desktop app 
     commands/                             # Slash commands
     rules/                                # Global rules (always active)
     skills/                               # Thin shells (redirect to Claude/skills/)
-    scripts/ -> junction to Claude/scripts/
-    templates/ -> junction to Claude/templates/
   Claude/                                 # Freely editable (no permission prompts)
     config-version.json                   # Global config version tracking
     setup.ps1                             # Fresh machine bootstrap
@@ -129,10 +122,7 @@ When Claude finishes a task or hits a permission prompt, the Claude desktop app 
       refactor-docs/
 ```
 
-**Junctions:**
-- `~/.claude/` -> `~/claude-config/dotclaude/`
-- `dotclaude/scripts/` -> `Claude/scripts/`
-- `dotclaude/templates/` -> `Claude/templates/`
+**Junction:** `~/.claude/` -> `~/claude-config/dotclaude/`
 
 ### Design Pattern
 
@@ -165,7 +155,7 @@ Rules in `dotclaude/rules/` are always loaded:
 
 ### Script Catalog
 
-All scripts in `Claude/scripts/`, accessible via `~/.claude/scripts/` through junction chain.
+All scripts in `Claude/scripts/`.
 
 | Category | Scripts |
 |----------|---------|

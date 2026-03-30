@@ -9,7 +9,7 @@ Pull the latest global config, then scaffold new project skills or sync existing
 
 Input: `$ARGUMENTS` (optional — "fresh" to force re-scaffold, or skill names like "build test")
 
-Templates directory: `~/.claude/templates/skills/`
+Templates directory: `~/claude-config/Claude/templates/skills/`
 
 ## Project Skills (scaffolded from templates)
 
@@ -21,7 +21,6 @@ These encode project-specific knowledge and are committed to the repo for all te
 | **test** | Browser-based smoke tests with optional perf tracking |
 | **refactor-code** | Code quality & architecture review |
 | **refactor-tests** | Review test coverage against code changes |
-| **audit** | Deep architecture review (overengineering, boundaries, alternatives) |
 
 ## Global Skills (optional project copies for teammates)
 
@@ -33,6 +32,7 @@ These are available globally to users with the config. They can optionally be sc
 | **implement** | Autonomous dev loop (plan → implement → test → refactor → audit) |
 | **refactor** | Orchestrator: spawns refactor-code, refactor-docs, refactor-tests |
 | **refactor-docs** | Review and update documentation to match code changes |
+| **audit-architecture** | Deep architecture review (overengineering, boundaries, alternatives) |
 
 ---
 
@@ -41,7 +41,7 @@ These are available globally to users with the config. They can optionally be sc
 Run the pull script to fetch the latest global config:
 
 ```bash
-powershell.exe -NoProfile -File "$HOME/.claude/scripts/pull-config.ps1"
+powershell.exe -NoProfile -File "$HOME/claude-config/Claude/scripts/pull-config.ps1"
 ```
 
 - If `pulled = true`: note the changes briefly ("Pulled N commits from global config").
@@ -80,13 +80,13 @@ Use `AskUserQuestion` with multiSelect for project-specific skills:
 - test
 - refactor-code
 - refactor-tests
-- audit
 
 Then ask about **teammate copies** of global skills — these are already available to you globally, but teammates without the global config won't have them. Use `AskUserQuestion` with multiSelect:
 - plan — feature discovery and plan creation
 - implement — autonomous dev loop with build/test/refactor gates
 - refactor — orchestrator (spawns refactor-code, refactor-docs, refactor-tests)
 - refactor-docs — documentation sync
+- audit-architecture — deep architecture review
 
 Store the teammate copy choice in `Claude/local/skills/sync-config.md`:
 
@@ -133,7 +133,7 @@ Then ask the user for skill-specific info using `AskUserQuestion`:
 - Test framework files to read (patterns, conventions, existing test implementations)
 - Existing test mapping (which tests cover which features)
 
-**For audit:**
+**For audit-architecture** (only if scaffolding as teammate copy or creating local config):
 - Architecture boundary rules — derive from CLAUDE.md's core principles
 - Specific layering or dependency direction rules
 
@@ -188,14 +188,14 @@ Tests live in Tests/ and follow xUnit patterns...
 
 For each selected skill:
 
-1. Read the template from `~/.claude/templates/skills/{name}/`
+1. Read the template from `~/claude-config/Claude/templates/skills/{name}/`
 2. Compute the template hash: `sha256sum` of the raw template file, store first 8 hex chars
 3. Generate a customized version with the user's project info filled in — replace all `{PLACEHOLDER}` markers with actual values
 4. Write the **full implementation** to `Claude/skills/{name}/SKILL.md` (outside the protected `.claude/` folder)
 5. Write a **thin shell** to `.claude/skills/{name}/SKILL.md` containing only the frontmatter (name, description) and a redirect: `Read and follow Claude/skills/{name}/SKILL.md.` Include `$ARGUMENTS` in the shell for skills that accept user arguments (build, test, plan, implement).
 6. Copy any supporting files to `Claude/skills/{name}/` (e.g., `browser-throttling.md`, `plan-template.md`)
 
-**For build specifically:** Build is a **global skill** — do NOT create project-level skill files (no `.claude/skills/build/` or `Claude/skills/build/`). Instead, scaffold only `Claude/local/skills/build/config.md`. Read the build template at `~/.claude/templates/skills/build/SKILL.md` for the reference file format and placeholders. The global skill at `~/claude-config/Claude/skills/build/SKILL.md` reads this reference at runtime.
+**For build specifically:** Build is a **global skill** — do NOT create project-level skill files (no `.claude/skills/build/` or `Claude/skills/build/`). Instead, scaffold only `Claude/local/skills/build/config.md`. Read the build template at `~/claude-config/Claude/templates/skills/build/SKILL.md` for the reference file format and placeholders. The global skill at `~/claude-config/Claude/skills/build/SKILL.md` reads this reference at runtime.
 
 **For test specifically:** Also generate `Claude/skills/test/scripts/smoke-test.js` with the user's test execution script.
 
@@ -265,12 +265,12 @@ Run this when `Claude/local/config-version.json` exists (skills were previously 
 
 For each skill in the project's `skills` map:
 
-1. Check if the global template still exists at `~/.claude/templates/skills/{name}/SKILL.md`
+1. Check if the global template still exists at `~/claude-config/Claude/templates/skills/{name}/SKILL.md`
 2. Compute the current template's SHA256 hash (first 8 hex chars)
 3. Compare against the stored `templateHash`
 4. Categorize: **Changed** (hashes differ) or **Current** (hashes match)
 
-Also scan `~/.claude/templates/skills/` for templates that are NOT in the project's `skills` map — these are **New** (added to global config since last sync).
+Also scan `~/claude-config/Claude/templates/skills/` for templates that are NOT in the project's `skills` map — these are **New** (added to global config since last sync).
 
 Present a table:
 
@@ -293,7 +293,7 @@ Use `AskUserQuestion` with multiSelect. Pre-select all Changed and New skills. C
 **For Changed skills:**
 
 1. Read `Claude/local/skills/{name}/config.md` to recover all customization values
-2. Read the new template from `~/.claude/templates/skills/{name}/SKILL.md`
+2. Read the new template from `~/claude-config/Claude/templates/skills/{name}/SKILL.md`
 3. Re-generate `Claude/skills/{name}/SKILL.md` by applying stored values to the new template (same process as Step 2.5, but using stored values instead of asking)
 4. Copy any new or updated supporting files from the template directory
 5. Update the thin shell in `.claude/skills/{name}/SKILL.md` if the description changed

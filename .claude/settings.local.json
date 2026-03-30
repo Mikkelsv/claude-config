@@ -8,7 +8,8 @@
       "Bash(cmd /c \"dir /AL C:\\\\Users\\\\mikke\\\\claude-config\\\\Claude\\\\skills\")",
       "Bash(cmd /c \"dir /AL C:\\\\Users\\\\mikke\\\\claude-config\\\\Claude\\\\skills\\\\rebase-on-main\")",
       "Bash(cmd /c \"dir /AL C:\\\\Users\\\\mikke\\\\claude-config\\\\Claude\")",
-      "Bash(cmd /c \"fsutil reparsepoint query C:\\\\Users\\\\mikke\\\\claude-config\\\\Claude\\\\skills\\\\rebase-on-main\")"
+      "Bash(cmd /c \"fsutil reparsepoint query C:\\\\Users\\\\mikke\\\\claude-config\\\\Claude\\\\skills\\\\rebase-on-main\")",
+      "Bash(cmd /c \"dir /AL C:\\\\Users\\\\mikke\\\\claude-config\\\\dotclaude\")"
     ]
   }
 }

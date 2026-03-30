@@ -2,7 +2,7 @@
 
 Commit and push all changes in the `~/claude-config/` config repo.
 
-Scripts directory: `~/.claude/scripts`
+Scripts directory: `~/claude-config/Claude/scripts`
 
 ## Steps
 
@@ -11,7 +11,7 @@ Scripts directory: `~/.claude/scripts`
 2. Run `sync-config.ps1` with the commit message:
 
    ```bash
-   powershell.exe -NoProfile -File "$HOME/.claude/scripts/sync-config.ps1" -Message "<message>"
+   powershell.exe -NoProfile -File "$HOME/claude-config/Claude/scripts/sync-config.ps1" -Message "<message>"
    ```
 
    Returns: `{"committed": true, "pushed": true, "hash": "...", "message": "..."}` on success, or `{"committed": false, "reason": "nothing to commit"}` if clean.
