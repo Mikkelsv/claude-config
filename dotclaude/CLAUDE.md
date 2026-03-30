@@ -13,7 +13,7 @@ The repo has two directories:
 - `dotclaude/` — maps to `~/.claude/` via junction. Rules, commands, skill shells, settings.
 - `Claude/` — freely editable. Scripts, templates, full skill implementations.
 
-Edit files through the real paths in `~/claude-config/`, not through `~/.claude/`. Use `/claude-push` to commit and sync. Use `/claude-pull` to pick up changes.
+Edit files through the real paths in `~/claude-config/`, not through `~/.claude/`. Use `/claude-push` to commit and sync. Use `/claude-sync` in projects to pull and sync skills.
 
 ### Slash commands
 

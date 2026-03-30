@@ -4,53 +4,46 @@ Personal Claude Code configuration with slash commands, skills, and PowerShell a
 
 ## For Humans
 
-### Skills (slash commands)
+### Config Management
 
-#### `/claude-sync [skills|fresh]`
+| Command | What it does |
+|---|---|
+| `/claude-sync [skills\|fresh]` | Pull global config, then scaffold or sync project skills. First run = full scaffolding, later runs = targeted template updates. |
+| `/claude-refactor` | Audit all skills, commands, scripts, rules, and templates. Fixes bugs, stale refs, permission gaps. |
+| `/claude-push` | Commit and push config changes. Auto-bumps version on template changes. |
+| `/allow [prompt]` | Parse a blocked permission prompt and add a generalized allow rule. |
 
-Pull global config, then scaffold or sync project skills. First run does full scaffolding; later runs detect template drift and offer targeted updates. Stores customization values in `Claude/local/` so syncs never re-ask questions.
+### Global Workflow Skills
 
-- `/claude-sync` — pull + scaffold (first run) or pull + sync (later runs)
-- `/claude-sync fresh` — force full re-scaffold from scratch
-- `/claude-sync build test` — sync specific skills only
+Available to you in every project via the global config.
 
-#### `/rebase-on-main`
+| Skill | What it does |
+|---|---|
+| `/build` | Build & serve. Reads project config from `Claude/local/skills/build/config.md`. |
+| `/rebase-on-main` | Rebase on main, resolve conflicts, optionally merge/push. |
+| `/plan [feature]` | Collaborative feature discovery and structured plan creation. |
+| `/implement [plan]` | Autonomous dev loop — plan tasks with build/test/refactor/audit gates. |
+| `/refactor [focus]` | Code quality review orchestrator (spawns refactor-code, refactor-docs, refactor-tests). |
+| `/refactor-docs [focus]` | Documentation sync — checks docs match code changes. |
 
-Full rebase workflow: checks for uncommitted changes, fetches and rebases onto main, resolves conflicts autonomously. Then offers options: merge into main (with build verification and branch cleanup), force-push the rebased branch (with lease), build and test, or revert.
+### Project Skills (via /claude-sync)
 
-#### `/claude-refactor`
+Scaffolded per-project from templates. Embed project-specific knowledge (architecture rules, test patterns).
 
-Audit all skills, commands, scripts, rules, and templates across the global config and the current project. Checks for bugs, stale references, misplaced items, missing permissions, script extraction opportunities, template drift, and underused parallelization.
+| Skill | What it does |
+|---|---|
+| `/test` | Browser-based smoke tests with optional perf tracking. |
+| `/refactor-code [focus]` | Code quality & architecture review with project-specific criteria. |
+| `/refactor-tests [focus]` | Test coverage review with project-specific framework knowledge. |
+| `/audit` | Deep architecture review (boundaries, overengineering, alternatives). |
 
-#### `/allow [prompt]`
+### Utility Commands
 
-Parse a blocked permission prompt and add a generalized allow rule to `settings.json`.
-
-#### `/build`
-
-Build and serve the application. Reads project-specific config from `Claude/local/skills/build/config.md`. Automatically runs after code changes when invoked.
-
-### Commands
-
-#### `/claude-push`
-
-Commit and push all pending changes in the config repo. Automatically generates a commit message based on the diff.
-
-#### `/claude-pull`
-
-Pull the latest changes from the remote config repo (fast-forward only).
-
-#### `/todo [text]`
-
-Capture a question, prompt, or to-do item for Claude to remember and surface in future conversations.
-
-#### `/handoff`
-
-Write a session handoff summary to project memory so the next session can pick up where this one left off.
-
-#### `/pickup`
-
-Resume from a previous session's handoff.
+| Command | What it does |
+|---|---|
+| `/todo [text]` | Capture a to-do item for future sessions. |
+| `/handoff` | Write a session handoff summary to project memory. |
+| `/pickup` | Resume from a previous session's handoff. |
 
 ### Setup
 
@@ -91,7 +84,7 @@ Claude Code protects `.claude/` — writes through the `dotclaude/` junction sti
 #### After setup
 
 - **Edit config** through `~/claude-config/` paths (never `~/.claude/`).
-- **Sync changes** with `/claude-push` (commit + push) and `/claude-pull` (pull).
+- **Sync changes** with `/claude-push` (commit + push) or `/claude-sync` (pull + sync project skills).
 - **Add project skills** with `/claude-sync` in any project directory.
 
 ### Notifications
@@ -129,7 +122,11 @@ When Claude finishes a task or hits a permission prompt, the Claude desktop app 
       build/
       claude-refactor/
       claude-sync/
+      implement/
+      plan/
       rebase-on-main/
+      refactor/
+      refactor-docs/
 ```
 
 **Junctions:**

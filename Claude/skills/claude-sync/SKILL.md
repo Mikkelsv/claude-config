@@ -11,19 +11,28 @@ Input: `$ARGUMENTS` (optional — "fresh" to force re-scaffold, or skill names l
 
 Templates directory: `~/.claude/templates/skills/`
 
-## Available Skills
+## Project Skills (scaffolded from templates)
 
-| Skill | What it does | Dependencies |
-|---|---|---|
-| **build** | Build & serve with auto-build after code changes (global skill, scaffolds `Claude/local/skills/build/config.md` only) | None |
-| **test** | Browser-based smoke tests with optional perf tracking | build, preview tools |
-| **refactor** | Orchestrator: spawns refactor-code, refactor-docs, refactor-tests in parallel | refactor-code, refactor-docs, refactor-tests |
-| **refactor-code** | Code quality & architecture review | None (uses CLAUDE.md) |
-| **refactor-docs** | Review and update documentation to match code changes | None |
-| **refactor-tests** | Review test coverage against code changes | test framework files |
-| **audit** | Deep architecture review (overengineering, boundaries, alternatives) | None (uses CLAUDE.md) |
-| **plan** | Collaborative feature discovery and structured plan creation | implement (for plan format) |
-| **implement** | Autonomous dev loop (plan → implement → test → refactor → audit) | build, test, refactor, audit |
+These encode project-specific knowledge and are committed to the repo for all team members:
+
+| Skill | What it does |
+|---|---|
+| **build** | Global skill — scaffolds `Claude/local/skills/build/config.md` only |
+| **test** | Browser-based smoke tests with optional perf tracking |
+| **refactor-code** | Code quality & architecture review |
+| **refactor-tests** | Review test coverage against code changes |
+| **audit** | Deep architecture review (overengineering, boundaries, alternatives) |
+
+## Global Skills (optional project copies for teammates)
+
+These are available globally to users with the config. They can optionally be scaffolded as project-level copies so teammates without the global config can use them too:
+
+| Skill | What it does |
+|---|---|
+| **plan** | Collaborative feature discovery and structured plan creation |
+| **implement** | Autonomous dev loop (plan → implement → test → refactor → audit) |
+| **refactor** | Orchestrator: spawns refactor-code, refactor-docs, refactor-tests |
+| **refactor-docs** | Review and update documentation to match code changes |
 
 ---
 
@@ -62,19 +71,39 @@ Run this when no `Claude/local/config-version.json` exists (first time scaffoldi
 
 List any existing skills in `.claude/skills/`. If the user is scaffolding a skill that already exists, ask: overwrite or skip?
 
-### 2.2 — Select Skills
+### 2.2 — Select Project Skills
 
 If `$ARGUMENTS` specifies skills, use those. If "all", scaffold everything. If empty, ask:
 
-Use `AskUserQuestion` with multiSelect:
-- build (Recommended)
+Use `AskUserQuestion` with multiSelect for project-specific skills:
+- build (Recommended) — scaffolds local config only
 - test
-- refactor (includes refactor-code, refactor-docs, refactor-tests)
+- refactor-code
+- refactor-tests
 - audit
-- plan (requires implement for plan format)
-- implement (requires build + test + refactor + audit)
 
-If implement is selected, ensure build, test, refactor, and audit are also selected (they're prerequisites). If refactor is selected, ensure refactor-code, refactor-docs, and refactor-tests are also created. If plan is selected, ensure implement is also selected.
+Then ask about **teammate copies** of global skills — these are already available to you globally, but teammates without the global config won't have them. Use `AskUserQuestion` with multiSelect:
+- plan — feature discovery and plan creation
+- implement — autonomous dev loop with build/test/refactor gates
+- refactor — orchestrator (spawns refactor-code, refactor-docs, refactor-tests)
+- refactor-docs — documentation sync
+
+Store the teammate copy choice in `Claude/local/skills/sync-config.md`:
+
+```markdown
+# Sync Config
+
+## Teammate Copies
+
+Global skills also scaffolded as project-level for teammates:
+
+- plan
+- implement
+- refactor
+- refactor-docs
+```
+
+Scaffold the selected teammate copies from their templates (same process as project skills).
 
 ### 2.3 — Gather Project Info
 
@@ -96,10 +125,9 @@ Then ask the user for skill-specific info using `AskUserQuestion`:
 - If yes: perf baseline path (where to store the JSON baseline, should be gitignored)
 - Any testing conventions or patterns (file for new tests, registration, cleanup)
 
-**For refactor / refactor-code:**
+**For refactor-code:**
 - Architecture principles — can often be derived from CLAUDE.md. Ask only if CLAUDE.md is missing or sparse.
 - Specific quality goals or review criteria beyond CLAUDE.md
-- The refactor template is the orchestrator; refactor-code, refactor-docs, and refactor-tests are the sub-skills it spawns
 
 **For refactor-tests:**
 - Test framework files to read (patterns, conventions, existing test implementations)
@@ -109,14 +137,12 @@ Then ask the user for skill-specific info using `AskUserQuestion`:
 - Architecture boundary rules — derive from CLAUDE.md's core principles
 - Specific layering or dependency direction rules
 
-**For plan:**
-- Feature board file — does the project use a feature tracker? If yes, path (e.g., `plans/FEATURES.md`)
+**For plan** (only if scaffolding as teammate copy or creating local config):
 - Plan directory location (default: `plans/`)
+- Feature board file (optional)
 
-**For implement:**
+**For implement** (only if scaffolding as teammate copy or creating local config):
 - Commit message prefix convention (default: `FEAT:`/`FIX:`/`REFACTOR:`)
-- How to create tests for new features (test framework, patterns, file locations)
-- Any doc files that should stay updated (list them)
 - Plan directory location (default: `plans/`)
 
 ### 2.4 — Store Customization Values
