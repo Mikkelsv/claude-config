@@ -1,5 +1,5 @@
 # Claude Config Setup (Junction-based)
-# Clones the config repo to ~/Documents/Code/claude-config/ and creates junctions
+# Clones the config repo to ~/claude-config/ and creates junctions
 # so Claude Code finds everything at ~/.claude/.
 #
 # Usage:
@@ -13,7 +13,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$configRoot = "$env:USERPROFILE\Documents\Code\claude-config"
+$configRoot = "$env:USERPROFILE\claude-config"
 $dotclaude = "$configRoot\dotclaude"
 $claudeDir = "$env:USERPROFILE\.claude"
 
@@ -61,14 +61,6 @@ if (-not (Test-Path "$dotclaude\scripts")) {
 }
 if (-not (Test-Path "$dotclaude\templates")) {
     cmd /c "mklink /J `"$dotclaude\templates`" `"$configRoot\Claude\templates`""
-}
-
-# Install pre-commit hook
-$hookSrc = "$configRoot\hooks\pre-commit"
-$hookDst = "$configRoot\.git\hooks\pre-commit"
-if ((Test-Path $hookSrc) -and -not (Test-Path $hookDst)) {
-    Copy-Item $hookSrc $hookDst -Force
-    Write-Host "Pre-commit hook installed." -ForegroundColor Cyan
 }
 
 # Set up settings.json from template

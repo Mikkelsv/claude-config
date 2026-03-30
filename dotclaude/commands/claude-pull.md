@@ -1,6 +1,6 @@
 # Pull Claude Config
 
-Pull the latest changes from the remote `~/Documents/Code/claude-config/` config repo.
+Pull the latest changes from the remote `~/claude-config/` config repo.
 
 Scripts directory: `~/.claude/scripts`
 

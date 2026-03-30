@@ -12,8 +12,6 @@ Input: `$ARGUMENTS` — whatever the user pastes from the permission prompt. Cou
 
 If empty, prompt the user to paste the blocked action.
 
-Scripts directory: `~/.claude/scripts`
-
 ## Extracting the Rule
 
 Parse `$ARGUMENTS` to identify the **tool type** and **pattern**:
@@ -36,12 +34,8 @@ Parse `$ARGUMENTS` to identify the **tool type** and **pattern**:
 
 1. Extract and generalize the rule from `$ARGUMENTS` as described above.
 2. Show the user the proposed rule and ask for confirmation using `AskUserQuestion`.
-3. If confirmed, add the rule:
-
-   ```bash
-   powershell.exe -NoProfile -File "$HOME/.claude/scripts/settings-add-rule.ps1" -Rule "<rule>"
-   ```
-
-   Returns JSON: `{"added": true/false, "exists": true/false, "rule": "..."}`
-
-4. If `exists` is true, tell the user the rule already exists. Otherwise confirm it was added.
+3. If confirmed:
+   - Read `~/.claude/settings.json`.
+   - Check if `permissions.allow` already contains the rule (exact match). If so, tell the user it already exists and stop.
+   - Otherwise, use the Edit tool to append the rule to the `permissions.allow` array.
+4. Confirm the rule was added.

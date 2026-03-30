@@ -2,7 +2,6 @@
   "permissions": {
     "allow": [
       "Bash(git *)",
-      "Bash(cd ** && git *)",
       "Bash(dotnet *)",
       "Bash(powershell.exe -NoProfile -File *)",
       "Bash(powershell.exe -NoProfile -ExecutionPolicy *)",

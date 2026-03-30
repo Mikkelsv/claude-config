@@ -7,7 +7,7 @@ description: Rebase current branch on main with conflict resolution, build verif
 
 **Execute every step below in order. No step may be skipped.** Stop and report to the user if any step fails unexpectedly.
 
-Skill scripts: `~/Documents/Code/claude-config/Claude/skills/rebase-on-main/scripts`
+Skill scripts: `~/claude-config/Claude/skills/rebase-on-main/scripts`
 
 ---
 
@@ -16,7 +16,7 @@ Skill scripts: `~/Documents/Code/claude-config/Claude/skills/rebase-on-main/scri
 Run the rebase script (includes preflight checks):
 
 ```bash
-powershell.exe -NoProfile -File "~/Documents/Code/claude-config/Claude/skills/rebase-on-main/scripts/git-rebase-onto.ps1"
+powershell.exe -NoProfile -File "~/claude-config/Claude/skills/rebase-on-main/scripts/git-rebase-onto.ps1"
 ```
 
 Returns JSON with `status`:
@@ -49,12 +49,24 @@ After all conflicts resolved → Continue to Phase 2.
 
 ## Phase 2: Merge Prompt
 
-Use `AskUserQuestion` with four options (no "Other" escape hatch needed — user can dismiss the prompt and type freely):
+Use `AskUserQuestion` with five options (no "Other" escape hatch needed — user can dismiss the prompt and type freely):
 
 - **Merge** → Go to Build & Merge.
+- **Push branch** → Go to Push Rebased Branch.
 - **Build & test** → Go to Build & Test.
 - **Done** → Report "Rebase complete. Branch left as-is." Done.
 - **Revert** → `git reset --hard ORIG_HEAD`, report "Rebase reverted." Done.
+
+### Push Rebased Branch
+
+Force-push the rebased branch to the remote with lease (safe — rejects if someone else pushed):
+
+```bash
+git push --force-with-lease
+```
+
+- **Success** → Report "Branch pushed (force-with-lease)." Loop back to the same prompt.
+- **Failure** → Report the error. The branch may have been updated by someone else. Loop back to prompt.
 
 ### Build & Test
 
@@ -69,7 +81,7 @@ Invoke the project's `/build` skill if one exists. If no `/build` skill is avail
 2. Run the merge script:
 
 ```bash
-powershell.exe -NoProfile -File "~/Documents/Code/claude-config/Claude/skills/rebase-on-main/scripts/git-merge-cleanup.ps1" -Branch "<branch-name>"
+powershell.exe -NoProfile -File "~/claude-config/Claude/skills/rebase-on-main/scripts/git-merge-cleanup.ps1" -Branch "<branch-name>"
 ```
 
 Returns JSON: `{"merged": true, "pushed": true, "branch": "...", "localDeleted": true, "remoteDeleted": true, "worktreeRemoved": false, "worktreeName": null}`

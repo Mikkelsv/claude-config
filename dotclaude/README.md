@@ -8,7 +8,7 @@ Personal Claude Code configuration with slash commands, skills, and PowerShell a
 
 #### `/claude-setup [skills]`
 
-Scaffold project-level skills from global templates. Creates thin shells in `.claude/skills/` (for skill discovery) and full implementations in `Claude/skills/` (for frictionless editing). Also creates `Claude/docs/` for architecture documentation. Available skills: build, test, refactor, plan, implement.
+Scaffold project-level skills from global templates. Creates thin shells in `.claude/skills/` (for skill discovery) and full implementations in `Claude/skills/` (for frictionless editing). Also creates `Claude/docs/` for architecture documentation. Available skills: build, test, refactor (+ refactor-code/docs/tests), audit, plan, implement.
 
 - `/claude-setup` — asks which skills to scaffold
 - `/claude-setup all` — scaffolds everything
@@ -16,7 +16,7 @@ Scaffold project-level skills from global templates. Creates thin shells in `.cl
 
 #### `/rebase-on-main`
 
-Full rebase workflow: checks for uncommitted changes, fetches and rebases onto main, resolves conflicts autonomously, verifies the build, and force-pushes with lease. Optionally merges the feature branch back into main with branch cleanup and worktree cleanup.
+Full rebase workflow: checks for uncommitted changes, fetches and rebases onto main, resolves conflicts autonomously. Then offers options: merge into main (with build verification and branch cleanup), force-push the rebased branch (with lease), build and test, or revert.
 
 #### `/claude-refactor`
 
@@ -48,7 +48,45 @@ Parse a blocked permission prompt and add a generalized allow rule to `settings.
 
 ### Setup
 
-Config is a git repo at <https://github.com/Mikkelsv/claude-config.git>, stored at `~/Documents/Code/claude-config/`. A Windows junction makes `~/.claude/` point to `dotclaude/` so Claude Code finds everything where it expects it. For a fresh machine, run `Claude/setup.ps1` to clone, create junctions, and configure.
+Config is a git repo at <https://github.com/Mikkelsv/claude-config.git>, stored at `~/claude-config/`.
+
+#### How it works
+
+Claude Code expects its config at `~/.claude/`. Instead of editing there directly (which triggers permission prompts on every write), this repo uses **Windows junctions** to make `~/.claude/` point to the repo's `dotclaude/` directory. Edits go through the real repo paths.
+
+```
+~/.claude/  ──junction──>  ~/claude-config/dotclaude/   (discovery: rules, commands, skill shells)
+                           ~/claude-config/Claude/       (editable: scripts, templates, skill implementations)
+```
+
+Two inner junctions provide backward-compatible `~/.claude/scripts/` and `~/.claude/templates/` paths:
+
+```
+dotclaude/scripts/   ──junction──>  Claude/scripts/
+dotclaude/templates/ ──junction──>  Claude/templates/
+```
+
+#### Why two directories?
+
+Claude Code protects `.claude/` — writes through the `dotclaude/` junction still trigger prompts because the OS resolves the junction. The `Claude/` directory is outside this protection, so edits there are prompt-free. Discovery files (rules, commands, skill shells, settings) must live in `dotclaude/` for Claude Code to find them, but everything else belongs in `Claude/`.
+
+#### Fresh machine setup
+
+1. Install [git](https://git-scm.com/) and ensure it's on PATH.
+2. If `~/.claude/` already exists as a regular directory, back it up and remove it.
+3. Run the setup script from an elevated PowerShell:
+   ```powershell
+   git clone https://github.com/Mikkelsv/claude-config.git "$env:USERPROFILE\claude-config"
+   powershell -File "$env:USERPROFILE\claude-config\Claude\setup.ps1"
+   ```
+4. The script clones the repo (if needed), creates all junctions, and generates `settings.json` from the template.
+5. Open Claude Code — your rules, commands, and skills should be active immediately.
+
+#### After setup
+
+- **Edit config** through `~/claude-config/` paths (never `~/.claude/`).
+- **Sync changes** with `/claude-push` (commit + push) and `/claude-pull` (pull).
+- **Add project skills** with `/claude-setup` in any project directory.
 
 ### Notifications
 
@@ -61,7 +99,7 @@ When Claude finishes a task or hits a permission prompt, the Claude desktop app 
 ### Directory Layout
 
 ```text
-~/Documents/Code/claude-config/           # Git repo root
+~/claude-config/           # Git repo root
   dotclaude/                              # Junction target for ~/.claude/
     .gitignore
     .claude/rules/                        # Meta-config for the config repo
@@ -77,7 +115,7 @@ When Claude finishes a task or hits a permission prompt, the Claude desktop app 
   Claude/                                 # Freely editable (no permission prompts)
     config-version.json                   # Global config version tracking
     setup.ps1                             # Fresh machine bootstrap
-    scripts/                              # PowerShell automation (21 scripts)
+    scripts/                              # PowerShell automation (19 scripts)
     templates/skills/                     # 9 skill templates
     skills/                               # Full global skill implementations
       rebase-on-main/
@@ -85,7 +123,7 @@ When Claude finishes a task or hits a permission prompt, the Claude desktop app 
 ```
 
 **Junctions:**
-- `~/.claude/` -> `~/Documents/Code/claude-config/dotclaude/`
+- `~/.claude/` -> `~/claude-config/dotclaude/`
 - `dotclaude/scripts/` -> `Claude/scripts/`
 - `dotclaude/templates/` -> `Claude/templates/`
 
@@ -95,12 +133,12 @@ When Claude finishes a task or hits a permission prompt, the Claude desktop app 
 
 - **`dotclaude/`** holds discovery files (rules, commands, skill shells, settings)
 - **`Claude/`** holds editable content (scripts, templates, skill implementations)
-- Edit through `~/Documents/Code/claude-config/` paths, not `~/.claude/`
-- Git operations target `~/Documents/Code/claude-config/` (the repo root)
+- Edit through `~/claude-config/` paths, not `~/.claude/`
+- Git operations target `~/claude-config/` (the repo root)
 
 ### Version Tracking
 
-`Claude/config-version.json` tracks the global config version. A pre-commit hook auto-bumps on changes to rules, commands, skills, scripts, or templates. Projects track staleness via their own `Claude/config-version.json`.
+`Claude/config-version.json` tracks the global config version. The `/claude-push` command auto-bumps the patch version when changes touch rules, commands, skills, scripts, or templates. Projects track staleness via their own `Claude/config-version.json` — at session start, Claude compares the two and suggests `/claude-setup` if they differ.
 
 ### Global Rules
 
@@ -127,7 +165,7 @@ All scripts in `Claude/scripts/`, accessible via `~/.claude/scripts/` through ju
 | Launching | `launch-vscode`, `launch-claude-tab`, `launch-worktree`, `launch-dev-server`, `kill-port` |
 | Git | `git-preflight`, `git-branch-scope`, `git-diff-scope` |
 | File/Process | `remove-path`, `move-path`, `npm-command`, `node-run` |
-| Config | `sync-config`, `pull-config`, `settings-add-rule` |
+| Config | `sync-config`, `pull-config` |
 | Notifications | `notify` |
 
 Skill-local scripts in `Claude/skills/rebase-on-main/scripts/`: `git-rebase-onto`, `git-merge-cleanup`.

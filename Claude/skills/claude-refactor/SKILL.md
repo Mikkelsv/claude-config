@@ -10,7 +10,7 @@ and the current project. Check for bugs, stale references, misplaced items,
 missing permissions, script extraction opportunities, template drift, and
 underused parallelization. Fix what can be fixed directly; propose the rest.
 
-Scripts directory: `~/Documents/Code/claude-config/Claude/scripts`
+Scripts directory: `~/claude-config/Claude/scripts`
 
 ---
 
@@ -91,7 +91,7 @@ reusable script:
   `preview_*` calls.
 
 For each candidate: where it appears, what it does, proposed script name, whether
-shared (`~/Documents/Code/claude-config/Claude/scripts/`) or skill-local (`scripts/`).
+shared (`~/claude-config/Claude/scripts/`) or skill-local (`scripts/`).
 
 ### Agent B — Structure & Permissions
 
@@ -168,7 +168,7 @@ Phase 3.
 
 ## Phase 3 — Fix
 
-This phase will touch files in `~/Documents/Code/claude-config/` (the global
+This phase will touch files in `~/claude-config/` (the global
 config repo). Edit files using the real path (not `~/.claude/`) to avoid
 permission prompts.
 
@@ -182,13 +182,9 @@ Low-risk, clearly correct changes:
   script `param()` blocks.
 - **JSON output format mismatches**: Update SKILL.md descriptions to match actual
   script output.
-- **Missing permission patterns** (assessed as safe in 2.3):
-
-  ```bash
-  powershell.exe -NoProfile -File "$HOME/Documents/Code/claude-config/Claude/scripts/settings-add-rule.ps1" -Rule "<pattern>"
-  ```
-
-  If the pattern is portable, also update `settings.template.json`.
+- **Missing permission patterns** (assessed as safe in 2.3): Add to
+  `~/.claude/settings.json` via Edit tool. If the pattern is portable, also
+  update `settings.template.json`.
 
 - **README corrections**: Fix inaccurate descriptions, add missing entries,
   remove stale entries.

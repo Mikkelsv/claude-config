@@ -90,7 +90,7 @@ For each selected skill:
 1. Read the template from `~/.claude/templates/skills/{name}/`
 2. Generate a customized version with the user's project info filled in — replace all `{PLACEHOLDER}` markers with actual values
 3. Write the **full implementation** to `Claude/skills/{name}/SKILL.md` (outside the protected `.claude/` folder)
-4. Write a **thin shell** to `.claude/skills/{name}/SKILL.md` containing only the frontmatter (name, description) and a redirect: `Read and follow Claude/skills/{name}/SKILL.md.` Include `$ARGUMENTS` in the shell for skills that accept user arguments (build, test, plan, implement, db-restore).
+4. Write a **thin shell** to `.claude/skills/{name}/SKILL.md` containing only the frontmatter (name, description) and a redirect: `Read and follow Claude/skills/{name}/SKILL.md.` Include `$ARGUMENTS` in the shell for skills that accept user arguments (build, test, plan, implement).
 5. Copy any supporting files to `Claude/skills/{name}/` (e.g., `browser-throttling.md`, `plan-template.md`)
 
 **For build specifically:** Also generate scripts in `Claude/skills/build/scripts/`:
@@ -125,7 +125,7 @@ If the user selected test and configured a preview server, check if `.claude/lau
 
 ### Step 6 — Stamp Config Version
 
-Read `~/Documents/Code/claude-config/Claude/config-version.json` to get the current global config version. Write `Claude/config-version.json` in the project root:
+Read `~/claude-config/Claude/config-version.json` to get the current global config version. Write `Claude/config-version.json` in the project root:
 
 ```json
 {

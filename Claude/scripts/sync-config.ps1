@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory)][string]$Message
 )
 
-$repoRoot = "$env:USERPROFILE\Documents\Code\claude-config"
+$repoRoot = "$env:USERPROFILE\claude-config"
 
 Push-Location $repoRoot
 try {
@@ -13,6 +13,24 @@ try {
     }
 
     git add -A 2>$null
+
+    # Auto-bump config version if meaningful files changed
+    $trackedDirs = @("dotclaude/rules", "dotclaude/commands", "dotclaude/skills", "Claude/scripts", "Claude/skills", "Claude/templates")
+    $staged = git diff --cached --name-only 2>$null
+    $meaningful = $staged | Where-Object { $f = $_; $trackedDirs | Where-Object { $f.StartsWith("$_/") } }
+    if ($meaningful) {
+        $versionFile = "$repoRoot\Claude\config-version.json"
+        if (Test-Path $versionFile) {
+            $vJson = Get-Content $versionFile -Raw | ConvertFrom-Json
+            $parts = $vJson.version -split '\.'
+            $parts[2] = [int]$parts[2] + 1
+            $vJson.version = $parts -join '.'
+            $vJson.lastUpdated = (Get-Date -Format "yyyy-MM-dd")
+            $vJson | ConvertTo-Json -Depth 10 | Set-Content $versionFile -Encoding UTF8
+            git add $versionFile 2>$null
+        }
+    }
+
     git commit -m "$Message`n`nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>" 2>$null
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Commit failed"

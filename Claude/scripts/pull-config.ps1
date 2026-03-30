@@ -1,4 +1,4 @@
-$repoRoot = "$env:USERPROFILE\Documents\Code\claude-config"
+$repoRoot = "$env:USERPROFILE\claude-config"
 
 Push-Location $repoRoot
 try {

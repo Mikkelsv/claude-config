@@ -15,7 +15,7 @@
 
 ## Global-level
 
-The global config uses the same pattern at `~/Documents/Code/claude-config/`:
+The global config uses the same pattern at `~/claude-config/`:
 
 | Location | Content | Why |
 | --- | --- | --- |
@@ -42,9 +42,23 @@ $ARGUMENTS
 Read and follow `Claude/skills/<name>/SKILL.md`.
 ```
 
-For global skills, the redirect uses the full path: `~/Documents/Code/claude-config/Claude/skills/<name>/SKILL.md`.
+For global skills, the redirect uses the full path: `~/claude-config/Claude/skills/<name>/SKILL.md`.
 
 The actual instructions live in `Claude/skills/<name>/SKILL.md`. Include `$ARGUMENTS` in the shell only for skills that accept user arguments.
+
+## Permission behavior (tested)
+
+Claude Code protects `.claude/` paths. Because `dotclaude/` junctions to `~/.claude/`, the OS resolves writes through the junction — triggering the same protection.
+
+| Operation | `claude-config/Claude/` | `claude-config/dotclaude/` | `~/.claude/` |
+| --- | --- | --- | --- |
+| **Read** (Read tool) | No prompt | No prompt | Prompted |
+| **Write** (Write/Edit tool) | No prompt | Prompted | Prompted |
+| **Bash** (cat, rm, etc.) | No prompt | Prompted | Prompted |
+
+The Read tool checks the literal path, so reading via `claude-config/dotclaude/` is clean. Write and Bash operations resolve the junction and hit `.claude/` protection.
+
+**Bottom line:** Always edit in `Claude/` to avoid prompts. Only touch `dotclaude/` for discovery files that must live at `.claude/` (rules, commands, skill shells, settings).
 
 ## How to apply
 
