@@ -2,6 +2,10 @@
 
 Only lists changes that require project action. Global rules, scripts, and global skills are picked up automatically and not tracked here.
 
+## v1.0.3 — 2026-03-31
+
+- Settings template updated with `~/` anchored permission globs (no project action needed — fix is in global `settings.json`)
+
 ## v1.0.1 — 2026-03-30
 
 - Run `/claude-sync` to scaffold `Claude/local/skills/build/config.md` (new local build reference)

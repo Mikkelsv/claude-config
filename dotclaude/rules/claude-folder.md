@@ -58,6 +58,8 @@ Claude Code protects `.claude/` paths. Because `dotclaude/` junctions to `~/.cla
 
 The Read tool checks the literal path, so reading via `claude-config/dotclaude/` is clean. Write and Bash operations resolve the junction and hit `.claude/` protection.
 
+**Permission glob syntax:** `Read(**)` only matches paths relative to the CWD. To allow reads of global config from any project, use `~/` anchored patterns: `Read(~/claude-config/**)`. See [permissions docs](https://code.claude.com/docs/en/permissions.md) for all prefix types (`~/`, `//`, `/`, `./`).
+
 **Bottom line:** Always edit in `Claude/` to avoid prompts. Only touch `dotclaude/` for discovery files that must live at `.claude/` (rules, commands, skill shells, settings).
 
 ## How to apply
