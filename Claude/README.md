@@ -26,6 +26,8 @@ Available to you in every project via the global config.
 | `/refactor [focus]` | Code quality review orchestrator (spawns refactor-code, refactor-docs, refactor-tests). |
 | `/refactor-docs [focus]` | Documentation sync — checks docs match code changes. |
 | `/audit-architecture [focus]` | Deep architecture review (boundaries, overengineering, alternatives). |
+| `/teach [mode]` | Interactive programming lesson — contextual deep-dive, codebase exploration, or random topic. |
+| `/commit [hint]` | Stage all changes, craft a typed commit message (FEAT/FIX/REFAC/DOCS), and push. Prompts to amend for small changes. |
 
 ### Project Skills (via /claude-sync)
 
@@ -120,6 +122,8 @@ When Claude finishes a task or hits a permission prompt, the Claude desktop app 
       rebase-on-main/
       refactor/
       refactor-docs/
+      commit/
+      teach/
 ```
 
 **Junction:** `~/.claude/` -> `~/claude-config/dotclaude/`
@@ -152,6 +156,7 @@ Rules in `dotclaude/rules/` are always loaded:
 - **todo-surfacing.md** — Surface todo items at natural moments
 - **no-read-generated-css.md** — Never read Tailwind output files
 - **skill-tiers.md** — 3-tier skill placement (global, project, local config)
+- **teach-on-completion.md** — Offer a teaching nugget + quiz after completing dev tasks
 
 ### Script Catalog
 
@@ -161,7 +166,7 @@ All scripts in `Claude/scripts/`.
 |----------|---------|
 | Worktree | `get-worktrees`, `create-worktree`, `remove-worktree`, `escape-worktree` |
 | Launching | `launch-vscode`, `launch-dev-server`, `kill-port` |
-| Git | `git-preflight`, `git-branch-scope`, `git-diff-scope` |
+| Git | `git-preflight`, `git-branch-scope`, `git-diff-scope`, `commit` |
 | File/Process | `remove-path`, `move-path`, `npm-command`, `node-run` |
 | Config | `sync-config`, `pull-config` |
 | Notifications | `notify` |
