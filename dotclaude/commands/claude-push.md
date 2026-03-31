@@ -6,17 +6,19 @@ Scripts directory: `~/claude-config/Claude/scripts`
 
 ## Steps
 
-1. Review what changed using `git -C ~/claude-config diff` and `git -C ~/claude-config status --porcelain` to write a good commit message. Keep it concise (one line, imperative mood).
-
-2. Run `sync-config.ps1` with the commit message:
+1. Run `sync-config.ps1` to stage all changes and handle version bumping:
 
    ```bash
-   powershell.exe -NoProfile -File "$HOME/claude-config/Claude/scripts/sync-config.ps1" -Message "<message>"
+   powershell.exe -NoProfile -File "$HOME/claude-config/Claude/scripts/sync-config.ps1"
    ```
 
-   Returns: `{"committed": true, "pushed": true, "hash": "...", "message": "..."}` on success, or `{"committed": false, "reason": "nothing to commit"}` if clean.
+   Returns JSON: `{"hasChanges": true, "staged": [...], "versionBump": bool, "newVersion": "..."}` or `{"hasChanges": false, "reason": "nothing to commit"}`.
 
-3. **Update the changelog** if the version was bumped AND the changes require project action (e.g., template changes that need re-scaffolding, new gitignore entries, new local config files). Skip the changelog for changes that are picked up automatically (rules, scripts, global skills). Append a bullet-list entry to `~/claude-config/Claude/CHANGELOG.md` with the new version, date, and actionable items only. Then stage the changelog and amend the commit:
+   If no changes, report "nothing to commit" and stop.
+
+2. Run `/commit` to commit and push. The commit skill will analyze the staged diff, pick the right TYPE, and push. Since this is config work, it will typically be `DOCS:`.
+
+3. **Update the changelog** if `sync-config.ps1` reported `versionBump: true` AND the changes require project action (e.g., template changes that need re-scaffolding, new gitignore entries, new local config files). Skip the changelog for changes that are picked up automatically (rules, scripts, global skills). Append a bullet-list entry to `~/claude-config/Claude/CHANGELOG.md` with the new version, date, and actionable items only. Then stage and amend:
 
    ```bash
    git -C ~/claude-config add Claude/CHANGELOG.md
@@ -24,4 +26,4 @@ Scripts directory: `~/claude-config/Claude/scripts`
    git -C ~/claude-config push --force-with-lease
    ```
 
-4. Report the result to the user: commit hash and message, or "nothing to commit" if clean. Note: `sync-config.ps1` auto-bumps the config version when staged files touch rules, commands, skills, scripts, or templates — mention the version bump if it occurred.
+4. Report the result to the user: commit hash and message, or "nothing to commit" if clean. Mention the version bump if one occurred.

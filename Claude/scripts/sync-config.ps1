@@ -1,6 +1,7 @@
-param(
-    [Parameter(Mandatory)][string]$Message
-)
+param()
+
+# Version-bump prep: stages all changes and bumps config version if templates changed.
+# Does NOT commit or push — caller handles that (e.g. via /commit).
 
 $repoRoot = "$env:USERPROFILE\claude-config"
 
@@ -8,7 +9,7 @@ Push-Location $repoRoot
 try {
     $status = git status --porcelain 2>$null
     if (-not $status) {
-        @{ committed = $false; reason = "nothing to commit" } | ConvertTo-Json -Compress
+        @{ hasChanges = $false; reason = "nothing to commit" } | ConvertTo-Json -Compress
         exit 0
     }
 
@@ -19,6 +20,8 @@ try {
     $trackedDirs = @("Claude/templates")
     $staged = git diff --cached --name-only 2>$null
     $meaningful = $staged | Where-Object { $f = $_; $trackedDirs | Where-Object { $f.StartsWith("$_/") } }
+    $bumped = $false
+    $newVersion = $null
     if ($meaningful) {
         $versionFile = "$repoRoot\Claude\config-version.json"
         if (Test-Path $versionFile) {
@@ -29,23 +32,17 @@ try {
             $vJson.lastUpdated = (Get-Date -Format "yyyy-MM-dd")
             $vJson | ConvertTo-Json -Depth 10 | Set-Content $versionFile -Encoding UTF8
             git add $versionFile 2>$null
+            $bumped = $true
+            $newVersion = $vJson.version
         }
     }
 
-    git commit -m "$Message`n`nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>" 2>$null
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "Commit failed"
-        exit 1
-    }
-
-    git push 2>$null
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "Push failed"
-        exit 1
-    }
-
-    $hash = git rev-parse --short HEAD 2>$null
-    @{ committed = $true; pushed = $true; hash = $hash; message = $Message } | ConvertTo-Json -Compress
+    @{
+        hasChanges  = $true
+        staged      = @($staged)
+        versionBump = $bumped
+        newVersion  = $newVersion
+    } | ConvertTo-Json -Compress
 }
 finally {
     Pop-Location

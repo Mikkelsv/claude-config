@@ -77,7 +77,7 @@ If it has a group letter (e.g., `A`), collect **all unchecked tasks in the same 
    - If a merge conflict occurs: attempt auto-resolution. If unresolvable, log in **Decisions & Review Items** and re-implement that task sequentially after the group completes.
    - After all successful merges: run `/test` once on the combined result.
    - If tests fail: diagnose which task's changes broke things. Fix the issue or revert that task's merge and re-queue it for sequential execution. Max 3 fix attempts on the combined result.
-   - Commit each task separately (one commit per task, same format as Step 6).
+   - Commit each task separately via `/commit {task description}` (one commit per task).
 
 4. Check off all completed tasks in the group, then proceed to the next unchecked task in the plan.
 
@@ -161,7 +161,7 @@ Check off `- [x] Docs & tests`. Do not commit yet.
 
 ### 6. Checkpoint
 
-**Commit** all changes from steps 2-5 as a single commit: `FEAT: {task description}` (or `FIX:`, `REFACTOR:` as appropriate). One task = one commit.
+Run `/commit {task description}` to commit and push all changes from steps 2-5. The commit skill picks the TYPE automatically. One task = one commit.
 
 - Check off `- [x] Done` in the plan
 - Brief one-line status to the user: "Task 3 done: added depth coloring toggle. 5/12 complete."
