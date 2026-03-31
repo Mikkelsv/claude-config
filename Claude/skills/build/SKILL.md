@@ -19,18 +19,18 @@ If no instructions were provided, skip to Phase 2.
 
 Once the task is complete (or immediately if no task was given):
 
-1. Read `Claude/local/skills/build/config.md` for project-specific build config (build command, preview server name).
-2. Read the server port from `.claude/launch.json` (the `port` field of the first configuration).
+1. Read `.claude/launch.json` for the server config (name, port, command).
+2. If `Claude/local/skills/build/config.md` exists, read it for overrides (e.g., a separate build command that differs from the serve command). This file is optional.
 3. Stop any existing preview server (use `preview_stop` if one is running, check with `preview_list` first).
-4. Kill any orphaned processes on that port:
+4. Kill any orphaned processes on the port:
 
    ```bash
    powershell.exe -NoProfile -File "$HOME/claude-config/Claude/scripts/kill-port.ps1" -Port <port>
    ```
 
-5. Build using the command from the build reference (can run in parallel with steps 3–4).
+5. Build using the build command from config.md if present, otherwise infer from `launch.json` (can run in parallel with steps 3–4).
 6. If the build **fails**, fix the errors and rebuild. If it still fails after 2 attempts, stop and report.
-7. If the build **succeeds**, start the dev server via `preview_start` with the server name from the build reference (uses `.claude/launch.json`).
+7. If the build **succeeds**, start the dev server via `preview_start` with the server name from `launch.json`.
 8. Report: "Build OK. Dev server running in preview."
 
 ## Auto-build Rule
