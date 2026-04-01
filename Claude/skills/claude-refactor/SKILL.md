@@ -3,256 +3,59 @@ name: claude-refactor
 description: Audit and improve Claude skills, commands, scripts, and configuration
 ---
 
-# Claude Config Audit & Refactor
+# Claude Config Audit
 
-Audit all skills, commands, scripts, rules, and templates across the global config
-and the current project. Check for bugs, stale references, misplaced items,
-missing permissions, script extraction opportunities, template drift, and
-underused parallelization. Fix what can be fixed directly; propose the rest.
+Audit skills, commands, scripts, rules, and templates. Fix bugs, stale refs, permission gaps, and misplacements.
 
-Scripts directory: `~/claude-config/Claude/scripts`
-
----
+Scripts: `~/claude-config/Claude/scripts`
 
 ## Phase 1 — Inventory
 
-Read all configuration files to build a complete picture. Launch two parallel
-agents to speed up the read phase:
+Launch 2 parallel agents:
 
-**Agent 1 — Global config:**
+**Agent 1 — Global**: read all `~/.claude/skills/`, `~/.claude/commands/`, `~/claude-config/Claude/scripts/`, `~/.claude/rules/`, `~/claude-config/Claude/templates/skills/`, README.md, settings.json, settings.template.json, CLAUDE.md. Record: path, purpose, references.
 
-- `~/.claude/skills/` — all SKILL.md files and co-located scripts
-- `~/.claude/commands/` — all command files
-- `~/claude-config/Claude/scripts/` — all PowerShell scripts (read each, note params + output)
-- `~/.claude/rules/` — all rule files
-- `~/claude-config/Claude/templates/skills/` — all template SKILL.md files and supporting files
-- `~/claude-config/Claude/README.md`
-- `~/.claude/settings.json` (permissions and hooks)
-- `~/.claude/settings.template.json`
-- `~/.claude/CLAUDE.md`
-
-For each item, record: file path, purpose, and any references to other files,
-scripts, or skills.
-
-**Agent 2 — Project config** (skip if not in a project directory):
-
-- `.claude/skills/` — all SKILL.md files and co-located scripts
-- `.claude/commands/` — all command files (if any)
-- `.claude/rules/` — all rule files
-- `.claude/docs/` — all doc files
-- `CLAUDE.md`
-
-For each item, record the same as above, plus note which global template it was
-scaffolded from (match by skill name).
-
-**When both agents return**, merge the inventories and proceed to Phase 2.
-
----
+**Agent 2 — Project** (skip if not in a project): read `.claude/skills/`, `.claude/commands/`, `.claude/rules/`, `.claude/docs/`, CLAUDE.md. Record same, plus which global template each was scaffolded from.
 
 ## Phase 2 — Review
 
-The 7 audit categories are grouped into 3 independent tracks. Launch all 3 as
-**background agents** in a single message. Each agent receives the Phase 1
-inventory summary and reads the relevant files itself.
+Launch 3 background agents with the inventory:
 
-### Agent A — Content Quality
+**Agent A — Content Quality**:
+- **Correctness**: logic flow, script param mismatches, stale references, JSON output mismatches.
+- **Script extraction**: multi-line bash blocks that should be scripts (especially if repeated). Not single-liners.
 
-#### 2.1 Correctness & Bugs
+**Agent B — Structure & Permissions**:
+- **Permissions**: walk skills/commands, find Bash/Write/Edit calls not covered by settings.json globs. Draft safe patterns. Update template if portable.
+- **Placement**: global skills with project-specific assumptions? Project skills that are generic? Commands that should be skills or vice versa?
+- **Parallelization**: independent read-only phases that could be parallel agents? Write-independent phases safe for worktrees?
 
-For each SKILL.md (global and project):
-
-- Does the logic flow make sense? Look for contradictions, unreachable branches,
-  or impossible states.
-- Do script invocations match actual script parameters? Check `param()` blocks
-  against the calling syntax in SKILL.md.
-- Are there references to files, skills, or scripts that no longer exist?
-- Do JSON output descriptions in SKILL.md match what the script actually outputs?
-
-For each command:
-
-- Does it reference scripts that exist?
-- Are the described input/output formats accurate?
-
-For each script:
-
-- Does it output valid JSON via `ConvertTo-Json -Compress`?
-- Does it use non-zero exit codes for errors?
-- Does it avoid absolute user paths? (Should use `$env:USERPROFILE`,
-  `$PSScriptRoot`, or `$HOME`)
-
-#### 2.2 Script Extraction Opportunities
-
-Scan all SKILL.md files and commands for inline shell work that could become a
-reusable script:
-
-- **Candidate**: Multi-line bash blocks, command construction, output parsing,
-  file management. Especially if the same pattern appears in more than one skill.
-- **Not a candidate**: Single-line script invocations, `git` one-liners, simple
-  `preview_*` calls.
-
-For each candidate: where it appears, what it does, proposed script name, whether
-shared (`~/claude-config/Claude/scripts/`) or skill-local (`scripts/`).
-
-### Agent B — Structure & Permissions
-
-#### 2.3 Permission Optimization
-
-Read `~/.claude/settings.json` and the `permissions.allow` list. Walk through
-every skill and command, identifying operations that would trigger a permission
-prompt:
-
-- `Bash(...)` calls not covered by existing glob patterns
-- `Write(...)` or `Edit(...)` to paths outside the covered globs
-
-For each missing pattern: is it safe to auto-allow? Draft the glob pattern.
-Check whether `settings.template.json` should also be updated (only if portable).
-
-#### 2.4 Placement Audit
-
-For each skill, evaluate global vs project-level placement:
-
-**Should be global** — works in any project, no project-specific references.
-**Should be project-level** — references project-specific build commands, test
-frameworks, ports, architecture.
-
-Check for: global skills with project-specific assumptions, project skills that
-are entirely generic, commands that should be skills (complex flows needing
-co-located scripts), skills that should be commands (simple flows using shared
-scripts only).
-
-#### 2.5 Agent & Parallelization Audit
-
-For each skill, evaluate whether it could better leverage background agents:
-
-- Are there phases that are **read-only and independent**? These can run as
-  parallel agents (e.g., exploration, lint checks, multiple file reads).
-- Are there phases that are **write-independent**? (Touch different files with no
-  shared state — safe to parallelize in worktrees.)
-- Does the skill already use agents? If so, is the grouping optimal?
-- Could sequential steps be restructured into a parallel dispatch + sequential
-  merge pattern?
-
-Flag skills where parallelization would meaningfully reduce wall-clock time
-(not micro-optimizations). Note the specific phases and proposed agent structure.
-
-### Agent C — Sync & Documentation
-
-#### 2.6 Template Sync
-
-For each project skill with a corresponding global template (matched by directory
-name):
-
-1. Compare structure and content between the two.
-2. **Project → template**: Generic improvements in the project skill that would
-   benefit all future projects. These should propagate back.
-3. **Template → project**: Template updates not yet in the project skill. These
-   could be pulled in.
-4. **Project-specific customizations**: Expected divergence. Do not flag.
-
-#### 2.7 README Accuracy
-
-Compare `~/claude-config/Claude/README.md` and `~/claude-config/README.md` against the actual inventory:
-
-- All commands, skills, scripts, and rules listed?
-- Descriptions accurate and up to date?
-- Directory layout section accurate?
-- Script catalog tables complete with correct params and output?
-- Entries for items that no longer exist?
-
----
-
-**When all 3 agents return**, merge their findings into a single list. Proceed to
-Phase 3.
-
----
+**Agent C — Sync & Docs**:
+- **Template sync**: compare project skills to templates. Generic improvements → propagate back. Template updates → pull in. Project-specific divergence → expected.
+- **README accuracy**: both `Claude/README.md` and root `README.md`. All items listed? Descriptions accurate? Directory layout correct? Script catalog complete?
 
 ## Phase 3 — Fix
 
-This phase will touch files in `~/claude-config/` (the global
-config repo). Edit files using the real path (not `~/.claude/`) to avoid
-permission prompts.
+Edit via `~/claude-config/` paths (not `~/.claude/`).
 
-### 3.1 Auto-fixes (apply directly)
+**Auto-fix** (apply directly): stale references, script param mismatches, JSON format mismatches, safe permission patterns, README corrections.
 
-Low-risk, clearly correct changes:
-
-- **Stale references**: Remove or update references to files/scripts/skills that
-  no longer exist.
-- **Script parameter mismatches**: Update SKILL.md invocations to match actual
-  script `param()` blocks.
-- **JSON output format mismatches**: Update SKILL.md descriptions to match actual
-  script output.
-- **Missing permission patterns** (assessed as safe in 2.3): Add to
-  `~/.claude/settings.json` via Edit tool. If the pattern is portable, also
-  update `settings.template.json`.
-
-- **README corrections**: Fix inaccurate descriptions, add missing entries,
-  remove stale entries.
-
-### 3.2 User decisions (ask via `AskUserQuestion`)
-
-For each of these, present concrete options:
-
-- **Placement changes**: "Skill X is global but references project-specific
-  paths. Move to template / Make generic / Skip?"
-- **Script extraction**: "This inline bash in skill X could be a script. Extract
-  to shared / Extract to skill-local / Keep inline?"
-- **Template sync**: "Project skill X has this generic improvement. Propagate
-  back to template / Keep local / Skip?"
-- **Agent parallelization**: "Skill X has independent phases A and B that could
-  run as parallel agents. Restructure / Keep sequential / Skip?"
-
-Apply confirmed changes immediately after each decision.
-
----
+**Ask user** (via `AskUserQuestion`): placement changes, script extraction, template sync propagation, parallelization restructuring. Apply confirmed changes immediately.
 
 ## Phase 4 — Documentation
 
-After all fixes:
+Update `~/claude-config/Claude/README.md` and `~/claude-config/README.md` to reflect all Phase 3 changes. Update Global Rules section if rules changed. Note `settings.template.json` changes for cross-machine sync.
 
-1. Update `~/claude-config/Claude/README.md` (Claude-facing docs) to reflect every
-   change made in Phase 3: new/removed skills, updated descriptions, directory
-   layout, script catalog.
-2. Update `~/claude-config/README.md` (GitHub-facing) with matching changes.
-3. If rules were added or modified, update the Global Rules section.
-4. If `settings.template.json` was modified, note changes for the user (they may
-   need to re-sync on other machines).
-
----
-
-## Phase 5 — Summary & Push
-
-Print a structured summary:
-
-### Findings
+## Phase 5 — Summary
 
 | Category | High | Medium | Low |
-| --- | --- | --- | --- |
-| Correctness & bugs | N | N | N |
+|---|---|---|---|
+| Correctness | N | N | N |
 | Script opportunities | N | N | N |
 | Permission gaps | N | N | N |
-| Placement issues | N | N | N |
-| Agent usage | N | N | N |
+| Placement | N | N | N |
+| Parallelization | N | N | N |
 | Template drift | N | N | N |
 | README accuracy | N | N | N |
 
-### Changes Made
-
-List each change: **What** — brief description, **Where** — file path(s),
-**Category** — audit category.
-
-### Deferred Items
-
-Findings the user chose to skip, with reason and suggested follow-up.
-
-### Settings Template
-
-If `settings.template.json` was updated, list the changes for cross-machine sync.
-
----
-
-Use `AskUserQuestion` to prompt:
-
-- **Push now** — run `/claude-push` to commit and sync changes
-- **Review first** — stop here so you can review before pushing
-- **Done** — no push needed
+List changes made, deferred items, and settings template updates. Ask: **Push now** / **Review first** / **Done**.
