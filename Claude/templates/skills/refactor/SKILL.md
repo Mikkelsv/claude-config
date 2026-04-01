@@ -9,60 +9,23 @@ Runs three review passes in parallel: code review, documentation sync, and test 
 
 ## Execution
 
-1. Determine the review mode from arguments and conversation context:
+1. Determine scope:
+   - **Mode A** (no args): run `~/claude-config/Claude/scripts/git-diff-scope.ps1`. Abort if `MODE: none`.
+   - **Mode B** (path/area): Glob relevant files. Build scope summary.
+   - **Mode C** (`all`): scan solution from CLAUDE.md, pick 2-3 areas. Build scope summary.
+   - Also factor in conversation context.
 
-   **Mode A — Changes** (no arguments provided):
-
-   Run the scope script:
-
-   ```bash
-   powershell.exe -NoProfile -File "$HOME/claude-config/Claude/scripts/git-diff-scope.ps1"
-   ```
-
-   If `MODE: none`, abort — nothing to review.
-
-   **Mode B — Focused** (arguments are a path, module name, or description of an area):
-
-   The arguments describe where to focus. Use Glob to find the relevant files. Build a scope summary listing the target files and why they were selected.
-
-   **Mode C — General** (argument is `all`):
-
-   Scan the solution structure from CLAUDE.md. Use Glob to count files per folder and identify the largest/most complex areas. Pick the 2–3 areas that would benefit most from review. Build a scope summary listing the target files and areas.
-
-   **Conversation context**: In all modes, also consider what the user was working on in this conversation. If recent edits or discussion provide relevant context, factor that into the scope.
-
-2. Read all three sub-skill files:
+2. Read all three sub-skill files (check project first, fall back to global):
    - `Claude/skills/refactor-code/SKILL.md`
    - `Claude/skills/refactor-docs/SKILL.md`
    - `Claude/skills/refactor-tests/SKILL.md`
 
-3. Spawn all three as **parallel background agents** using the Agent tool. Pass each skill's full contents as the agent prompt, **prepending the scope output** (for changes mode) or a **scope summary** (for focused/general mode) so they skip their scope identification step and start directly from the analysis step.
+3. Spawn all three as **parallel background agents**, prepending scope output so they skip their scope step.
 
-4. Wait for all three to complete.
-
-5. Present a unified report combining the results:
-
-### Code Review
-
-Relay the refactor-code agent's findings: summary, architecture concerns, quality issues, simplifications, and verdict.
-
-### Documentation Sync
-
-Relay the refactor-docs agent's findings: what docs were updated, any gaps flagged.
-
-### Test Coverage
-
-Relay the refactor-tests agent's findings: coverage verdict, gaps, stale tests.
-
-### Overall Verdict
-
-Synthesize across all three: is this ready to ship, or does it need work? If any sub-review flagged issues, use `AskUserQuestion` to ask if the user wants fixes applied.
+4. Present unified report: **Code Review** (summary, issues, verdict), **Documentation Sync** (updates, gaps), **Test Coverage** (verdict, gaps, stale tests), **Overall Verdict** (ship or needs work). If issues flagged, ask via `AskUserQuestion` to apply fixes.
 
 ---
 
 ## Customization Guide
 
-When scaffolding this skill for a project via `/claude-sync`:
-
-- Replace the scope script path with a project-local version (e.g., `Claude/scripts/git-diff-scope.ps1`) so the skill works without the global config.
-- Ensure the three sub-skills are also scaffolded: `refactor-code`, `refactor-docs`, `refactor-tests`.
+Replace scope script path with project-local version for teammate copies. Ensure all three sub-skills are scaffolded.

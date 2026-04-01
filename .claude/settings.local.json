@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(wc -l ~/claude-config/Claude/skills/*/SKILL.md)"
+      "Bash(wc -l ~/claude-config/Claude/skills/*/SKILL.md)",
+      "Bash(wc -l ~/claude-config/Claude/templates/skills/*/SKILL.md)"
     ]
   }
 }
