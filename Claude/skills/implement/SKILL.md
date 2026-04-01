@@ -68,7 +68,7 @@ If it has a group letter (e.g., `A`), collect **all unchecked tasks in the same 
    - Read the task's Context, Files, and Acceptance
    - Implement the task following all project conventions from CLAUDE.md
    - Read `Claude/local/skills/build/config.md` for the build command. Run it to verify compilation. If it fails, fix and retry (max 3 attempts).
-   - Run `/refactor` on the changes (reviews the worktree diff)
+   - Run `/refactor-code` on the changes (code quality only — full refactor runs at the end)
    - Do **not** run `/test` (no preview server access in a worktree)
    - Do **not** commit
    - Report back: what was implemented, build result, refactor verdict, any issues
@@ -116,11 +116,11 @@ Check off `- [x] Implement`. Do not commit yet.
 
 ### 4. Refactor Pass (with read-ahead)
 
-Launch `/refactor` as a **background Agent** on the uncommitted changes. All implementation work is still uncommitted at this point, so `/refactor` sees the full task diff. `/refactor` spawns three parallel sub-skills: `refactor-code` (code quality), `refactor-docs` (documentation sync), and `refactor-tests` (test coverage).
+Launch `/refactor-code` only as a **background Agent** on the uncommitted changes (skip docs and tests per-task — the full `/refactor` trio runs once at the end in the Final Audit).
 
-**While refactor runs**, start reading ahead to the next task: read its `**Context:**`, `**Files:**`, and `**Acceptance:**` fields, and read all files listed under `**Files:**`. This loads context so you're ready to implement as soon as the current task is fully committed. If this is the **last task** in the plan, skip the read-ahead and wait for refactor inline.
+**While refactor-code runs**, start reading ahead to the next task: read its `**Context:**`, `**Files:**`, and `**Acceptance:**` fields, and read all files listed under `**Files:**`. This loads context so you're ready to implement as soon as the current task is fully committed. If this is the **last task** in the plan, skip the read-ahead and wait for refactor inline.
 
-**When refactor returns**, process the verdict:
+**When refactor-code returns**, process the verdict:
 
 - **Ship it** — no changes needed, continue
 - **Minor tweaks** or **Refactor recommended** — before applying, `git stash` the current working state as a safe point. Apply the suggested fixes, then re-run `/test`:
@@ -128,7 +128,7 @@ Launch `/refactor` as a **background Agent** on the uncommitted changes. All imp
   - If tests fail: restore the pre-refactor state (`git stash pop`), continue with the code that already passed. Note the failed refactor attempt in **Decisions & Review Items**.
 - **Rethink** — log the concern in **Decisions & Review Items** with the suggested alternative. Keep the current implementation (it passes tests) and move on.
 
-The refactor/test cycle repeats until `/refactor` returns "Ship it" or "Minor tweaks" applied cleanly (max 3 refactor iterations per task).
+The refactor/test cycle repeats until refactor-code returns "Ship it" or "Minor tweaks" applied cleanly (max 3 refactor iterations per task).
 
 > **Important:** Never start *implementing* the next task while the current task's refactor is still pending. Read-ahead is read-only preparation. Implementation of the next task only begins after the current task is fully committed in Step 6.
 
@@ -194,9 +194,12 @@ Always keep moving forward. The user reviews decisions after the full loop compl
 
 ## Final Audit
 
-After all tasks are processed (before the report), run `/audit-architecture` on the full branch diff. This is a holistic architecture review across all committed tasks — it catches overengineering, boundary violations, and structural issues that only become visible when you see the changes together.
+After all tasks are processed (before the report), run two passes on the full branch diff:
 
-Include the audit findings verbatim in the report under **Architecture Audit**.
+1. **`/refactor`** (full trio: code, docs, tests) — this is the only time docs and tests are reviewed. Per-task steps only ran refactor-code to save tokens.
+2. **`/audit-architecture`** — holistic architecture review across all committed tasks.
+
+Include findings from both in the report under **Refactor Review** and **Architecture Audit**.
 
 ## Decisions & Review Items
 

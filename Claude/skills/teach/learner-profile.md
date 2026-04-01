@@ -25,7 +25,9 @@
 <!-- Add entries as: - YYYY-MM-DD: topic keyword — correct/incorrect/skipped -->
 - 2026-03-31: Azure Managed Identity Q1 (RBAC role assignment) — correct
 - 2026-03-31: Azure Managed Identity Q2 (local vs prod permission gap) — incorrect
+- 2026-04-01: Azure Managed Identity Q3 (system-assigned lifecycle on redeploy) — incorrect
 
 ## Topics to Review
 <!-- Topics where the user got a quiz wrong, seemed uncertain, or asked to revisit -->
 - DefaultAzureCredential auth chain — how it resolves differently in local vs production environments
+- System-assigned identity lifecycle — identity is destroyed on resource redeploy, breaking RBAC assignments
