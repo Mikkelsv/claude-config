@@ -34,13 +34,13 @@ Want to go deeper on this? `/teach contextual`
 
 ## Quiz prompt
 
-After the teaching nugget, offer a quiz using plain text (not AskUserQuestion):
+After the teaching nugget, offer choices as a numbered list:
 
 ```
-**Quiz:** Want to test your understanding? (1) Take Quiz  (2) Skip
+(1) Go deeper  (2) Take Quiz  (3) Skip
 ```
 
-If they take the quiz, ask 1-2 focused questions as plain text with numbered options (one correct, 2-3 plausible wrong, always a Skip option). After answering, briefly explain why the correct answer is correct.
+If they take the quiz, ask 1-2 focused questions as a numbered list (one correct, 2-3 plausible wrong, always a Skip option). After answering, briefly explain why the correct answer is correct.
 
 ## Tracking
 

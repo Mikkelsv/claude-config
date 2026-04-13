@@ -34,11 +34,11 @@ Project config: `Claude/local/` (gitignored, Tier 3)
 | --- | --- |
 | `build` | Platform-dependent scripts (kill-port.ps1, terminal). Reads project config from `Claude/local/skills/build/config.md`. |
 | `rebase-on-main` | Platform-dependent scripts (PowerShell). References global worktree/merge scripts. |
-| `plan` | Generic workflow. Reads plan directory from `Claude/local/skills/plan/config.md`. |
-| `implement` | Generic workflow. Reads config from `Claude/local/skills/implement/config.md`. Invokes project-level `/test`, `/refactor`, `/audit`. |
+| `plan` | Generic workflow. Uses `plans/` by convention. |
+| `implement` | Generic workflow. Delegates commits to `/commit`. Invokes project-level `/test`, `/refactor`, `/audit-architecture`. |
 | `refactor` | Orchestrator — invokes refactor-code, refactor-docs, refactor-tests. No customization. |
 | `refactor-docs` | Generic doc sync — reads CLAUDE.md and `Claude/docs/`. No customization. |
-| `audit-architecture` | Architecture review. Reads boundary rules from `Claude/local/skills/audit-architecture/config.md`. |
+| `audit-architecture` | Architecture review. Derives boundary rules from CLAUDE.md and `.claude/rules/`. |
 
 ## Tier 2 — Project skills (shared, committed to repo)
 
@@ -68,11 +68,10 @@ The local counterpart of a Tier 1 global skill. Lives in `Claude/local/skills/<n
 
 | Path | Global skill | Why local |
 | --- | --- | --- |
-| `Claude/local/skills/build/config.md` | `build` | Build commands and server config may vary by dev setup |
-| `Claude/local/skills/plan/config.md` | `plan` | Plan directory, feature board path |
-| `Claude/local/skills/implement/config.md` | `implement` | Commit prefix, plan directory |
-| `Claude/local/skills/audit-architecture/config.md` | `audit-architecture` | Architecture boundary rules |
+| `Claude/local/skills/build/config.md` | `build` | Build commands and server config vary by dev setup |
 | `Claude/local/skills/sync-config.md` | `claude-sync` | Which global skills to copy for teammates |
+
+Only `build` and `claude-sync` use runtime local config. Other global skills (`plan`, `implement`, `audit-architecture`) rely on conventions (`plans/` directory, `/commit` for commit format) or scaffold-time template customization instead — removing a layer of indirection.
 
 **Important:** `Claude/local/` must be in `.gitignore`. If it's missing, `/claude-sync` should add it.
 

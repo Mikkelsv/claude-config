@@ -1,3 +1,5 @@
+<!-- Task plan — single phase. For multi-phase features, a managing plan links to multiple task plans like this one. -->
+
 # Plan: {title}
 
 ## Overview

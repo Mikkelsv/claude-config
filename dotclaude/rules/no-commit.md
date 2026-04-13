@@ -1,5 +1,3 @@
-# Never Commit
+# Commit Rules
 
-Never create git commits. The user manages commits themselves. Do not offer to commit either.
-
-**Exception:** Commits are allowed when working inside `~/claude-config/` (the Claude config repo).
+Always use the `/commit` skill when committing. Never commit with raw git commands or ad-hoc message formats.

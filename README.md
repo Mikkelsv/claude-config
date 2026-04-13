@@ -21,11 +21,13 @@ Available in every project via the global config.
 |---|---|
 | `/build` | Build & serve. Reads project config from `Claude/local/skills/build/config.md`. |
 | `/rebase-on-main` | Rebase on main, resolve conflicts, optionally merge/push. |
-| `/plan [feature]` | Collaborative feature discovery and structured plan creation. |
+| `/plan [feature]` | Collaborative discovery + plan. Skeptical persona — flags .NET/web anti-patterns. |
 | `/implement [plan]` | Autonomous dev loop with build/test/refactor/audit gates. |
 | `/refactor [focus]` | Code quality review orchestrator. |
 | `/refactor-docs [focus]` | Documentation sync. |
-| `/audit-architecture [focus]` | Deep architecture review. |
+| `/audit-architecture [focus]` | Strict, skeptical single-pass architecture review. |
+| `/teach [mode]` | Interactive programming lesson — contextual, codebase exploration, or random topic. |
+| `/commit [hint]` | Stage all changes, craft a typed commit message, and push. |
 
 ### Project Skills (via /claude-sync)
 
@@ -69,7 +71,7 @@ Scripts and templates live directly in `Claude/scripts/` and `Claude/templates/`
    git clone https://github.com/Mikkelsv/claude-config.git "$env:USERPROFILE\claude-config"
    powershell -File "$env:USERPROFILE\claude-config\Claude\setup.ps1"
    ```
-4. The script clones the repo (if needed), creates all junctions, and generates `settings.json` from the template.
+4. The script clones the repo (if needed), creates all junctions, generates `settings.json` from the template, and registers the toast notification AppID for desktop notifications.
 5. Open Claude Code — your rules, commands, and skills should be active immediately.
 
 #### After setup
@@ -80,7 +82,7 @@ Scripts and templates live directly in `Claude/scripts/` and `Claude/templates/`
 
 ### Notifications
 
-When Claude finishes a task or hits a permission prompt, the Claude desktop app flashes its taskbar icon and plays a notification sound (`Claude/scripts/notify.ps1`).
+When Claude finishes a task or hits a permission prompt, `Claude/scripts/notify.ps1` shows a Windows toast banner with a short summary of the task, flashes the Claude desktop app's taskbar icon, and plays a notification sound. Toast registration is handled automatically by `setup.ps1` via `register-toast-appid.ps1` (creates a Start Menu shortcut with embedded AppUserModelID — required by Windows 11).
 
 ---
 
@@ -115,7 +117,7 @@ When Claude finishes a task or hits a permission prompt, the Claude desktop app 
     CHANGELOG.md                         # Project action changelog
     config-version.json                  # Global config version tracking
     setup.ps1                            # Fresh machine bootstrap
-    scripts/                             # PowerShell automation (17 scripts)
+    scripts/                             # PowerShell automation (19 scripts)
     templates/skills/                    # 9 skill templates
     skills/                              # Full global skill implementations
       allow/
@@ -177,7 +179,7 @@ The core principle: **prompts are Claude orchestration, scripts are mechanical e
 |--------|--------|--------|---------|
 | `git-preflight.ps1` | (none) | `{branch, isMain, hasChanges, staged, unstaged, untracked}` | (shared utility) |
 | `git-branch-scope.ps1` | `-BaseBranch` (default: main) | `{branch, base, hasMergeBase, isAhead, commitCount, commits[], files[]}` | (legacy) |
-| `git-diff-scope.ps1` | `-RepoPath`, `-BaseBranch` (default: main), `-StatOnly` | Text: mode + stat + diff | `/refactor`, `/audit` |
+| `git-diff-scope.ps1` | `-RepoPath`, `-BaseBranch` (default: main), `-StatOnly` | Text: mode + stat + diff | `/refactor`, `/audit-architecture` |
 
 #### Rebase (skill-local: `Claude/skills/rebase-on-main/scripts/`)
 
@@ -201,7 +203,8 @@ The core principle: **prompts are Claude orchestration, scripts are mechanical e
 |--------|--------|--------|---------|
 | `sync-config.ps1` | `-Message` | `{committed, pushed, hash, message}` | `/claude-push` |
 | `pull-config.ps1` | (none) | `{pulled, before, after, commits}` | `/claude-sync` |
-| `notify.ps1` | (none) | (side-effects only: taskbar flash + sound) | Stop and Notification hooks |
+| `notify.ps1` | (none, reads JSON hook input from stdin) | (side-effects: Windows toast banner + taskbar flash + sound) | Stop and Notification hooks |
+| `register-toast-appid.ps1` | (none) | (side-effects: registers AppID, Start Menu shortcut, banner permissions) | `setup.ps1` (one-time setup) |
 
 ### Settings and Permissions
 
@@ -226,3 +229,5 @@ Rules in `dotclaude/rules/` are always loaded:
 - **todo-surfacing.md** — Surface todo items at natural moments
 - **no-read-generated-css.md** — Never read Tailwind output files
 - **skill-tiers.md** — 3-tier skill placement (global, project, local config)
+- **teach-on-completion.md** — Offer a teaching nugget + quiz after completing dev tasks
+- **always-plan.md** — Auto-invoke `/plan` when work warrants a structured plan

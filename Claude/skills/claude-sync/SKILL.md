@@ -55,9 +55,9 @@ Read CLAUDE.md for context. Ask per-skill info via `AskUserQuestion`:
 - **test**: preview server name, test script (JS for `preview_eval`), perf tracking (yes/no + baseline path), testing conventions
 - **refactor-code**: architecture principles (derive from CLAUDE.md if possible)
 - **refactor-tests**: test framework files, test mapping
-- **audit-architecture**: boundary rules (from CLAUDE.md)
-- **plan**: plan directory, feature board path
-- **implement**: commit prefix, plan directory
+- **audit-architecture**: boundary rules (from CLAUDE.md) — scaffold-time only, baked into the template
+- **plan**: no config — plans live in `plans/` by convention
+- **implement**: no config — `/commit` handles commit format
 
 ### 2.4 Store values in `Claude/local/skills/{name}/config.md` (markdown with clear headings).
 

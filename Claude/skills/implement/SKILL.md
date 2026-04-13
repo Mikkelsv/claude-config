@@ -16,8 +16,24 @@ Work through a plan task-by-task with build, test, refactor gates. One task = on
 1. **Worktree?** Ask via `AskUserQuestion`: **Worktree (Recommended)** or **Current directory**.
 2. If on `main`, create branch `implement/{plan-name}`. Worktree creates its own branch.
 3. Verify clean working tree. If dirty, ask: stash or continue?
-4. Read and validate plan format (see below). Flag vague tasks — ask targeted questions. **Don't start until user approves.**
-5. Find first unchecked `- [ ] Done` task. Print: "Resuming at Task N. M/T done."
+4. Read and validate plan format (see below). **Detect plan type:**
+   - **Managing plan** (has `## Phases`): enter Phase Chain mode (see below).
+   - **Task plan** (has `## Tasks`): enter normal Loop mode.
+5. Flag vague tasks — ask targeted questions. **Don't start until user approves.**
+6. Find first unchecked `- [ ] Done` task (or phase). Print: "Resuming at Task/Phase N. M/T done."
+
+## Phase Chain (Managing Plans)
+
+When the plan has `## Phases` instead of `## Tasks`, process phases sequentially:
+
+1. Find the first phase with unchecked `- [ ] Done`.
+2. Read that phase's `**Plan:**` path and load the task plan.
+3. Run the full Loop (below) on that task plan.
+4. After completing all tasks in the phase, check off `- [x] Done` on the phase in the managing plan.
+5. Auto-start the next unchecked phase. Repeat until all phases are done.
+6. **Final Audit** runs once after all phases complete — not per-phase.
+
+Phase-level decisions are logged in the managing plan's **Decisions & Review Items**. Task-level decisions go in each phase's task plan.
 
 ## Plan Format
 
@@ -42,7 +58,7 @@ Runs until all tasks completed or skipped. After each checkpoint, pick next unch
 
 ### Parallel Groups
 
-If task has a group letter, collect all unchecked tasks in that group. Main thread takes one (prefer most downstream dependents). Others launch as background agents with `isolation: "worktree"` — implement, build, run `/refactor-code`, no `/test`, no commit. After all return, merge one at a time (`git merge --no-ff`). Resolve conflicts or re-queue failed tasks. Run `/test` once on combined result. Commit each via `/commit`.
+If task has a group letter, collect all unchecked tasks in that group. Main thread takes one (prefer most downstream dependents). Others launch as background agents with `isolation: "worktree"` — implement, build, must run `/refactor-code` (skip only if < 20 lines changed), no `/test`, no commit. After all return, merge one at a time (`git merge --no-ff`). Resolve conflicts or re-queue failed tasks. Run `/test` once on combined result. Commit each via `/commit`.
 
 ### 1. Read & Understand
 
@@ -60,9 +76,10 @@ Check off `- [x] Implement`.
 
 ### 4. Refactor (with read-ahead)
 
-Launch `/refactor-code` as background agent (docs+tests deferred to Final Audit). While it runs, read ahead to next task's Context/Files/Acceptance.
+**Must run `/refactor-code`** unless the task changed < 20 lines total (sum of insertions + deletions). Check with `git diff --stat` against the last commit.
 
-Process verdict: **Ship it** → continue. **Minor tweaks/Refactor recommended** → stash, apply fixes, re-test (if tests fail: pop stash, keep passing code). **Rethink** → log in Decisions, keep current. Max 3 iterations.
+- **≥ 20 lines:** Run `/refactor-code` as background agent. While it runs, read ahead to next task's Context/Files/Acceptance. Process verdict: **Ship it** → continue. **Minor tweaks/Refactor recommended** → stash, apply fixes, re-test (if tests fail: pop stash, keep passing code). **Rethink** → log in Decisions, keep current. Max 3 iterations.
+- **< 20 lines:** Skip per-task refactor — Final Audit catches it. Still read ahead to next task. Check off `- [x] Refactor` with note "(deferred — < 20 lines)".
 
 Check off `- [x] Refactor`. Verify acceptance criteria still met. Take "after" screenshot if UI task.
 
@@ -93,6 +110,3 @@ After all tasks: run `/refactor` (full trio — only time docs+tests are reviewe
 
 Branch name + N commits, tasks completed/skipped, tests added, refactor iterations, perf trend, parallel stats, decisions count, architecture audit findings.
 
-## Local Config
-
-If `Claude/local/skills/implement/config.md` exists, read for commit prefix convention, plan directory, test creation conventions.

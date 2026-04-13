@@ -21,11 +21,11 @@ Available to you in every project via the global config.
 |---|---|
 | `/build` | Build & serve. Reads project config from `Claude/local/skills/build/config.md`. |
 | `/rebase-on-main` | Rebase on main, resolve conflicts, optionally merge/push. |
-| `/plan [feature]` | Collaborative feature discovery and structured plan creation. |
-| `/implement [plan]` | Autonomous dev loop — plan tasks with build/test/refactor/audit gates. |
+| `/plan [feature]` | Collaborative feature discovery + plan creation. Skeptical senior-engineer persona — challenges premise, flags .NET/web anti-patterns. |
+| `/implement [plan]` | Autonomous dev loop — plan tasks with build/test/refactor/audit gates. Per-task `/refactor-code` if ≥ 20 lines changed. |
 | `/refactor [focus]` | Code quality review orchestrator (spawns refactor-code, refactor-docs, refactor-tests). |
 | `/refactor-docs [focus]` | Documentation sync — checks docs match code changes. |
-| `/audit-architecture [focus]` | Deep architecture review (boundaries, overengineering, alternatives). |
+| `/audit-architecture [focus]` | Strict, skeptical architecture review (single-pass): boundaries, overengineering, alternatives. Assumes overengineered until proven otherwise. |
 | `/teach [mode]` | Interactive programming lesson — contextual deep-dive, codebase exploration, or random topic. |
 | `/commit [hint]` | Stage all changes, craft a typed commit message (FEAT/FIX/REFAC/DOCS), and push. Prompts to amend for small changes. |
 
@@ -75,7 +75,7 @@ Claude Code protects `.claude/` — writes through the `dotclaude/` junction sti
    git clone https://github.com/Mikkelsv/claude-config.git "$env:USERPROFILE\claude-config"
    powershell -File "$env:USERPROFILE\claude-config\Claude\setup.ps1"
    ```
-4. The script clones the repo (if needed), creates all junctions, and generates `settings.json` from the template.
+4. The script clones the repo (if needed), creates all junctions, generates `settings.json` from the template, and registers the toast notification AppID (Start Menu shortcut + banner permissions, required by Windows 11).
 5. Open Claude Code — your rules, commands, and skills should be active immediately.
 
 #### After setup
@@ -86,7 +86,9 @@ Claude Code protects `.claude/` — writes through the `dotclaude/` junction sti
 
 ### Notifications
 
-When Claude finishes a task or hits a permission prompt, the Claude desktop app flashes its taskbar icon and plays a notification sound (`Claude/scripts/notify.ps1`).
+When Claude finishes a task or hits a permission prompt, `Claude/scripts/notify.ps1` shows a Windows toast banner with a short summary, flashes the Claude desktop app's taskbar icon, and plays a notification sound.
+
+The toast registration is set up by `Claude/scripts/register-toast-appid.ps1` (run automatically by `setup.ps1` on first install). It registers a dedicated AppID, enables banner popups, and creates a Start Menu shortcut with the AppUserModelID embedded — Windows 11 requires all three or toasts land silently in Action Center.
 
 ---
 
@@ -110,7 +112,7 @@ When Claude finishes a task or hits a permission prompt, the Claude desktop app 
     config-version.json                   # Global config version tracking
     setup.ps1                             # Fresh machine bootstrap
     CHANGELOG.md                          # Project action changelog
-    scripts/                              # PowerShell automation (17 scripts)
+    scripts/                              # PowerShell automation (19 scripts)
     templates/skills/                     # 9 skill templates
     skills/                               # Full global skill implementations
       allow/
@@ -157,6 +159,7 @@ Rules in `dotclaude/rules/` are always loaded:
 - **no-read-generated-css.md** — Never read Tailwind output files
 - **skill-tiers.md** — 3-tier skill placement (global, project, local config)
 - **teach-on-completion.md** — Offer a teaching nugget + quiz after completing dev tasks
+- **always-plan.md** — Auto-invoke `/plan` when work warrants a structured plan
 
 ### Script Catalog
 
@@ -169,6 +172,6 @@ All scripts in `Claude/scripts/`.
 | Git | `git-preflight`, `git-branch-scope`, `git-diff-scope`, `commit` |
 | File/Process | `remove-path`, `move-path`, `npm-command`, `node-run` |
 | Config | `sync-config`, `pull-config` |
-| Notifications | `notify` |
+| Notifications | `notify`, `register-toast-appid` |
 
 Skill-local scripts in `Claude/skills/rebase-on-main/scripts/`: `git-rebase-onto`, `git-merge-cleanup`.

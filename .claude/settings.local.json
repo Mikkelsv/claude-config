@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(wc -l ~/claude-config/Claude/skills/*/SKILL.md)",
-      "Bash(wc -l ~/claude-config/Claude/templates/skills/*/SKILL.md)"
+      "Bash(wc -l ~/claude-config/Claude/templates/skills/*/SKILL.md)",
+      "Bash(powershell.exe -NoProfile -Command \"Get-Module -ListAvailable BurntToast | Select-Object Name, Version\")",
+      "Bash(powershell.exe -NoProfile -Command \"if \\(Test-Path 'HKCU:\\\\Software\\\\Classes\\\\claude'\\) { Get-ItemProperty 'HKCU:\\\\Software\\\\Classes\\\\claude\\\\' } else { 'No claude:// scheme registered in HKCU' }\")"
     ]
   }
 }
