@@ -39,10 +39,67 @@ If pull fails: ask user — continue with local templates or abort?
 
 ### 2.1 Check existing skills in `.claude/skills/`. If overlap, ask: overwrite or skip?
 
-### 2.2 Select skills via `AskUserQuestion` (multiSelect):
+### 2.2 Git workflow
+
+If `.claude/rules/git-workflow.md` already exists, skip this step.
+
+Ask via `AskUserQuestion`: which workflow does this project use?
+
+- **Feature branches (Recommended)** — `/implement` creates `implement/{plan-name}` branch per plan, `/commit` pushes to that branch. PR-based merge to main.
+- **Direct to main** — Solo project or prototype. `/implement` works on main directly, `/commit` pushes straight to main. No PR step.
+- **Worktree per feature** — Like feature branches, but each plan gets its own worktree for parallel dev.
+
+Write the choice to `.claude/rules/git-workflow.md` using one of the templates below. Other skills (especially `/implement`, `/commit`, `/rebase-on-main`) read this rule to behave correctly.
+
+#### Template — Feature branches
+
+```markdown
+# Git Workflow: Feature Branches
+
+This project uses feature branches with PR-based merging to main.
+
+## How to apply
+
+- `/implement` creates a new branch `implement/{plan-name}` before starting work.
+- `/commit` pushes to the current feature branch — never directly to main.
+- After implementation completes, the user opens a PR to merge into main.
+- Use `/rebase-on-main` to keep feature branches current before merging.
+```
+
+#### Template — Direct to main
+
+```markdown
+# Git Workflow: Direct to Main
+
+Solo project — commits go directly to main, no branches.
+
+## How to apply
+
+- `/implement` does NOT create a branch. It works on main directly.
+- `/commit` pushes to main without confirmation (it's already the working branch).
+- Skip `/rebase-on-main` — there are no feature branches to rebase.
+- Worktrees are still allowed for parallel work, but each writes back to main on merge.
+```
+
+#### Template — Worktree per feature
+
+```markdown
+# Git Workflow: Worktree per Feature
+
+This project uses git worktrees + feature branches for parallel development.
+
+## How to apply
+
+- `/implement` defaults to creating a worktree (with branch `implement/{plan-name}`).
+- `/commit` pushes to the worktree's branch.
+- After implementation completes, user opens a PR.
+- `/rebase-on-main` cleans up the worktree after merge.
+```
+
+### 2.3 Select skills via `AskUserQuestion` (multiSelect):
 build (Recommended), test, refactor-code, refactor-tests.
 
-### 2.3 Gather project info
+### 2.4 Gather project info
 
 Read CLAUDE.md for context. Ask per-skill info via `AskUserQuestion`:
 
@@ -51,9 +108,9 @@ Read CLAUDE.md for context. Ask per-skill info via `AskUserQuestion`:
 - **refactor-code**: architecture principles (derive from CLAUDE.md if possible)
 - **refactor-tests**: test framework files, test mapping
 
-### 2.4 Store values in `Claude/local/skills/{name}/config.md` (markdown with clear headings).
+### 2.5 Store values in `Claude/local/skills/{name}/config.md` (markdown with clear headings).
 
-### 2.5 Generate skills
+### 2.6 Generate skills
 
 For each selected skill:
 1. Read template, compute SHA256 hash (first 8 hex)
@@ -68,11 +125,11 @@ For each selected skill:
 
 Replace `${CLAUDE_SKILL_DIR}` refs with `Claude/skills/{name}/` in generated files.
 
-### 2.6 Create `.claude/launch.json` if test selected + preview server configured and file doesn't exist.
+### 2.7 Create `.claude/launch.json` if test selected + preview server configured and file doesn't exist.
 
-### 2.7 Stamp `Claude/local/config-version.json` with global version, date, and skill template hashes.
+### 2.8 Stamp `Claude/local/config-version.json` with global version, date, and skill template hashes.
 
-### 2.8 Report: list created files. Remind about `Claude/local/` in .gitignore, editing in `Claude/skills/`, and CLAUDE.md for architecture docs.
+### 2.9 Report: list created files (including `git-workflow.md`). Remind about `Claude/local/` in .gitignore, editing in `Claude/skills/`, and CLAUDE.md for architecture docs.
 
 ---
 
