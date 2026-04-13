@@ -28,7 +28,34 @@ Read the input. Explore the codebase for context:
 - **Broad features** (multiple areas): launch parallel agents — (1) read CLAUDE.md, rules, docs for conventions, (2) find relevant code files and patterns, (3) check plans directory for overlapping plans. Synthesize findings.
 - **Narrow features** (single area): read relevant files directly.
 
-Present the synthesis at the start of Phase 2.
+Present the synthesis at the start of Phase 1.5.
+
+## Phase 1.5 — External Research
+
+**Do not trust your training data alone.** Library APIs, framework conventions, and best practices change. Your knowledge may be outdated, incomplete, or wrong. **Must do external research** before drafting the plan when any of the following apply:
+
+- Feature involves a **third-party library, framework, or service** (any version-sensitive integration)
+- Feature touches an **API surface you'd otherwise have to guess at** (method signatures, configuration keys, lifecycle hooks, breaking changes between versions)
+- Feature involves a **pattern with multiple competing approaches** (auth flows, real-time sync, caching, background jobs) — verify what the current idiomatic answer is
+- User mentions a **specific library/version** — confirm it exists, check changelog, look for known issues
+- You're about to recommend an alternative to an anti-pattern (per the Architecture scrutiny section) — verify the framework still recommends what you think it does
+
+**How to research:**
+
+1. **Identify open questions** explicitly. Write them down: "I need to verify X about library Y at version Z."
+2. **Use `WebSearch`** to find current documentation, recent (last 2 years) blog posts, GitHub issues, Stack Overflow. Search with the current year in queries to avoid stale results.
+3. **Use `WebFetch`** on official docs URLs to read primary sources directly.
+4. **Cross-check** at least 2 sources before treating a fact as confirmed. If they disagree, flag it as a question for the user.
+5. **Check version compatibility** — confirm the library version in the project supports what you're proposing.
+6. **Note the source** for each non-obvious claim you'll make in Phase 2.
+
+**When you can skip research:**
+
+- Pure UI tweaks with no library API decisions
+- Refactoring within existing code (no new external dependencies)
+- Feature is fully explained by reading the project's own code
+
+**If you're uncertain whether to research, research.** The cost of a 2-minute web search is far less than the cost of a wrong plan. Surface what you learned (and what surprised you) at the start of Phase 2.
 
 ## Phase 2 — Discovery
 
