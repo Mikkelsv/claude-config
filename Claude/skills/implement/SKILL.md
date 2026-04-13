@@ -13,14 +13,15 @@ Work through a plan task-by-task with build, test, refactor gates. One task = on
 
 ## Phase 0 — Setup
 
-1. **Worktree?** Ask via `AskUserQuestion`: **Worktree (Recommended)** or **Current directory**.
-2. If on `main`, create branch `implement/{plan-name}`. Worktree creates its own branch.
-3. Verify clean working tree. If dirty, ask: stash or continue?
-4. Read and validate plan format (see below). **Detect plan type:**
+1. **Read project context**: `CLAUDE.md`, `.claude/rules/`, and `Claude/docs/` if it exists. These set the conventions you must follow during implementation.
+2. **Worktree?** Ask via `AskUserQuestion`: **Worktree (Recommended)** or **Current directory**.
+3. If on `main`, create branch `implement/{plan-name}`. Worktree creates its own branch.
+4. Verify clean working tree. If dirty, ask: stash or continue?
+5. Read and validate plan format (see below). **Detect plan type:**
    - **Managing plan** (has `## Phases`): enter Phase Chain mode (see below).
    - **Task plan** (has `## Tasks`): enter normal Loop mode.
-5. Flag vague tasks — ask targeted questions. **Don't start until user approves.**
-6. Find first unchecked `- [ ] Done` task (or phase). Print: "Resuming at Task/Phase N. M/T done."
+6. Flag vague tasks — ask targeted questions. **Don't start until user approves.**
+7. Find first unchecked `- [ ] Done` task (or phase). Print: "Resuming at Task/Phase N. M/T done."
 
 ## Phase Chain (Managing Plans)
 

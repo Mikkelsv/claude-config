@@ -23,10 +23,17 @@ If empty, ask what to plan.
 
 ## Phase 1 — Understand
 
-Read the input. Explore the codebase for context:
+Read the input. **Always read project context first** — even for narrow features:
 
-- **Broad features** (multiple areas): launch parallel agents — (1) read CLAUDE.md, rules, docs for conventions, (2) find relevant code files and patterns, (3) check plans directory for overlapping plans. Synthesize findings.
-- **Narrow features** (single area): read relevant files directly.
+1. **`CLAUDE.md`** at the project root — architecture, conventions, stack
+2. **`.claude/rules/`** — project-specific rules that constrain how things are done
+3. **`Claude/docs/`** if it exists — deeper architecture documentation
+4. **`plans/`** — check for overlapping or related plans
+
+Then explore code:
+
+- **Broad features** (multiple areas): launch parallel agents — (1) project context per above, (2) find relevant code files and patterns, (3) check for overlapping plans. Synthesize findings.
+- **Narrow features** (single area): read project context (steps 1-4 above) + relevant files directly.
 
 Present the synthesis at the start of Phase 1.5.
 

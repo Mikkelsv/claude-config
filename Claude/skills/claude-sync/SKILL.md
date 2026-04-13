@@ -13,16 +13,14 @@ Templates: `~/claude-config/Claude/templates/skills/`
 
 ## Project Skills (from templates)
 
+Only skills with genuine project-specific content are scaffolded. Generic global skills (`/plan`, `/implement`, `/refactor`, `/refactor-docs`, `/audit-architecture`) read project context from `CLAUDE.md` and `.claude/rules/` at runtime — no scaffolding needed.
+
 | Skill | Notes |
 |---|---|
 | **build** | Global skill — scaffolds `Claude/local/skills/build/config.md` only |
 | **test** | Browser-based smoke tests + optional perf tracking |
 | **refactor-code** | Code quality & architecture review |
 | **refactor-tests** | Test coverage review |
-
-## Optional Teammate Copies (global skills scaffolded for teammates)
-
-plan, implement, refactor, refactor-docs, audit-architecture
 
 ---
 
@@ -42,10 +40,7 @@ If pull fails: ask user — continue with local templates or abort?
 ### 2.1 Check existing skills in `.claude/skills/`. If overlap, ask: overwrite or skip?
 
 ### 2.2 Select skills via `AskUserQuestion` (multiSelect):
-- Project skills: build (Recommended), test, refactor-code, refactor-tests
-- Teammate copies: plan, implement, refactor, refactor-docs, audit-architecture
-
-Store teammate choice in `Claude/local/skills/sync-config.md`.
+build (Recommended), test, refactor-code, refactor-tests.
 
 ### 2.3 Gather project info
 
@@ -55,9 +50,6 @@ Read CLAUDE.md for context. Ask per-skill info via `AskUserQuestion`:
 - **test**: preview server name, test script (JS for `preview_eval`), perf tracking (yes/no + baseline path), testing conventions
 - **refactor-code**: architecture principles (derive from CLAUDE.md if possible)
 - **refactor-tests**: test framework files, test mapping
-- **audit-architecture**: boundary rules (from CLAUDE.md) — scaffold-time only, baked into the template
-- **plan**: no config — plans live in `plans/` by convention
-- **implement**: no config — `/commit` handles commit format
 
 ### 2.4 Store values in `Claude/local/skills/{name}/config.md` (markdown with clear headings).
 

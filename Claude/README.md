@@ -113,7 +113,7 @@ The toast registration is set up by `Claude/scripts/register-toast-appid.ps1` (r
     setup.ps1                             # Fresh machine bootstrap
     CHANGELOG.md                          # Project action changelog
     scripts/                              # PowerShell automation (19 scripts)
-    templates/skills/                     # 9 skill templates
+    templates/skills/                     # 4 skill templates (build, test, refactor-code, refactor-tests)
     skills/                               # Full global skill implementations
       allow/
       build/

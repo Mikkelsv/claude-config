@@ -54,12 +54,6 @@ Scaffolded from global templates in `~/claude-config/Claude/templates/skills/`.
 | `refactor-code` | Architecture check criteria are project-specific (multi-line block content) |
 | `refactor-tests` | Test framework files and test mapping are project-specific |
 
-### Teammate copies of global skills
-
-Some global skills can optionally be scaffolded as project-level copies so teammates without the global config can use them. `/claude-sync` asks during initial setup and stores the choice in `Claude/local/skills/sync-config.md`. Templates for these exist in `~/claude-config/Claude/templates/skills/`.
-
-Candidates: `plan`, `implement`, `refactor`, `refactor-docs`, `audit-architecture`.
-
 ## Tier 3 — Local skill config (private, gitignored)
 
 The local counterpart of a Tier 1 global skill. Lives in `Claude/local/skills/<name>/` in the project, mirroring the global skill's name. Gitignored. Scaffolded by `/claude-sync`.
@@ -69,9 +63,8 @@ The local counterpart of a Tier 1 global skill. Lives in `Claude/local/skills/<n
 | Path | Global skill | Why local |
 | --- | --- | --- |
 | `Claude/local/skills/build/config.md` | `build` | Build commands and server config vary by dev setup |
-| `Claude/local/skills/sync-config.md` | `claude-sync` | Which global skills to copy for teammates |
 
-Only `build` and `claude-sync` use runtime local config. Other global skills (`plan`, `implement`, `audit-architecture`) rely on conventions (`plans/` directory, `/commit` for commit format) or scaffold-time template customization instead — removing a layer of indirection.
+Only `build` uses runtime local config. Other global skills (`plan`, `implement`, `audit-architecture`, `refactor`, `refactor-docs`) read project context from `CLAUDE.md` and `.claude/rules/` at runtime instead.
 
 **Important:** `Claude/local/` must be in `.gitignore`. If it's missing, `/claude-sync` should add it.
 
@@ -79,6 +72,6 @@ Only `build` and `claude-sync` use runtime local config. Other global skills (`p
 
 When creating or modifying a skill, ask:
 
-1. **Is it a generic workflow or meta-tool?** → Tier 1 (global skill + Tier 3 local config if needed)
-2. **Does it embed multi-line project knowledge (architecture rules, test patterns)?** → Tier 2 (project skill from template)
-3. **Should teammates without global config have it?** → Tier 2 copy via `/claude-sync` sync-config
+1. **Is it a generic workflow or meta-tool?** → Tier 1 (global skill). Make sure it reads `CLAUDE.md` and `.claude/rules/` for project context.
+2. **Does it embed multi-line project knowledge (architecture rules, test patterns)?** → Tier 2 (project skill from template).
+3. **Does it need per-machine config (build commands, paths)?** → Add Tier 3 local config in `Claude/local/skills/<name>/`.

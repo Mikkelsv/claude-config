@@ -118,7 +118,7 @@ When Claude finishes a task or hits a permission prompt, `Claude/scripts/notify.
     config-version.json                  # Global config version tracking
     setup.ps1                            # Fresh machine bootstrap
     scripts/                             # PowerShell automation (19 scripts)
-    templates/skills/                    # 9 skill templates
+    templates/skills/                    # 4 skill templates (build, test, refactor-code, refactor-tests)
     skills/                              # Full global skill implementations
       allow/
       build/
@@ -142,7 +142,7 @@ When Claude finishes a task or hits a permission prompt, `Claude/scripts/notify.
 **Project-level** (in `<project>/.claude/skills/`) — embed project-specific knowledge, scaffolded by `/claude-sync`:
 - `/test`, `/refactor-code`, `/refactor-tests`
 
-Global workflow skills can optionally be scaffolded as project copies for teammates via `/claude-sync`.
+Global workflow skills (`/plan`, `/implement`, `/refactor`, `/refactor-docs`, `/audit-architecture`) read project context from `CLAUDE.md` and `.claude/rules/` at runtime — they don't need per-project scaffolding.
 
 ### Design Pattern: Commands / Skills + Scripts
 
