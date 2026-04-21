@@ -36,3 +36,4 @@ Types: **FEAT** (new features), **FIX** (fixes/minor improvements), **REFAC** (r
 - Do not confirm — commit and push immediately
 - Always push. Amend uses `--force-with-lease`, never `--force`
 - Imperative mood: "Add user auth" not "Added user auth"
+- **No plan references in commit messages.** Never include task IDs, phase labels, or plan names (e.g., "A1 —", "Task 3:", "Phase 2:"). The message describes what the code does, not which plan item it came from. Bad: `FEAT: A1 — Add user auth`. Good: `FEAT: Add user auth`.
