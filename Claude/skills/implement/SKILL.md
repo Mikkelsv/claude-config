@@ -109,6 +109,10 @@ Never stop unless all done. 3 fix failures → stash + skip + note. Unclear requ
 
 After all tasks: run `/refactor` (full trio — only time docs+tests are reviewed) and `/audit-architecture` on the full branch diff.
 
+## Cleanup
+
+Delete the plan file (and managing plan if applicable) after all tasks are complete and the final audit passes. Plans are working documents, not permanent artifacts — the commit history tells the story.
+
 ## Report
 
 Branch name + N commits, tasks completed/skipped, tests added, refactor iterations, perf trend, parallel stats, decisions count, architecture audit findings.
