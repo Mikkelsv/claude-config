@@ -11,7 +11,7 @@ Do not be polite about findings. Do not soften language. If something is unneces
 
 ## Step 1: Scope
 
-**Mode A — Changes** (no args): run `~/claude-config/Claude/scripts/git-diff-scope.ps1`. Abort if `MODE: none`.
+**Mode A — Changes** (no args): run `~/.claude/scripts/git-diff-scope.ps1`. Abort if `MODE: none`.
 **Mode B — Focused** (path/module/area): Glob+Grep the specified area. Read in full.
 **Mode C — General** (`all`): scan solution structure from CLAUDE.md, pick 2-3 areas with most coupling/complexity.
 

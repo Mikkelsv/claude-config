@@ -13,7 +13,7 @@ The build skill is **global** (lives in `~/claude-config/`). Projects provide a 
 
 - `Claude/local/skills/build/config.md` — project-specific build config
 
-The global skill at `~/claude-config/Claude/skills/build/SKILL.md` reads this file at runtime.
+The global skill at `~/.claude/skills/build/SKILL.md` reads this file at runtime.
 
 ## Template for `Claude/local/skills/build/config.md`
 
@@ -49,7 +49,7 @@ The global skill at `~/claude-config/Claude/skills/build/SKILL.md` reads this fi
 ## Prerequisites
 
 The global build skill and `kill-port.ps1` script must exist at:
-- `~/claude-config/Claude/skills/build/SKILL.md`
-- `~/claude-config/Claude/scripts/kill-port.ps1`
+- `~/.claude/skills/build/SKILL.md`
+- `~/.claude/scripts/kill-port.ps1`
 
 If missing, the skill will fail at runtime. These are set up once per dev machine, not per project.

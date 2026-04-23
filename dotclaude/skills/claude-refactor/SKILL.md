@@ -7,13 +7,13 @@ description: Audit and improve Claude skills, commands, scripts, and configurati
 
 Audit skills, commands, scripts, rules, and templates. Fix bugs, stale refs, permission gaps, and misplacements.
 
-Scripts: `~/claude-config/Claude/scripts`
+Scripts: `~/.claude/scripts`
 
 ## Phase 1 — Inventory
 
 Launch 2 parallel agents:
 
-**Agent 1 — Global**: read all `~/.claude/skills/`, `~/.claude/commands/`, `~/claude-config/Claude/scripts/`, `~/.claude/rules/`, `~/claude-config/Claude/templates/skills/`, README.md, settings.json, settings.template.json, CLAUDE.md. Record: path, purpose, references.
+**Agent 1 — Global**: read all `~/.claude/skills/`, `~/.claude/commands/`, `~/.claude/scripts/`, `~/.claude/rules/`, `~/.claude/templates/skills/`, README.md, settings.json, settings.template.json, CLAUDE.md. Record: path, purpose, references.
 
 **Agent 2 — Project** (skip if not in a project): read `.claude/skills/`, `.claude/commands/`, `.claude/rules/`, `.claude/docs/`, CLAUDE.md. Record same, plus which global template each was scaffolded from.
 
@@ -45,7 +45,7 @@ Edit via `~/claude-config/` paths (not `~/.claude/`).
 
 ## Phase 4 — Documentation
 
-Update `~/claude-config/Claude/README.md` and `~/claude-config/README.md` to reflect all Phase 3 changes. Update Global Rules section if rules changed. Note `settings.template.json` changes for cross-machine sync.
+Update `~/.claude/README.md` and `~/claude-config/README.md` to reflect all Phase 3 changes. Update Global Rules section if rules changed. Note `settings.template.json` changes for cross-machine sync.
 
 ## Phase 5 — Summary
 

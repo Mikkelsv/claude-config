@@ -5,7 +5,7 @@ Skills must have a shell in `.claude/skills/` for Claude Code discovery. Three t
 ## Tier 1 — Global skills (private)
 
 Shell: `~/.claude/skills/<name>/SKILL.md` (junctioned from `dotclaude/skills/`)
-Implementation: `~/claude-config/Claude/skills/<name>/SKILL.md`
+Implementation: `~/.claude/skills/<name>/SKILL.md`
 
 Generic workflows and meta-tooling. Available only to devs with the personal config.
 
@@ -17,7 +17,7 @@ Global workflow skills read project context (`CLAUDE.md`, `.claude/rules/`, `Cla
 
 Shell: `<project>/.claude/skills/<name>/SKILL.md`
 Implementation: `<project>/Claude/skills/<name>/SKILL.md`
-Scaffolded by `/claude-sync` from `~/claude-config/Claude/templates/skills/`.
+Scaffolded by `/claude-sync` from `~/.claude/templates/skills/`.
 
 For skills embedding project-specific knowledge that can't live in `CLAUDE.md` (test scripts, framework wiring, boundary definitions).
 

@@ -25,7 +25,7 @@ Once the task is complete (or immediately if no task was given):
 4. Kill any orphaned processes on the port:
 
    ```bash
-   powershell.exe -NoProfile -File "$HOME/claude-config/Claude/scripts/kill-port.ps1" -Port <port>
+   powershell.exe -NoProfile -File "$HOME/.claude/scripts/kill-port.ps1" -Port <port>
    ```
 
 5. Build using the build command from config.md if present, otherwise infer from `launch.json` (can run in parallel with steps 3–4).

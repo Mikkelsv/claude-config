@@ -26,13 +26,7 @@
       "Write(~/.gitignore_global)",
       "Write(**/Code/**)",
       "Read(**)",
-      "Read(~/claude-config/**)",
       "Glob(**)",
-      "Glob(~/claude-config/**)",
-      "Edit(**/Claude/**)",
-      "Edit(~/claude-config/Claude/**)",
-      "Write(**/Claude/**)",
-      "Write(~/claude-config/Claude/**)",
       "WebFetch(*)",
       "WebSearch(*)",
       "Bash(python *)",
@@ -55,7 +49,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"<USERPROFILE>/claude-config/Claude/scripts/notify.ps1\"",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"<USERPROFILE>/.claude/scripts/notify.ps1\"",
             "timeout": 30
           }
         ]
@@ -67,7 +61,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"<USERPROFILE>/claude-config/Claude/scripts/notify.ps1\"",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"<USERPROFILE>/.claude/scripts/notify.ps1\"",
             "timeout": 30
           }
         ]

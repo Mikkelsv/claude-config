@@ -12,11 +12,11 @@ All git commands target `~/claude-config/`, not `~/.claude/` (junction, not a gi
 
 ## Setup script is one-time
 
-`~/claude-config/Claude/setup.ps1` is for fresh machine setup only. Do not run it for routine config changes.
+`~/.claude/setup.ps1` is for fresh machine setup only. Do not run it for routine config changes.
 
 ## Prefer scripts over inline shell
 
-For mechanical shell work (git, file I/O, process management), create/update a PowerShell script in `~/claude-config/Claude/scripts/` instead of constructing inline commands. Reusable, testable, saves tokens.
+For mechanical shell work (git, file I/O, process management), create/update a PowerShell script in `~/.claude/scripts/` instead of constructing inline commands. Reusable, testable, saves tokens.
 
 ## No absolute user paths
 
@@ -31,12 +31,12 @@ Exception: `settings.json` hook commands need real paths (gitignored, per-machin
 
 ## Keep templates in sync
 
-When improving a project-scaffolded skill, propagate generic improvements back to `~/claude-config/Claude/templates/skills/<name>/`. Project-specific tweaks stay local. Templates are the source of truth for new projects.
+When improving a project-scaffolded skill, propagate generic improvements back to `~/.claude/templates/skills/<name>/`. Project-specific tweaks stay local. Templates are the source of truth for new projects.
 
 ## Version tracking
 
-Global version in `~/claude-config/Claude/config-version.json`. Projects track scaffold version in `Claude/local/config-version.json` (gitignored). `/claude-push` auto-bumps global version when templates change.
+Global version in `~/.claude/config-version.json`. Projects track scaffold version in `Claude/local/config-version.json` (gitignored). `/claude-push` auto-bumps global version when templates change.
 
 ## Keep READMEs up to date
 
-When adding/removing/changing commands, scripts, rules, skills, or other config, update both `~/claude-config/README.md` and `~/claude-config/Claude/README.md`.
+When adding/removing/changing commands, scripts, rules, skills, or other config, update both `~/claude-config/README.md` and `~/.claude/README.md`.

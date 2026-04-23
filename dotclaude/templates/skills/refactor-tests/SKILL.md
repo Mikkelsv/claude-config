@@ -17,7 +17,7 @@ Read project test patterns and conventions:
 
 If orchestrator provided scope, skip to Step 3.
 
-**Mode A** (no args): run `~/claude-config/Claude/scripts/git-diff-scope.ps1`. Abort if `MODE: none`.
+**Mode A** (no args): run `~/.claude/scripts/git-diff-scope.ps1`. Abort if `MODE: none`.
 **Mode B** (path/area): Glob relevant files, map to testable behavior.
 **Mode C** (`all`): review full test suite vs full codebase.
 

@@ -11,7 +11,7 @@ Check if docs match current code. Update what's stale.
 
 If orchestrator provided scope, skip to Step 2.
 
-**Mode A** (no args): run `~/claude-config/Claude/scripts/git-diff-scope.ps1`. Abort if `MODE: none`.
+**Mode A** (no args): run `~/.claude/scripts/git-diff-scope.ps1`. Abort if `MODE: none`.
 **Mode B** (path/area): Glob relevant files, cross-reference with docs.
 **Mode C** (`all`): read all docs, cross-reference full codebase.
 

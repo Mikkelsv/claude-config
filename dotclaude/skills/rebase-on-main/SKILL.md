@@ -7,11 +7,11 @@ description: Rebase current branch on main with conflict resolution, build verif
 
 Execute every step in order. Stop and report on unexpected failure.
 
-Scripts: `$HOME/claude-config/Claude/skills/rebase-on-main/scripts`
+Scripts: `$HOME/.claude/skills/rebase-on-main/scripts`
 
 ## Phase 1: Rebase
 
-Run: `powershell.exe -NoProfile -File "$HOME/claude-config/Claude/skills/rebase-on-main/scripts/git-rebase-onto.ps1"`
+Run: `powershell.exe -NoProfile -File "$HOME/.claude/skills/rebase-on-main/scripts/git-rebase-onto.ps1"`
 
 Handle `status`:
 - **worktree** → `ExitWorktree` (keep), `git checkout <branch>`, re-run script.
@@ -32,7 +32,7 @@ For source conflicts: read both sides, resolve favoring main's structure + featu
 ## Phase 2: Merge Prompt
 
 `AskUserQuestion` with options:
-- **Merge** → build via `/build` (one fix attempt if it fails), then run `powershell.exe -NoProfile -File "$HOME/claude-config/Claude/skills/rebase-on-main/scripts/git-merge-cleanup.ps1" -Branch "<branch>"`. Report result (merged, pushed, branch deleted, worktree cleaned).
+- **Merge** → build via `/build` (one fix attempt if it fails), then run `powershell.exe -NoProfile -File "$HOME/.claude/skills/rebase-on-main/scripts/git-merge-cleanup.ps1" -Branch "<branch>"`. Report result (merged, pushed, branch deleted, worktree cleaned).
 - **Push branch** → `git push --force-with-lease`. Report result. Loop back.
 - **Build & test** → run `/build`. Loop back.
 - **Done** → report "Rebase complete. Branch left as-is."

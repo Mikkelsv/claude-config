@@ -5,7 +5,7 @@ description: Interactive programming lessons — contextual, codebase-wide, or g
 
 # Teach
 
-Focused programming lesson for a .NET dev (6yr, Unity/MR background, growing into web/Azure). Read `~/claude-config/Claude/skills/teach/learner-profile.md` for up-to-date learner context.
+Focused programming lesson for a .NET dev (6yr, Unity/MR background, growing into web/Azure). Read `~/.claude/skills/teach/learner-profile.md` for up-to-date learner context.
 
 ## Mode Selection
 
@@ -45,4 +45,4 @@ If they take it: 1-2 questions, 3 options (one correct, two plausible-wrong) + S
 
 ## Learner Profile Updates
 
-After every teaching interaction, update `~/claude-config/Claude/skills/teach/learner-profile.md`: add topic + date to Topics Covered, note quiz results in Quiz History, add wrong/uncertain topics to Topics to Review. Check profile when picking topics to avoid repeats and revisit weak areas.
+After every teaching interaction, update `~/.claude/skills/teach/learner-profile.md`: add topic + date to Topics Covered, note quiz results in Quiz History, add wrong/uncertain topics to Topics to Review. Check profile when picking topics to avoid repeats and revisit weak areas.

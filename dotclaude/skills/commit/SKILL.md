@@ -15,7 +15,7 @@ Types: **FEAT** (new features), **FIX** (fixes/minor improvements), **REFAC** (r
 
 ## Steps
 
-1. Run `~/claude-config/Claude/scripts/git-preflight.ps1`. Stop if no changes.
+1. Run `~/.claude/scripts/git-preflight.ps1`. Stop if no changes.
 2. Read the diff (`git diff` + `git diff --cached`) to pick TYPE and write the message.
 3. **Branch check** — read `.claude/rules/git-workflow.md` if it exists.
    - **Feature branches workflow** + on `main`: stop and ask the user to switch to a branch first (or confirm they really want to commit to main).

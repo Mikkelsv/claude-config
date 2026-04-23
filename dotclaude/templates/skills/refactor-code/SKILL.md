@@ -11,7 +11,7 @@ Review-only — no changes unless requested.
 
 If orchestrator provided scope, skip to Step 2.
 
-**Mode A** (no args): run `~/claude-config/Claude/scripts/git-diff-scope.ps1`. Abort if `MODE: none`.
+**Mode A** (no args): run `~/.claude/scripts/git-diff-scope.ps1`. Abort if `MODE: none`.
 **Mode B** (path/area): Glob+Grep relevant files.
 **Mode C** (`all`): scan solution from CLAUDE.md, pick 2-3 areas with most quality risk.
 

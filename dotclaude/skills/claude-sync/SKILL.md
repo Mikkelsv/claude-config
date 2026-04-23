@@ -9,7 +9,7 @@ Pull global config, then scaffold new project skills or sync existing ones.
 
 Input: `$ARGUMENTS` (optional — `fresh` to force re-scaffold, or skill names to scope)
 
-Templates: `~/claude-config/Claude/templates/skills/`
+Templates: `~/.claude/templates/skills/`
 
 ## Project Skills (from templates)
 
@@ -26,7 +26,7 @@ Only skills with genuine project-specific content are scaffolded. Generic global
 
 ## Step 0 — Pull
 
-Run: `powershell.exe -NoProfile -File "$HOME/claude-config/Claude/scripts/pull-config.ps1"`
+Run: `powershell.exe -NoProfile -File "$HOME/.claude/scripts/pull-config.ps1"`
 
 If pull fails: ask user — continue with local templates or abort?
 

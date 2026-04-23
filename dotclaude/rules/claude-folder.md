@@ -31,7 +31,7 @@ $ARGUMENTS
 Read and follow `Claude/skills/<name>/SKILL.md`.
 ```
 
-For global skills use `~/claude-config/Claude/skills/<name>/SKILL.md`. Omit `$ARGUMENTS` for skills that don't take args.
+For global skills use `~/.claude/skills/<name>/SKILL.md`. Omit `$ARGUMENTS` for skills that don't take args.
 
 ## Permission glob syntax
 

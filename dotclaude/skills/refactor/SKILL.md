@@ -16,7 +16,7 @@ Runs three review passes in parallel: code review, documentation sync, and test 
    Run the scope script:
 
    ```bash
-   powershell.exe -NoProfile -File "$HOME/claude-config/Claude/scripts/git-diff-scope.ps1"
+   powershell.exe -NoProfile -File "$HOME/.claude/scripts/git-diff-scope.ps1"
    ```
 
    If `MODE: none`, abort — nothing to review.
@@ -32,9 +32,9 @@ Runs three review passes in parallel: code review, documentation sync, and test 
    **Conversation context**: In all modes, also consider what the user was working on in this conversation. If recent edits or discussion provide relevant context, factor that into the scope.
 
 2. Read all three sub-skill files. For each, check the project first, then fall back to the global location:
-   - `Claude/skills/refactor-code/SKILL.md` (project) or `~/claude-config/Claude/skills/refactor-code/SKILL.md` (global)
-   - `Claude/skills/refactor-docs/SKILL.md` (project) or `~/claude-config/Claude/skills/refactor-docs/SKILL.md` (global)
-   - `Claude/skills/refactor-tests/SKILL.md` (project) or `~/claude-config/Claude/skills/refactor-tests/SKILL.md` (global)
+   - `Claude/skills/refactor-code/SKILL.md` (project) or `~/.claude/skills/refactor-code/SKILL.md` (global)
+   - `Claude/skills/refactor-docs/SKILL.md` (project) or `~/.claude/skills/refactor-docs/SKILL.md` (global)
+   - `Claude/skills/refactor-tests/SKILL.md` (project) or `~/.claude/skills/refactor-tests/SKILL.md` (global)
 
 3. Spawn all three as **parallel background agents** using the Agent tool. Pass each skill's full contents as the agent prompt, **prepending the scope output** (for changes mode) or a **scope summary** (for focused/general mode) so they skip their scope identification step and start directly from the analysis step.
 

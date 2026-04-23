@@ -58,7 +58,7 @@ Claude Code expects its config at `~/.claude/`. Instead of editing there directl
 
 ```
 ~/.claude/  ──junction──>  ~/claude-config/dotclaude/   (discovery: rules, commands, skill shells)
-                           ~/claude-config/Claude/       (editable: scripts, templates, skill implementations)
+                           ~/.claude/       (editable: scripts, templates, skill implementations)
 ```
 
 Scripts and templates live directly in `Claude/scripts/` and `Claude/templates/` — no junctions needed.
@@ -70,7 +70,7 @@ Scripts and templates live directly in `Claude/scripts/` and `Claude/templates/`
 3. Run the setup script from an elevated PowerShell:
    ```powershell
    git clone https://github.com/Mikkelsv/claude-config.git "$env:USERPROFILE\claude-config"
-   powershell -File "$env:USERPROFILE\claude-config\Claude\setup.ps1"
+   powershell -File "$env:USERPROFILE\.claude\setup.ps1"
    ```
 4. The script clones the repo (if needed), creates all junctions, generates `settings.json` from the template, and registers the toast notification AppID for desktop notifications.
 5. Open Claude Code — your rules, commands, and skills should be active immediately.

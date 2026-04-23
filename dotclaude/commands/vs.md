@@ -10,7 +10,7 @@ Open the current session's project folder in VS Code with a random title bar col
 2. Run the launch script:
 
    ```bash
-   powershell.exe -NoProfile -File "$HOME/claude-config/Claude/scripts/launch-vscode.ps1" -Path "<cwd>" -Color "<color>"
+   powershell.exe -NoProfile -File "$HOME/.claude/scripts/launch-vscode.ps1" -Path "<cwd>" -Color "<color>"
    ```
 
    Use the current working directory as the path.

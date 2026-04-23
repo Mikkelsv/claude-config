@@ -23,10 +23,5 @@ policy-limits.json
 sessions/
 scheduled-tasks/
 
-# Junctions (backward-compat shims pointing to ../Claude/)
-scripts/
-templates/
-
 # Legacy
 setup-claude-sync.ps1
-setup.ps1

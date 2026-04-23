@@ -16,14 +16,14 @@ try {
     git add -A 2>$null
 
     # Auto-bump config version only when templates change (projects need re-sync).
-    # Global rules, skills, and scripts are picked up automatically via junction.
-    $trackedDirs = @("Claude/templates")
+    # Global rules, skills, and scripts are picked up automatically — no bump needed.
+    $trackedDirs = @("dotclaude/templates")
     $staged = git diff --cached --name-only 2>$null
     $meaningful = $staged | Where-Object { $f = $_; $trackedDirs | Where-Object { $f.StartsWith("$_/") } }
     $bumped = $false
     $newVersion = $null
     if ($meaningful) {
-        $versionFile = "$repoRoot\Claude\config-version.json"
+        $versionFile = "$repoRoot\dotclaude\config-version.json"
         if (Test-Path $versionFile) {
             $vJson = Get-Content $versionFile -Raw | ConvertFrom-Json
             $parts = $vJson.version -split '\.'
