@@ -1,20 +1,12 @@
 # Global Claude Configuration
 
-## Git-Synced Config
-
-User-level Claude config is a git repo at `~/claude-config/`:
+User-level Claude config is a git repo at `~/.claude/`.
 
 - **Repository**: <https://github.com/Mikkelsv/claude-config.git>
-- **Local path**: `~/claude-config/`
-- **Junction**: `~/.claude/` → `~/claude-config/dotclaude/`
-- **Setup script**: `Claude/setup.ps1` (for fresh machine setup only)
+- **Local path**: `~/.claude/`
 
-The repo has two directories:
-- `dotclaude/` — maps to `~/.claude/` via junction. Rules, commands, skill shells, settings.
-- `Claude/` — freely editable. Scripts, templates, full skill implementations.
+Edit files directly. Use `/claude-push` to commit and sync. Use `/claude-sync` in projects to pull the latest global config and sync project-scaffolded skills.
 
-Edit files through the real paths in `~/claude-config/`, not through `~/.claude/`. Use `/claude-push` to commit and sync. Use `/claude-sync` in projects to pull and sync skills.
-
-### Slash commands
+## Slash commands
 
 User-level slash commands live in `~/.claude/commands/`. These are available in every project. Check what's there before creating project-level duplicates.

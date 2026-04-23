@@ -1,14 +1,10 @@
 # User-level Config Rules
 
-Repo structure and edit-in-place behavior are covered by `claude-folder.md`. Skill placement is covered by `skill-tiers.md`. This file covers what's left.
+Skill placement is covered by `skill-tiers.md`. This file covers what's left.
 
 ## Check before duplicating
 
 Before creating project-level commands, rules, or docs, check `~/.claude/commands/`, `~/.claude/rules/`, and `~/.claude/docs/` for existing user-level equivalents. Prefer extending over duplicating.
-
-## Git operations target the repo root
-
-All git commands target `~/claude-config/`, not `~/.claude/` (junction, not a git root). After config edits, use `/claude-push` to commit + sync.
 
 ## Setup script is one-time
 
@@ -22,8 +18,8 @@ For mechanical shell work (git, file I/O, process management), create/update a P
 
 Never hardcode absolute user paths. Use portable alternatives:
 
-- **Bash**: `$HOME/claude-config/...`
-- **PowerShell**: `$env:USERPROFILE\claude-config\...` or `$PSScriptRoot`
+- **Bash**: `$HOME/.claude/...`
+- **PowerShell**: `$env:USERPROFILE\.claude\...` or `$PSScriptRoot`
 - **Permissions**: `**` globs like `**/Code/**`, `**/.claude/**`
 - **Docs**: `~/` shorthand
 
@@ -35,8 +31,8 @@ When improving a project-scaffolded skill, propagate generic improvements back t
 
 ## Version tracking
 
-Global version in `~/.claude/config-version.json`. Projects track scaffold version in `Claude/local/config-version.json` (gitignored). `/claude-push` auto-bumps global version when templates change.
+Global version in `~/.claude/config-version.json`. Projects track scaffold version in `.claude/local/config-version.json` (gitignored). `/claude-push` auto-bumps global version when templates change.
 
-## Keep READMEs up to date
+## Keep the README up to date
 
-When adding/removing/changing commands, scripts, rules, skills, or other config, update both `~/claude-config/README.md` and `~/.claude/README.md`.
+When adding/removing/changing commands, scripts, rules, skills, or other config, update `~/.claude/README.md`.
