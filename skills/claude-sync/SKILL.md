@@ -17,7 +17,7 @@ Only skills with genuine project-specific content are scaffolded. Generic global
 
 | Skill | Notes |
 |---|---|
-| **build** | Global skill — scaffolds `Claude/local/skills/build/config.md` only |
+| **build** | Global skill — scaffolds `.claude/local/skills/build/config.md` only |
 | **test** | Browser-based smoke tests + optional perf tracking |
 | **refactor-code** | Code quality & architecture review |
 | **refactor-tests** | Test coverage review |
@@ -32,7 +32,7 @@ If pull fails: ask user — continue with local templates or abort?
 
 ## Step 1 — Detect Mode
 
-`Claude/local/config-version.json` exists? → **Sync** (Step 3). Missing → **Initial Setup** (Step 2).
+`.claude/local/config-version.json` exists? → **Sync** (Step 3). Missing → **Initial Setup** (Step 2).
 `$ARGUMENTS = "fresh"` → force Initial Setup. Skill names → scope to those skills in detected mode.
 
 ## Step 2 — Initial Setup
@@ -108,28 +108,28 @@ Read CLAUDE.md for context. Ask per-skill info via `AskUserQuestion`:
 - **refactor-code**: architecture principles (derive from CLAUDE.md if possible)
 - **refactor-tests**: test framework files, test mapping
 
-### 2.5 Store values in `Claude/local/skills/{name}/config.md` (markdown with clear headings).
+### 2.5 Store values in `.claude/local/skills/{name}/config.md` (markdown with clear headings).
 
 ### 2.6 Generate skills
 
 For each selected skill:
 1. Read template, compute SHA256 hash (first 8 hex)
 2. Generate customized version (replace `{PLACEHOLDER}` markers)
-3. Write full implementation to `Claude/skills/{name}/SKILL.md`
+3. Write full implementation to `.claude/skills/{name}/SKILL.md`
 4. Write thin shell to `.claude/skills/{name}/SKILL.md` (frontmatter + redirect). Include `$ARGUMENTS` for skills that accept args.
 5. Copy supporting files from template
 
-**build exception**: scaffolds only `Claude/local/skills/build/config.md` — no project skill files (global skill reads config at runtime).
+**build exception**: scaffolds only `.claude/local/skills/build/config.md` — no project skill files (global skill reads config at runtime).
 
-**test**: also generate `Claude/skills/test/scripts/smoke-test.js`.
+**test**: also generate `.claude/skills/test/scripts/smoke-test.js`.
 
-Replace `${CLAUDE_SKILL_DIR}` refs with `Claude/skills/{name}/` in generated files.
+Replace `${CLAUDE_SKILL_DIR}` refs with `.claude/skills/{name}/` in generated files.
 
 ### 2.7 Create `.claude/launch.json` if test selected + preview server configured and file doesn't exist.
 
-### 2.8 Stamp `Claude/local/config-version.json` with global version, date, and skill template hashes.
+### 2.8 Stamp `.claude/local/config-version.json` with global version, date, and skill template hashes.
 
-### 2.9 Report: list created files (including `git-workflow.md`). Remind about `Claude/local/` in .gitignore, editing in `Claude/skills/`, and CLAUDE.md for architecture docs.
+### 2.9 Report: list created files (including `git-workflow.md`). Remind about `.claude/local/` in .gitignore, editing in `.claude/skills/`, and CLAUDE.md for architecture docs.
 
 ---
 

@@ -1,6 +1,6 @@
 # Push Claude Config
 
-Commit and push all changes in the `~/claude-config/` config repo.
+Commit and push all changes in the `~/.claude/` config repo.
 
 Scripts directory: `~/.claude/scripts`
 

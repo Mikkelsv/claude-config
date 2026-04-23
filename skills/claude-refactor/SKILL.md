@@ -33,11 +33,9 @@ Launch 3 background agents with the inventory:
 
 **Agent C — Sync & Docs**:
 - **Template sync**: compare project skills to templates. Generic improvements → propagate back. Template updates → pull in. Project-specific divergence → expected.
-- **README accuracy**: both `Claude/README.md` and root `README.md`. All items listed? Descriptions accurate? Directory layout correct? Script catalog complete?
+- **README accuracy**: `~/.claude/README.md`. All items listed? Descriptions accurate? Directory layout correct? Script catalog complete?
 
 ## Phase 3 — Fix
-
-Edit via `~/claude-config/` paths (not `~/.claude/`).
 
 **Auto-fix** (apply directly): stale references, script param mismatches, JSON format mismatches, safe permission patterns, README corrections.
 
@@ -45,7 +43,7 @@ Edit via `~/claude-config/` paths (not `~/.claude/`).
 
 ## Phase 4 — Documentation
 
-Update `~/.claude/README.md` and `~/claude-config/README.md` to reflect all Phase 3 changes. Update Global Rules section if rules changed. Note `settings.template.json` changes for cross-machine sync.
+Update `~/.claude/README.md` to reflect all Phase 3 changes. Update Global Rules section if rules changed. Note `settings.template.json` changes for cross-machine sync.
 
 ## Phase 5 — Summary
 

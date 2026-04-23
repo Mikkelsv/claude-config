@@ -5,7 +5,7 @@ description: Build and serve the application
 
 # Build & Serve
 
-Execute user instructions, then build and serve the application. Reads project-specific config from `Claude/local/skills/build/config.md`.
+Execute user instructions, then build and serve the application. Reads project-specific config from `.claude/local/skills/build/config.md`.
 
 ## Phase 1 — User Task
 
@@ -20,7 +20,7 @@ If no instructions were provided, skip to Phase 2.
 Once the task is complete (or immediately if no task was given):
 
 1. Read `.claude/launch.json` for the server config (name, port, command).
-2. If `Claude/local/skills/build/config.md` exists, read it for overrides (e.g., a separate build command that differs from the serve command). This file is optional.
+2. If `.claude/local/skills/build/config.md` exists, read it for overrides (e.g., a separate build command that differs from the serve command). This file is optional.
 3. Stop any existing preview server (use `preview_stop` if one is running, check with `preview_list` first).
 4. Kill any orphaned processes on the port:
 

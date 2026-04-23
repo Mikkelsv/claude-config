@@ -3,7 +3,7 @@ param()
 # Version-bump prep: stages all changes and bumps config version if templates changed.
 # Does NOT commit or push — caller handles that (e.g. via /commit).
 
-$repoRoot = "$env:USERPROFILE\claude-config"
+$repoRoot = "$env:USERPROFILE\.claude"
 
 Push-Location $repoRoot
 try {

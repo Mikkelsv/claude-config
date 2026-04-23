@@ -5,17 +5,17 @@ description: Template for scaffolding project build reference
 
 # Build Template — Scaffolding Guide
 
-The build skill is **global** (lives in `~/claude-config/`). Projects provide a **build reference** at `Claude/local/skills/build/config.md` with project-specific config.
+The build skill is **global** (lives in `~/.claude/`). Projects provide a **build reference** at `.claude/local/skills/build/config.md` with project-specific config.
 
 ## What `/claude-sync` scaffolds for build
 
 **Project file only** — no project-level skill shell or implementation:
 
-- `Claude/local/skills/build/config.md` — project-specific build config
+- `.claude/local/skills/build/config.md` — project-specific build config
 
 The global skill at `~/.claude/skills/build/SKILL.md` reads this file at runtime.
 
-## Template for `Claude/local/skills/build/config.md`
+## Template for `.claude/local/skills/build/config.md`
 
 ```markdown
 # Build Config

@@ -51,7 +51,7 @@ if ($remoteRef) {
 }
 
 # Check for associated worktree
-$scriptsDir = "$env:USERPROFILE\claude-config\Claude\scripts"
+$scriptsDir = "$env:USERPROFILE\.claude\scripts"
 $getWorktrees = Join-Path $scriptsDir 'get-worktrees.ps1'
 $removeWorktree = Join-Path $scriptsDir 'remove-worktree.ps1'
 

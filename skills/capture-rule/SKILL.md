@@ -76,7 +76,7 @@ On confirm:
 ## Step 5: Update docs (global rules only)
 
 If the rule was saved globally, append a bullet to the **Global Rules** section in both:
-- `~/claude-config/README.md`
+- `~/.claude/README.md`
 - `~/.claude/README.md`
 
 Format: `- **<filename>** — <one-line description>`
