@@ -2,6 +2,17 @@
 
 Only lists changes that require project action. Global rules, scripts, and global skills are picked up automatically and not tracked here.
 
+## v1.1.0 — 2026-04-23 — Structure flatten
+
+The two-directory `Claude/` + `dotclaude/` split is gone. Everything lives flat at the repo root, and the repo is `~/.claude/` directly (no more `~/claude-config/` wrapper, no junction).
+
+**Project action:**
+
+- **Existing machines on the old layout:** run `$env:USERPROFILE\claude-config\scripts\migrate-to-claude-root.ps1` from plain PowerShell (outside a Claude Code session) once you've pulled this commit. The script renames `~/claude-config/` to `~/.claude/` and deletes the junction. Close all Claude Code sessions before running.
+- **Fresh machines:** new `setup.ps1` clones directly into `~/.claude/` — no junction step.
+- **Per-project scaffolded skills (`refactor-code`, `refactor-tests`, `build`, `test`):** templates moved from `Claude/templates/skills/` to `templates/skills/`. Run `/claude-sync` in each project to refresh scaffolded copies.
+- **Per-project local config (Tier 3):** convention moved from `<project>/Claude/local/` to `<project>/.claude/local/`. If you have a local config (e.g. `<project>/Claude/local/skills/build/config.md`), move it to `<project>/.claude/local/skills/build/config.md` and update the project's `.gitignore`.
+
 ## v1.0.8 — 2026-04-13
 
 - Removed teammate-copy templates (plan, implement, refactor, refactor-docs, audit) — global skills now read project context directly. Projects that previously scaffolded any of these via `/claude-sync` should delete their `Claude/skills/<name>/` and `.claude/skills/<name>/` files for those skills and use the global versions instead.
