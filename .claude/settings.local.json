@@ -5,7 +5,11 @@
       "Bash(wc -l ~/claude-config/Claude/templates/skills/*/SKILL.md)",
       "Bash(powershell.exe -NoProfile -Command \"Get-Module -ListAvailable BurntToast | Select-Object Name, Version\")",
       "Bash(powershell.exe -NoProfile -Command \"if \\(Test-Path 'HKCU:\\\\Software\\\\Classes\\\\claude'\\) { Get-ItemProperty 'HKCU:\\\\Software\\\\Classes\\\\claude\\\\' } else { 'No claude:// scheme registered in HKCU' }\")",
-      "Bash(where code *)"
+      "Bash(where code *)",
+      "PowerShell(Get-Item \"$env:USERPROFILE\\\\.claude\" | Select-Object Name, LinkType, Target)",
+      "PowerShell(Remove-Item -Path \"$env:USERPROFILE\\\\.claude\\\\perm-test-junction.md\",\"$env:USERPROFILE\\\\claude-config\\\\dotclaude\\\\perm-test-realpath.md\",\"$env:USERPROFILE\\\\.claude\\\\rules\\\\perm-test-rule.md\" -Force -ErrorAction SilentlyContinue; Remove-Item -Path \"$env:USERPROFILE\\\\.claude\\\\skills\\\\perm-test-skill\" -Recurse -Force -ErrorAction SilentlyContinue; \"cleanup done\")",
+      "PowerShell(Get-ChildItem \"$env:USERPROFILE\\\\claude-config\\\\dotclaude\" -Force | Where-Object { $_.LinkType } | Select-Object Name, LinkType, Target)",
+      "PowerShell($items = Get-ChildItem \"$env:USERPROFILE\\\\claude-config\\\\dotclaude\\\\scripts\",\"$env:USERPROFILE\\\\claude-config\\\\dotclaude\\\\templates\" -Force -ErrorAction SilentlyContinue -Directory; foreach \\($i in \\(Get-ChildItem \"$env:USERPROFILE\\\\claude-config\\\\dotclaude\" -Force -Directory\\)\\) { if \\($i.Attributes -band [System.IO.FileAttributes]::ReparsePoint\\) { Write-Output \\(\"JUNCTION: {0} -> {1}\" -f $i.Name, $i.Target\\) } })"
     ]
   }
 }

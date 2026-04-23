@@ -107,7 +107,7 @@ Never stop unless all done. 3 fix failures → stash + skip + note. Unclear requ
 
 ## Final Audit
 
-After all tasks: run `/refactor` (full trio — only time docs+tests are reviewed) and `/audit-architecture` on the full branch diff.
+After all tasks: run `/refactor` (full trio — only time docs+tests are reviewed) and `/audit-architecture` on the full branch diff. Both skills will surface rule candidates per `wf-surface-rule-candidates.md`; collect those into a single post-audit prompt instead of two.
 
 ## Cleanup
 

@@ -12,6 +12,7 @@ Personal Claude Code configuration with slash commands, skills, and PowerShell a
 | `/claude-refactor` | Audit all skills, commands, scripts, rules, and templates. Fixes bugs, stale refs, permission gaps. |
 | `/claude-push` | Commit and push config changes. Auto-bumps version on template changes. |
 | `/allow [prompt]` | Parse a blocked permission prompt and add a generalized allow rule. |
+| `/capture-rule [idea]` | Capture a new code-quality, architecture, or workflow rule. Asks category + scope, drafts the rule, saves after your approval. |
 
 ### Global Workflow Skills
 
@@ -160,6 +161,9 @@ Rules in `dotclaude/rules/` are always loaded:
 - **skill-tiers.md** — 3-tier skill placement (global, project, local config)
 - **teach-on-completion.md** — Offer a teaching nugget + quiz after completing dev tasks
 - **always-plan.md** — Auto-invoke `/plan` when work warrants a structured plan
+- **wf-surface-rule-candidates.md** — Watch for generalizable decisions during work and surface them as rule candidates
+
+New rules use category prefixes: `cq-` (code-quality), `arch-` (architecture), `wf-` (workflow). Existing un-prefixed rules stay as-is.
 
 ### Script Catalog
 

@@ -47,3 +47,7 @@ Single pass over the in-scope files. **Must evaluate all four concerns** — do 
 
 **Verdict**: **Sound** / **Minor issues** / **Overengineered** / **Rethink**. Default assumption is **not Sound** — must earn Sound verdict by finding nothing across all four concerns. **Must act on findings:** minor issues → apply fixes automatically. Overengineered/Rethink → ask via `AskUserQuestion` with concrete fix options. Do not just report and move on.
 
+## Step 5: Rule Candidates
+
+After reporting, scan the findings for patterns that would generalize. Boundary violations, overengineering flags, and simpler-alternative preferences often hint at architecture rules worth codifying. Per `wf-surface-rule-candidates.md`, append up to 2 candidates using the standard format. Skip this section if nothing qualifies — don't fabricate.
+

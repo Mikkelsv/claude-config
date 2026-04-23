@@ -57,3 +57,7 @@ Relay the refactor-tests agent's findings: coverage verdict, gaps, stale tests.
 ### Overall Verdict
 
 Synthesize across all three: is this ready to ship, or does it need work? If any sub-review flagged issues, use `AskUserQuestion` to ask if the user wants fixes applied.
+
+### Rule Candidates
+
+Scan the findings for patterns that would generalize beyond this review — recurring simplifications, consistently-applied preferences, corrections the user has made before. Per `wf-surface-rule-candidates.md`, append up to 2 candidates using the standard format. Skip this section if nothing qualifies — don't fabricate.
