@@ -1,6 +1,6 @@
 ﻿{
-    "version":  "1.0.8",
-    "lastUpdated":  "2026-04-13",
+    "version":  "1.0.9",
+    "lastUpdated":  "2026-04-23",
     "changelog":  [
                       "1.0.0: Initial versioned config after junction-based restructure"
                   ]

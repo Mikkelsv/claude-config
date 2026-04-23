@@ -21,7 +21,7 @@ Scripts directory: `~/.claude/scripts`
 3. **Update the changelog** if `sync-config.ps1` reported `versionBump: true` AND the changes require project action (e.g., template changes that need re-scaffolding, new gitignore entries, new local config files). Skip the changelog for changes that are picked up automatically (rules, scripts, global skills). Append a bullet-list entry to `~/.claude/CHANGELOG.md` with the new version, date, and actionable items only. Then stage and amend:
 
    ```bash
-   git -C ~/claude-config add dotclaude/CHANGELOG.md
+   git -C ~/claude-config add CHANGELOG.md
    git -C ~/claude-config commit --amend --no-edit
    git -C ~/claude-config push --force-with-lease
    ```

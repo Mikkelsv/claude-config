@@ -28,7 +28,7 @@ Use `AskUserQuestion` with two questions in one batch:
 Make the recommended category the first option, inferred from the rule text. (E.g. "Prefer Result<T>..." → code-quality. "Keep repository methods free..." → architecture. "Always run /refactor after..." → workflow.)
 
 **Question 2 — Scope:**
-- **Global** — applies to every project (`~/claude-config/dotclaude/rules/`)
+- **Global** — applies to every project (`~/.claude/rules/`)
 - **Project-only** — applies only to current project (`<project>/.claude/rules/`)
 
 Recommend global unless the rule references project-specific names, paths, or frameworks.
@@ -53,7 +53,7 @@ Keep it terse. Existing rules are typically 10–40 lines. Match that.
 Slug = lowercase kebab-case of the directive (e.g. `cq-prefer-result-type.md`, `arch-repository-no-business-logic.md`, `wf-refactor-after-implement.md`).
 
 **Path:**
-- Global: `~/claude-config/dotclaude/rules/<prefix>-<slug>.md`
+- Global: `~/.claude/rules/<prefix>-<slug>.md`
 - Project: `<project-root>/.claude/rules/<prefix>-<slug>.md`
 
 ## Step 3: Confirm
@@ -85,6 +85,6 @@ Don't run `/claude-push` automatically — leave that to the user.
 
 ## Notes
 
-- **Avoid duplicates.** Before drafting, Grep `~/claude-config/dotclaude/rules/` (and project `.claude/rules/` if project-scope) for overlapping content. If you find one, tell the user and offer to extend the existing rule instead.
+- **Avoid duplicates.** Before drafting, Grep `~/.claude/rules/` (and project `.claude/rules/` if project-scope) for overlapping content. If you find one, tell the user and offer to extend the existing rule instead.
 - **Prefer global.** If in doubt, global is better — other projects may benefit. Project-scope is for rules tied to this codebase's structure or stack.
 - **No emojis in rule files** unless the user explicitly asks.

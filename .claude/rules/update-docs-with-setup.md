@@ -1,6 +1,6 @@
 # Update Docs When Changing Setup
 
-When modifying files in the config repo that affect the setup (scripts, commands, skills, hooks, settings template), check both `~/claude-config/Claude/README.md` and `~/claude-config/README.md` for sections that reference the changed component and update them to stay accurate.
+When modifying files in `~/.claude/` that affect the setup (scripts, commands, skills, hooks, settings template), always check `~/.claude/README.md` for sections that reference the changed component and update them to stay accurate.
 
 This includes changes to:
 - Scripts (`scripts/*.ps1`) — update the Script Catalog table and any prose mentioning the script

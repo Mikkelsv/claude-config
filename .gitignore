@@ -20,6 +20,9 @@ todos/
 settings.json
 chrome/
 policy-limits.json
+sessions/
+scheduled-tasks/
+mcp-needs-auth-cache.json
 
 # Legacy
 setup-claude-sync.ps1

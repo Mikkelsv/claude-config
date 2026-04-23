@@ -24,7 +24,7 @@ Launch 3 background agents with the inventory:
 **Agent A — Content Quality**:
 - **Correctness**: logic flow, script param mismatches, stale references, JSON output mismatches.
 - **Script extraction**: multi-line bash blocks that should be scripts (especially if repeated). Not single-liners.
-- **Token efficiency**: rules in `dotclaude/rules/` and CLAUDE.md are loaded into every conversation — flag verbose prose, redundant tables, repeated explanations, and content duplicated across files. Skills/commands are loaded on invocation — flag the same in heavy ones (>100 lines). Lead with the imperative, drop the "why" once it's been established. Aim: every line earns its tokens.
+- **Token efficiency**: rules in `rules/` and CLAUDE.md are loaded into every conversation — flag verbose prose, redundant tables, repeated explanations, and content duplicated across files. Skills/commands are loaded on invocation — flag the same in heavy ones (>100 lines). Lead with the imperative, drop the "why" once it's been established. Aim: every line earns its tokens.
 
 **Agent B — Structure & Permissions**:
 - **Permissions**: walk skills/commands, find Bash/Write/Edit calls not covered by settings.json globs. Draft safe patterns. Update template if portable.

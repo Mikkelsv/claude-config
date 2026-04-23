@@ -17,13 +17,13 @@ try {
 
     # Auto-bump config version only when templates change (projects need re-sync).
     # Global rules, skills, and scripts are picked up automatically — no bump needed.
-    $trackedDirs = @("dotclaude/templates")
+    $trackedDirs = @("templates")
     $staged = git diff --cached --name-only 2>$null
     $meaningful = $staged | Where-Object { $f = $_; $trackedDirs | Where-Object { $f.StartsWith("$_/") } }
     $bumped = $false
     $newVersion = $null
     if ($meaningful) {
-        $versionFile = "$repoRoot\dotclaude\config-version.json"
+        $versionFile = "$repoRoot\config-version.json"
         if (Test-Path $versionFile) {
             $vJson = Get-Content $versionFile -Raw | ConvertFrom-Json
             $parts = $vJson.version -split '\.'

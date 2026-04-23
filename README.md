@@ -8,45 +8,45 @@ Personal Claude Code configuration with slash commands, skills, and PowerShell a
 
 | Command | What it does |
 |---|---|
-| `/claude-sync [skills\|fresh]` | Pull global config, then scaffold or sync project skills |
-| `/claude-refactor` | Audit all skills, commands, scripts, rules, and templates |
-| `/claude-push` | Commit and push config changes |
-| `/allow [prompt]` | Parse a blocked permission prompt and add an allow rule |
-| `/capture-rule [idea]` | Capture a new code-quality, architecture, or workflow rule. Asks category + scope, drafts, and saves. |
+| `/claude-sync [skills\|fresh]` | Pull global config, then scaffold or sync project skills. First run = full scaffolding, later runs = targeted template updates. |
+| `/claude-refactor` | Audit all skills, commands, scripts, rules, and templates. Fixes bugs, stale refs, permission gaps. |
+| `/claude-push` | Commit and push config changes. Auto-bumps version on template changes. |
+| `/allow [prompt]` | Parse a blocked permission prompt and add a generalized allow rule. |
+| `/capture-rule [idea]` | Capture a new code-quality, architecture, or workflow rule. Asks category + scope, drafts the rule, saves after your approval. |
 
 ### Global Workflow Skills
 
-Available in every project via the global config.
+Available to you in every project via the global config.
 
 | Skill | What it does |
 |---|---|
 | `/build` | Build & serve. Reads project config from `Claude/local/skills/build/config.md`. |
 | `/rebase-on-main` | Rebase on main, resolve conflicts, optionally merge/push. |
-| `/plan [feature]` | Collaborative discovery + plan. Skeptical persona — flags .NET/web anti-patterns. |
-| `/implement [plan]` | Autonomous dev loop with build/test/refactor/audit gates. |
-| `/refactor [focus]` | Code quality review orchestrator. |
-| `/refactor-docs [focus]` | Documentation sync. |
-| `/audit-architecture [focus]` | Strict, skeptical single-pass architecture review. |
-| `/teach [mode]` | Interactive programming lesson — contextual, codebase exploration, or random topic. |
-| `/commit [hint]` | Stage all changes, craft a typed commit message, and push. |
+| `/plan [feature]` | Collaborative feature discovery + plan creation. Skeptical senior-engineer persona — challenges premise, flags .NET/web anti-patterns. |
+| `/implement [plan]` | Autonomous dev loop — plan tasks with build/test/refactor/audit gates. Per-task `/refactor-code` if ≥ 20 lines changed. |
+| `/refactor [focus]` | Code quality review orchestrator (spawns refactor-code, refactor-docs, refactor-tests). |
+| `/refactor-docs [focus]` | Documentation sync — checks docs match code changes. |
+| `/audit-architecture [focus]` | Strict, skeptical architecture review (single-pass): boundaries, overengineering, alternatives. Assumes overengineered until proven otherwise. |
+| `/teach [mode]` | Interactive programming lesson — contextual deep-dive, codebase exploration, or random topic. |
+| `/commit [hint]` | Stage all changes, craft a typed commit message (FEAT/FIX/REFAC/DOCS), and push. Prompts to amend for small changes. |
 
 ### Project Skills (via /claude-sync)
 
-Scaffolded per-project from templates. Embed project-specific knowledge.
+Scaffolded per-project from templates. Embed project-specific knowledge (architecture rules, test patterns).
 
 | Skill | What it does |
 |---|---|
 | `/test` | Browser-based smoke tests with optional perf tracking. |
 | `/refactor-code [focus]` | Code quality & architecture review with project-specific criteria. |
-| `/refactor-tests [focus]` | Test coverage review. |
+| `/refactor-tests [focus]` | Test coverage review with project-specific framework knowledge. |
 
 ### Utility Commands
 
 | Command | What it does |
 |---|---|
 | `/todo [text]` | Capture a to-do item for future sessions. |
-| `/handoff` | Write session handoff to project memory. |
-| `/pickup` | Resume from a previous handoff. |
+| `/handoff` | Write a session handoff summary to project memory. |
+| `/pickup` | Resume from a previous session's handoff. |
 
 ### Setup
 
@@ -63,6 +63,10 @@ Claude Code expects its config at `~/.claude/`. Instead of editing there directl
 
 Scripts and templates live directly in `Claude/scripts/` and `Claude/templates/` — no junctions needed.
 
+#### Why two directories?
+
+Claude Code protects `.claude/` — writes through the `dotclaude/` junction still trigger prompts because the OS resolves the junction. The `Claude/` directory is outside this protection, so edits there are prompt-free. Discovery files (rules, commands, skill shells, settings) must live in `dotclaude/` for Claude Code to find them, but everything else belongs in `Claude/`.
+
 #### Fresh machine setup
 
 1. Install [git](https://git-scm.com/) and ensure it's on PATH.
@@ -72,18 +76,20 @@ Scripts and templates live directly in `Claude/scripts/` and `Claude/templates/`
    git clone https://github.com/Mikkelsv/claude-config.git "$env:USERPROFILE\claude-config"
    powershell -File "$env:USERPROFILE\.claude\setup.ps1"
    ```
-4. The script clones the repo (if needed), creates all junctions, generates `settings.json` from the template, and registers the toast notification AppID for desktop notifications.
+4. The script clones the repo (if needed), creates all junctions, generates `settings.json` from the template, and registers the toast notification AppID (Start Menu shortcut + banner permissions, required by Windows 11).
 5. Open Claude Code — your rules, commands, and skills should be active immediately.
 
 #### After setup
 
 - **Edit config** through `~/claude-config/` paths (never `~/.claude/`).
-- **Sync changes** with `/claude-push` (commit + push).
+- **Sync changes** with `/claude-push` (commit + push) or `/claude-sync` (pull + sync project skills).
 - **Add project skills** with `/claude-sync` in any project directory.
 
 ### Notifications
 
-When Claude finishes a task or hits a permission prompt, `Claude/scripts/notify.ps1` shows a Windows toast banner with a short summary of the task, flashes the Claude desktop app's taskbar icon, and plays a notification sound. Toast registration is handled automatically by `setup.ps1` via `register-toast-appid.ps1` (creates a Start Menu shortcut with embedded AppUserModelID — required by Windows 11).
+When Claude finishes a task or hits a permission prompt, `Claude/scripts/notify.ps1` shows a Windows toast banner with a short summary, flashes the Claude desktop app's taskbar icon, and plays a notification sound.
+
+The toast registration is set up by `Claude/scripts/register-toast-appid.ps1` (run automatically by `setup.ps1` on first install). It registers a dedicated AppID, enables banner popups, and creates a Start Menu shortcut with the AppUserModelID embedded — Windows 11 requires all three or toasts land silently in Action Center.
 
 ---
 
@@ -92,35 +98,24 @@ When Claude finishes a task or hits a permission prompt, `Claude/scripts/notify.
 ### Directory Layout
 
 ```text
-~/claude-config/                         # Git repo root
-  dotclaude/                             # Junction target for ~/.claude/
+~/claude-config/           # Git repo root
+  dotclaude/                              # Junction target for ~/.claude/
     .gitignore
-    .claude/rules/                       # Meta-config for the config repo
-    CLAUDE.md                            # Global instructions
-    README.md                            # Claude-facing docs
-    settings.json                        # Machine-specific (gitignored)
-    settings.template.json               # Portable template (committed)
-    commands/                            # Slash commands
-      claude-push.md
-      handoff.md
-      pickup.md
-      todo.md
-    rules/                               # Global rules (always active)
-    skills/                              # Thin shells (redirect to Claude/skills/)
-      allow/
-      build/
-      claude-refactor/
-      claude-sync/
-      rebase-on-main/
-    scripts/ -> junction to Claude/scripts/
-    templates/ -> junction to Claude/templates/
-  Claude/                                # Freely editable (no permission prompts)
-    CHANGELOG.md                         # Project action changelog
-    config-version.json                  # Global config version tracking
-    setup.ps1                            # Fresh machine bootstrap
-    scripts/                             # PowerShell automation (19 scripts)
-    templates/skills/                    # 4 skill templates (build, test, refactor-code, refactor-tests)
-    skills/                              # Full global skill implementations
+    .claude/rules/                        # Meta-config for the config repo
+    CLAUDE.md                             # Global instructions
+    README.md                             # This file
+    settings.json                         # Machine-specific (gitignored)
+    settings.template.json                # Portable template (committed)
+    commands/                             # Slash commands
+    rules/                                # Global rules (always active)
+    skills/                               # Thin shells (redirect to Claude/skills/)
+  Claude/                                 # Freely editable (no permission prompts)
+    config-version.json                   # Global config version tracking
+    setup.ps1                             # Fresh machine bootstrap
+    CHANGELOG.md                          # Project action changelog
+    scripts/                              # PowerShell automation (19 scripts)
+    templates/skills/                     # 4 skill templates (build, test, refactor-code, refactor-tests)
+    skills/                               # Full global skill implementations
       allow/
       build/
       claude-refactor/
@@ -130,90 +125,24 @@ When Claude finishes a task or hits a permission prompt, `Claude/scripts/notify.
       rebase-on-main/
       refactor/
       refactor-docs/
-      audit-architecture/
+      commit/
+      teach/
 ```
 
-### Design Pattern: Global vs Project-Level
+**Junction:** `~/.claude/` -> `~/claude-config/dotclaude/`
 
-**Global** (in `~/claude-config/`) — generic workflows available in every project:
-- Config: `/claude-sync`, `/claude-refactor`, `/claude-push`, `/allow`
-- Workflow: `/build`, `/rebase-on-main`, `/plan`, `/implement`, `/refactor`, `/refactor-docs`, `/audit-architecture`
-- Utility: `/handoff`, `/pickup`, `/todo`
+### Design Pattern
 
-**Project-level** (in `<project>/.claude/skills/`) — embed project-specific knowledge, scaffolded by `/claude-sync`:
-- `/test`, `/refactor-code`, `/refactor-tests`
+**Prompts orchestrate, scripts execute.** Commands/skills contain decision logic; PowerShell scripts do mechanical work and return JSON.
 
-Global workflow skills (`/plan`, `/implement`, `/refactor`, `/refactor-docs`, `/audit-architecture`) read project context from `CLAUDE.md` and `.claude/rules/` at runtime — they don't need per-project scaffolding.
-
-### Design Pattern: Commands / Skills + Scripts
-
-The core principle: **prompts are Claude orchestration, scripts are mechanical execution**.
-
-- **Commands** (`commands/<name>.md`) — simple orchestration prompts for flows using shared scripts.
-- **Skills** (`skills/<name>/SKILL.md`) — complex orchestration with co-located scripts.
-- **Templates** (`templates/skills/<name>/SKILL.md`) — generic skill skeletons with `{PLACEHOLDER}` markers. Read by `/claude-sync` to generate project-level skills.
-- **Scripts** (`.ps1` files) — shell operations: git commands, file I/O, process management.
-- **Communication** is via JSON on stdout. Every script outputs a JSON object so Claude can parse the result.
-
-### Script Catalog
-
-#### Worktree Management
-
-| Script | Params | Output | Used by |
-|--------|--------|--------|---------|
-| `get-worktrees.ps1` | (none) | `[{name, path, branch, commit, color}]` | `git-merge-cleanup.ps1` |
-| `create-worktree.ps1` | `-Name`, `-Branch` | `{path, branch, commit}` | (manual use) |
-| `remove-worktree.ps1` | `-Name`, `-DeleteBranch` (switch) | `{removed, branch, branchDeleted}` | `git-merge-cleanup.ps1` |
-| `escape-worktree.ps1` | (none) | `{isWorktree, mainRepoRoot, branch}` | (manual use) |
-
-#### Launching
-
-| Script | Params | Output | Used by |
-|--------|--------|--------|---------|
-| `launch-vscode.ps1` | `-Path`, `-Color` | (none, run in background) | (manual use) |
-| `launch-dev-server.ps1` | `-Project`, `-Port` | `{launched, url}` | (template reference) |
-| `kill-port.ps1` | `-Port` | `{killed, pids}` or `{killed: false, reason}` | `/build` |
-
-#### Git Operations
-
-| Script | Params | Output | Used by |
-|--------|--------|--------|---------|
-| `git-preflight.ps1` | (none) | `{branch, isMain, hasChanges, staged, unstaged, untracked}` | (shared utility) |
-| `git-branch-scope.ps1` | `-BaseBranch` (default: main) | `{branch, base, hasMergeBase, isAhead, commitCount, commits[], files[]}` | (legacy) |
-| `git-diff-scope.ps1` | `-RepoPath`, `-BaseBranch` (default: main), `-StatOnly` | Text: mode + stat + diff | `/refactor`, `/audit-architecture` |
-
-#### Rebase (skill-local: `Claude/skills/rebase-on-main/scripts/`)
-
-| Script | Params | Output | Used by |
-|--------|--------|--------|---------|
-| `git-rebase-onto.ps1` | `-BaseBranch` (default: main) | `{status, branch, ...}` | `/rebase-on-main` |
-| `git-merge-cleanup.ps1` | `-Branch` | `{merged, pushed, branch, localDeleted, remoteDeleted, worktreeRemoved}` | `/rebase-on-main` |
-
-#### File & Process Operations
-
-| Script | Params | Output | Used by |
-|--------|--------|--------|---------|
-| `remove-path.ps1` | `-Path`, `-Force` (switch) | `{removed, path, type}` | (replaces `rm -rf`) |
-| `move-path.ps1` | `-Source`, `-Destination`, `-Force` (switch) | `{moved, source, destination}` | (replaces `mv`) |
-| `npm-command.ps1` | `-Command`, `-WorkingDirectory` (optional) | `{success, exitCode, output}` | (replaces `npm ...`) |
-| `node-run.ps1` | `-Script`, `-WorkingDirectory` (optional) | `{success, exitCode, output}` | (replaces `node ...`) |
-
-#### Config Sync & Notifications
-
-| Script | Params | Output | Used by |
-|--------|--------|--------|---------|
-| `sync-config.ps1` | `-Message` | `{committed, pushed, hash, message}` | `/claude-push` |
-| `pull-config.ps1` | (none) | `{pulled, before, after, commits}` | `/claude-sync` |
-| `notify.ps1` | (none, reads JSON hook input from stdin) | (side-effects: Windows toast banner + taskbar flash + sound) | Stop and Notification hooks |
-| `register-toast-appid.ps1` | (none) | (side-effects: registers AppID, Start Menu shortcut, banner permissions) | `setup.ps1` (one-time setup) |
-
-### Settings and Permissions
-
-`settings.json` controls permissions (allow list with glob patterns), default mode (`acceptEdits`), and hooks (notification on stop/permission prompt). Use `settings.template.json` as the portable template — copy to `settings.json` on new machines.
+- **`dotclaude/`** holds discovery files (rules, commands, skill shells, settings)
+- **`Claude/`** holds editable content (scripts, templates, skill implementations)
+- Edit through `~/claude-config/` paths, not `~/.claude/`
+- Git operations target `~/claude-config/` (the repo root)
 
 ### Version Tracking
 
-`Claude/config-version.json` tracks the global config version. The `/claude-push` command auto-bumps the patch version when changes touch templates. Projects track staleness via `Claude/local/config-version.json` (gitignored) — at session start, Claude compares the two and suggests `/claude-sync` if they differ.
+`Claude/config-version.json` tracks the global config version. The `/claude-push` command auto-bumps the patch version when changes touch rules, commands, skills, scripts, or templates. Projects track staleness via their own `Claude/local/config-version.json` (gitignored) — at session start, Claude compares the two and suggests `/claude-sync` if they differ.
 
 ### Global Rules
 
@@ -235,3 +164,18 @@ Rules in `dotclaude/rules/` are always loaded:
 - **wf-surface-rule-candidates.md** — Watch for generalizable decisions during work and surface them as rule candidates
 
 New rules use category prefixes: `cq-` (code-quality), `arch-` (architecture), `wf-` (workflow). Existing un-prefixed rules stay as-is.
+
+### Script Catalog
+
+All scripts in `Claude/scripts/`.
+
+| Category | Scripts |
+|----------|---------|
+| Worktree | `get-worktrees`, `create-worktree`, `remove-worktree`, `escape-worktree` |
+| Launching | `launch-vscode`, `launch-dev-server`, `kill-port` |
+| Git | `git-preflight`, `git-branch-scope`, `git-diff-scope`, `commit` |
+| File/Process | `remove-path`, `move-path`, `npm-command`, `node-run` |
+| Config | `sync-config`, `pull-config` |
+| Notifications | `notify`, `register-toast-appid` |
+
+Skill-local scripts in `Claude/skills/rebase-on-main/scripts/`: `git-rebase-onto`, `git-merge-cleanup`.
