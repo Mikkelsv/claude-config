@@ -127,6 +127,22 @@ Rules in `rules/` are always loaded:
 - **always-plan.md** — Auto-invoke `/plan` when work warrants a structured plan
 - **wf-surface-rule-candidates.md** — Watch for generalizable decisions and surface them as rule candidates
 - **cq-no-future-state-stubs.md** — Don't stub future DU cases / params with `NotImplementedException`; use a module comment instead
+- **cq-async-all-the-way.md** — Once async, always async. No `.Result` / `.Wait()` / `Task.Run` as sync→async bridges
+- **cq-flow-cancellation-tokens.md** — Thread `CancellationToken` through every cancellable async chain
+- **cq-no-async-void.md** — Never `async void` outside UI event handlers
+- **cq-no-silent-catch.md** — No catch blocks that swallow or log-and-continue without a documented reason
+- **cq-no-fallbacks-without-ask.md** — No "just in case" defaults or optional params; fail loudly or ask first
+- **cq-nullable-strict.md** — NRT warnings as errors; no `!` without an invariant comment
+- **cq-result-over-exceptions-for-expected-failures.md** — Exceptions for unexpected only; `Result<T>` for validation / not-found / domain errors
+- **cq-prefer-records-and-sealed.md** — `record` for data carriers, `sealed` for non-abstract classes by default
+- **cq-no-hardcoded-secrets-or-env-invention.md** — No hardcoded secrets; never invent env var names
+- **arch-no-repository-over-efcore.md** — Don't wrap `DbContext` in a generic `IRepository<T>`; it already is one
+- **arch-no-speculative-interfaces.md** — No `IFoo + Foo` for single-impl classes; default to `sealed class`
+- **wf-verify-api-before-using.md** — Grep / check `.csproj` / fetch docs before calling unfamiliar APIs
+- **wf-match-existing-pattern.md** — Find an existing pattern of the same shape and follow it before introducing a new one
+- **wf-fix-root-cause.md** — Diagnose before patching; don't edit tests to match broken behavior
+- **wf-three-tier-boundaries.md** — Structure rules as *always / ask first / never*
+- **wf-tight-claude-config.md** — Keep rules, skills, commands, and Claude docs terse; every line earns its tokens
 
 New rules use category prefixes: `cq-` (code-quality), `arch-` (architecture), `wf-` (workflow). Older un-prefixed rules stay as-is.
 

@@ -18,6 +18,8 @@ todos/
 
 # Machine-specific
 settings.json
+settings.local.json
+.claude/
 chrome/
 policy-limits.json
 sessions/
