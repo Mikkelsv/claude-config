@@ -11,7 +11,8 @@ Personal Claude Code configuration — slash commands, skills, rules, and PowerS
 | `/claude-sync [skills\|fresh]` | Pull global config, then scaffold or sync project skills. First run = full scaffolding, later runs = targeted template updates. |
 | `/claude-refactor` | Audit all skills, commands, scripts, rules, and templates. Fixes bugs, stale refs, permission gaps. |
 | `/claude-push` | Commit and push config changes. Auto-bumps version on template changes. |
-| `/allow [prompt]` | Parse a blocked permission prompt and add a generalized allow rule. |
+| `/allow [prompt]` | Parse a blocked permission prompt and save a suggested allow rule to `~/.claude/suggestions/` for later review (non-interrupting). |
+| `/suggestions [type]` | Walk through pending suggestions in `~/.claude/suggestions/` one at a time and accept/skip/discard each. |
 | `/capture-rule [idea]` | Capture a new code-quality, architecture, or workflow rule. Asks category + scope, drafts the rule, saves after your approval. |
 
 ### Global Workflow Skills
@@ -125,6 +126,7 @@ Rules in `rules/` are always loaded:
 - **teach-on-completion.md** — Offer a teaching nugget + quiz after dev tasks
 - **always-plan.md** — Auto-invoke `/plan` when work warrants a structured plan
 - **wf-surface-rule-candidates.md** — Watch for generalizable decisions and surface them as rule candidates
+- **cq-no-future-state-stubs.md** — Don't stub future DU cases / params with `NotImplementedException`; use a module comment instead
 
 New rules use category prefixes: `cq-` (code-quality), `arch-` (architecture), `wf-` (workflow). Older un-prefixed rules stay as-is.
 

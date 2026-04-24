@@ -23,6 +23,7 @@ policy-limits.json
 sessions/
 scheduled-tasks/
 mcp-needs-auth-cache.json
+/suggestions/
 
 # Legacy
 setup-claude-sync.ps1
