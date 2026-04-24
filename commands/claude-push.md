@@ -16,7 +16,7 @@ Scripts directory: `~/.claude/scripts`
 
    If no changes, report "nothing to commit" and stop.
 
-2. Run `/commit` to commit and push. The commit skill will analyze the staged diff, pick the right TYPE, and push. Since this is config work, it will typically be `DOCS:`.
+2. Run `/commit` to commit and push. The commit skill analyzes the staged diff, picks the right tag, and pushes. Config work is typically `[DOCS]`.
 
 3. **Update the changelog** if `sync-config.ps1` reported `versionBump: true` AND the changes require project action (e.g., template changes that need re-scaffolding, new gitignore entries, new local config files). Skip the changelog for changes that are picked up automatically (rules, scripts, global skills). Append a bullet-list entry to `~/.claude/CHANGELOG.md` with the new version, date, and actionable items only. Then stage and amend:
 
