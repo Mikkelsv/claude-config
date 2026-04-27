@@ -142,8 +142,27 @@ Replace `${CLAUDE_SKILL_DIR}` refs with `.claude/skills/{name}/` in generated fi
 ### 3.3 Ask via `AskUserQuestion` (multiSelect, pre-select Changed+New).
 
 ### 3.4 Apply updates:
-- **Changed**: read config file for stored values, re-generate from new template. Ask for new placeholders.
+- **Changed**: read config file for stored values, re-generate from new template. Ask for new placeholders. **Preserve PROJECT-SPECIFIC blocks** (see below).
 - **New**: check existing configs for reusable values, ask for the rest, scaffold normally.
+
+#### PROJECT-SPECIFIC block preservation
+
+Before overwriting any existing project SKILL.md, scan the current file for blocks delimited by:
+
+```markdown
+<!-- PROJECT-SPECIFIC: ... -->
+...content...
+<!-- /PROJECT-SPECIFIC -->
+```
+
+Each block is anchored to a stable marker — the most recent heading line above it (e.g. `## Step 3: Architecture`). After regenerating from template:
+
+1. Re-scan the regenerated file for the same heading markers.
+2. For each preserved block, find its anchor heading in the new file and re-insert the block **immediately after** that heading.
+3. If the anchor heading no longer exists, append the block to a `## Project additions` section at the end of the file and warn the user.
+4. If the regenerated file already contains a block with the same opening comment, prefer the preserved one (user-edited content wins over template default).
+
+This lets project-specific rule references (e.g. *"Apply `.claude/rules/arch-core-principles.md`"*) survive template upgrades. Templates stay project-agnostic; projects keep their additions.
 
 ### 3.5 Update version stamp.
 
@@ -155,5 +174,5 @@ Replace `${CLAUDE_SKILL_DIR}` refs with `.claude/skills/{name}/` in generated fi
 
 - **No skills map in version file**: scan for installed skills, treat all as unknown hash, offer re-sync.
 - **New placeholder in template**: detect, ask user, update config.
-- **Manual edits**: re-generation overwrites. User can skip individual skills.
+- **Manual edits**: re-generation overwrites. User can skip individual skills, OR wrap edits in `<!-- PROJECT-SPECIFIC: ... --> ... <!-- /PROJECT-SPECIFIC -->` blocks (see Step 3.4) to preserve them across syncs.
 - **Pull fails**: offer to continue with local templates.
