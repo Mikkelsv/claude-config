@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory)][string]$Branch,
-    [ValidateSet('merge','ff','squash')]
+    [ValidateSet('merge','ff')]
     [string]$Mode = 'ff'
 )
 
@@ -14,7 +14,7 @@ if ($currentBranch -ne "main") {
     }
 }
 
-# Merge by mode
+# Merge by mode. For squash, callers should run /squash on the feature branch first, then call this with -Mode ff.
 switch ($Mode) {
     'ff' {
         $output = git merge --ff-only $Branch 2>&1
@@ -23,22 +23,6 @@ switch ($Mode) {
     'merge' {
         $output = git merge --no-ff $Branch -m "Merge branch '$Branch'" 2>&1
         $failReason = "Merge commit failed: $output"
-    }
-    'squash' {
-        $squashOut = git merge --squash $Branch 2>&1
-        if ($LASTEXITCODE -ne 0) {
-            if ($currentBranch -ne "main") { git checkout $currentBranch 2>$null }
-            @{ merged = $false; reason = "Squash merge failed: $squashOut" } | ConvertTo-Json -Compress
-            exit 1
-        }
-        $gitDir = git rev-parse --git-dir 2>$null
-        $squashMsg = Join-Path $gitDir 'SQUASH_MSG'
-        if (Test-Path $squashMsg) {
-            $output = git commit -F $squashMsg 2>&1
-        } else {
-            $output = git commit -m "Squash merge: $Branch" 2>&1
-        }
-        $failReason = "Squash commit failed: $output"
     }
 }
 
@@ -55,13 +39,9 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-# Delete feature branch locally. -d refuses for squash (branch tip not reachable); fall back to -D.
+# Delete feature branch locally
 git branch -d $Branch 2>$null
 $localDeleted = $LASTEXITCODE -eq 0
-if (-not $localDeleted -and $Mode -eq 'squash') {
-    git branch -D $Branch 2>$null
-    $localDeleted = $LASTEXITCODE -eq 0
-}
 
 # Delete feature branch from remote (if it exists)
 $remoteDeleted = $false

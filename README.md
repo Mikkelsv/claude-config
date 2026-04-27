@@ -29,7 +29,8 @@ Available in every project via the global config.
 | `/refactor-docs [focus]` | Documentation sync — checks docs match code changes. |
 | `/audit-architecture [focus]` | Strict, skeptical architecture review (single-pass): boundaries, overengineering, alternatives. |
 | `/teach [mode]` | Interactive programming lesson — contextual deep-dive, codebase exploration, or random topic. |
-| `/commit [hint]` | Stage all changes, craft a typed commit message (FEAT/FIX/REFAC/DOCS), and push. |
+| `/commit [hint]` | Stage all changes, craft a bracket-tagged commit message (`[FEAT]`/`[FIX]`/`[REFAC]`/`[DOCS]` or a custom feature tag like `[GridCreation]`), and push. |
+| `/squash [tag]` | Squash all commits since the branch diverged from main into one, using `/commit`'s tag format and a synthesized message. Force-pushes with lease. |
 
 ### Project Skills (via /claude-sync)
 
@@ -160,4 +161,6 @@ All scripts in `scripts/`.
 | Notifications | `notify`, `register-toast-appid` |
 | Migration | `migrate-to-claude-root` (one-time, for machines still on the old `~/claude-config/` + junction layout) |
 
-Skill-local scripts in `skills/rebase-on-main/scripts/`: `git-rebase-onto`, `git-merge-cleanup`.
+Skill-local scripts:
+- `skills/rebase-on-main/scripts/`: `git-rebase-onto`, `git-merge-cleanup`
+- `skills/squash/scripts/`: `git-squash-inventory`, `git-squash-execute`

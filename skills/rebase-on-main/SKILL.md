@@ -43,7 +43,7 @@ Five actions, identical regardless of how they're presented:
 
 - **Merge** — `/build` (one fix attempt on failure), then `git-merge-cleanup.ps1 -Branch <branch> -Mode merge` (PR-style `--no-ff` merge commit).
 - **Fast-forward** — `/build`, then `... -Mode ff` (no merge commit).
-- **Squash** — `/build`, then `... -Mode squash` (single commit on main).
+- **Squash** — `/build`, invoke `/squash` (collapses branch commits into one; user confirms inside `/squash`), then `... -Mode ff` (squashed branch is now 1 commit ahead → fast-forward applies). If `/squash` is cancelled, return to this prompt.
 - **Build & test** — run `/build`, loop back to the prompt.
 - **Cancel** — report "Rebase complete, not merged. Branch left as-is." Do NOT revert; the user can `git reset --hard ORIG_HEAD` if they want.
 
