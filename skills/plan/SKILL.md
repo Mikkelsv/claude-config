@@ -27,7 +27,7 @@ Read the input. **Always read project context first** — even for narrow featur
 
 1. **`CLAUDE.md`** at the project root — architecture, conventions, stack
 2. **`.claude/rules/`** — project-specific rules that constrain how things are done
-3. **`Claude/docs/`** if it exists — deeper architecture documentation
+3. **`docs/`** if it exists — deeper architecture documentation
 4. **`plans/`** — check for overlapping or related plans
 
 Then explore code:
@@ -76,27 +76,13 @@ Draw from these dimensions as needed: **Functional** (what, inputs/outputs, edge
 - "What happens if we just don't build this?"
 - "This sounds like [known pattern/anti-pattern] — is that what you want?"
 
-### Architecture scrutiny (.NET / web dev)
+### Architecture scrutiny
 
-When the user proposes or implies an architectural choice, **must evaluate against idiomatic patterns** before accepting. Flag violations directly — do not hedge. Common anti-patterns to catch:
+When the user proposes or implies an architectural choice, **must evaluate against idiomatic patterns** before accepting. Flag violations directly — do not hedge.
 
-- **Repository over EF/DbContext**: EF's `DbSet<T>` is already a repository + UoW. Wrapping it usually adds no value.
-- **Service classes with one method**: probably just a function or an endpoint handler.
-- **Interfaces with one implementation** (and no test mocking need): remove the interface, use the concrete type.
-- **Custom DI containers / service locators**: use the built-in `IServiceCollection`.
-- **Manual mapping layers** when AutoMapper / Mapster / record `with` expressions would do it.
-- **DTO explosion**: separate request/response/domain/view DTOs for trivial CRUD is overkill — one record often suffices.
-- **Custom middleware for cross-cutting concerns** that filters/attributes handle better (auth, validation, logging).
-- **Rolling your own auth** instead of ASP.NET Identity / OAuth providers.
-- **N+1 queries** from lazy loading or naïve `.ToList().Select(x => x.Navigation)`.
-- **Sync-over-async** (`.Result`, `.Wait()`) in request paths.
-- **Global state / static mutable fields** in web apps.
-- **Premature microservices / premature CQRS / premature event sourcing** for a CRUD feature.
-- **Blazor: `StateHasChanged()` spam** when binding/events would work.
-- **Reinventing validation** when `DataAnnotations` / FluentValidation / minimal API validation exists.
-- **Custom JSON serialization** when `System.Text.Json` options would suffice.
+Apply the user-level `arch-*` rules in `~/.claude/rules/` (auto-loaded) — they cover the common .NET / EF Core / DI anti-patterns. If the project has its own `.claude/rules/arch-anti-patterns.md` (or similar), apply that too — project specifics override generic guidance.
 
-If the user's plan hits any of these, **must** flag it in Phase 2 and propose the idiomatic alternative as the recommended option — even if they seemed set on the original approach.
+If the user's plan hits any flagged anti-pattern, **must** raise it in Phase 2 and propose the idiomatic alternative as the recommended option — even if they seemed set on the original approach.
 
 Guidelines:
 - Offer your own suggestions — make one option your recommendation, but your recommendation is often "don't build it this way"
