@@ -17,7 +17,7 @@ If orchestrator provided scope, skip to Step 2.
 
 ## Step 2: Read All Docs
 
-Read in full: `CLAUDE.md`, all `Claude/docs/` files, all `.claude/rules/` files.
+Read in full: `CLAUDE.md`, all `docs/` files, all `.claude/rules/` files.
 
 ## Step 3: Cross-Reference
 

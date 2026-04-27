@@ -13,7 +13,7 @@ Work through a plan task-by-task with build, test, refactor gates. One task = on
 
 ## Phase 0 — Setup
 
-1. **Read project context**: `CLAUDE.md`, `.claude/rules/` (including `git-workflow.md` if it exists), and `Claude/docs/` if it exists. These set the conventions you must follow during implementation.
+1. **Read project context**: `CLAUDE.md`, `.claude/rules/` (including `git-workflow.md` if it exists), and `docs/` if it exists. These set the conventions you must follow during implementation.
 2. **Branch / worktree** — branch on the `git-workflow.md` rule:
    - **Direct to main**: skip branch creation. Work on main directly.
    - **Worktree per feature**: create a worktree for `implement/{plan-name}` without asking.

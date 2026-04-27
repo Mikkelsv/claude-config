@@ -19,7 +19,7 @@ Also factor in conversation context (recent edits, discussion).
 
 ## Step 2: Build Context
 
-Read all in-scope files in full, plus their consumers/dependencies. Also read CLAUDE.md, relevant `.claude/rules/`, and `Claude/docs/`.
+Read all in-scope files in full, plus their consumers/dependencies. Also read CLAUDE.md, relevant `.claude/rules/`, and `docs/`.
 
 ## Step 3: Analysis
 
