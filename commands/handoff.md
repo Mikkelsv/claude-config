@@ -1,5 +1,7 @@
 Write a session handoff summary to project memory so the next session can pick up where this one left off.
 
+**Execute mechanically.** Follow the steps; no need to weigh alternatives or deliberate.
+
 ## Steps
 
 1. **Gather context** — Review the conversation to identify:

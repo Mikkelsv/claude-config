@@ -5,6 +5,8 @@ description: Parse a blocked permission prompt and save a suggested allow rule f
 
 # Suggest Allow Rule
 
+**Execute mechanically.** Follow the steps; no need to weigh alternatives or deliberate.
+
 Capture a blocked permission prompt as a **suggestion file** in `~/.claude/suggestions/`. Do NOT edit `settings.json` directly — the user reviews and applies suggestions in bulk later via `/suggestions`. Keep this flow fast and non-interrupting.
 
 Input: `$ARGUMENTS` — whatever the user pastes. Could be any of these formats:

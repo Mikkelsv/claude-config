@@ -5,6 +5,8 @@ description: Review pending suggestions captured by other skills (allow rules, e
 
 # Review Suggestions
 
+**Execute mechanically.** Follow the steps; no need to weigh alternatives or deliberate.
+
 Walk through pending suggestion files in `~/.claude/suggestions/` one at a time. For each: show it, ask the user what to do, apply or discard.
 
 Suggestions are dropped here by other skills (e.g. `/allow`) so they don't interrupt flow in the middle of work. This is the batch review.

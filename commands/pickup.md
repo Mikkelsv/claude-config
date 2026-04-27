@@ -1,5 +1,7 @@
 Check for session handoff context from a previous session and resume where it left off.
 
+**Execute mechanically.** Follow the steps; no need to weigh alternatives or deliberate.
+
 ## Steps
 
 1. **Find handoff files** — Look in the project's memory directory for any files matching `project_session-handoff*.md`. Also check MEMORY.md for "Session Handoff" pointers.

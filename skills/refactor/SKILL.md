@@ -36,7 +36,7 @@ Runs three review passes in parallel: code review, documentation sync, and test 
    - `.claude/skills/refactor-docs/SKILL.md` (project) or `~/.claude/skills/refactor-docs/SKILL.md` (global)
    - `.claude/skills/refactor-tests/SKILL.md` (project) or `~/.claude/skills/refactor-tests/SKILL.md` (global)
 
-3. Spawn all three as **parallel background agents** using the Agent tool. Pass each skill's full contents as the agent prompt, **prepending the scope output** (for changes mode) or a **scope summary** (for focused/general mode) so they skip their scope identification step and start directly from the analysis step.
+3. Spawn all three as **parallel background agents** (`model: "sonnet"`) using the Agent tool. Pass each skill's full contents as the agent prompt, **prepending the scope output** (for changes mode) or a **scope summary** (for focused/general mode) so they skip their scope identification step and start directly from the analysis step.
 
 4. Wait for all three to complete.
 

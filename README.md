@@ -144,6 +144,7 @@ Rules in `rules/` are always loaded:
 - **wf-fix-root-cause.md** — Diagnose before patching; don't edit tests to match broken behavior
 - **wf-three-tier-boundaries.md** — Structure rules as *always / ask first / never*
 - **wf-tight-claude-config.md** — Keep rules, skills, commands, and Claude docs terse; every line earns its tokens
+- **wf-agents-on-sonnet.md** — Spawn delegated agents on Sonnet by default; reserve Opus for the orchestrating session
 
 New rules use category prefixes: `cq-` (code-quality), `arch-` (architecture), `wf-` (workflow). Older un-prefixed rules stay as-is.
 

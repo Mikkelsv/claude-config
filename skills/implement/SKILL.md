@@ -61,7 +61,7 @@ Runs until all tasks completed or skipped. After each checkpoint, pick next unch
 
 ### Parallel Groups
 
-If task has a group letter, collect all unchecked tasks in that group. Main thread takes one (prefer most downstream dependents). Others launch as background agents with `isolation: "worktree"` — implement, build, must run `/refactor-code` (skip only if < 20 lines changed), no `/test`, no commit. After all return, merge one at a time (`git merge --no-ff`). Resolve conflicts or re-queue failed tasks. Run `/test` once on combined result. Commit each via `/commit`.
+If task has a group letter, collect all unchecked tasks in that group. Main thread takes one (prefer most downstream dependents). Others launch as background agents with `isolation: "worktree"`, `model: "sonnet"` — implement, build, must run `/refactor-code` (skip only if < 20 lines changed), no `/test`, no commit. After all return, merge one at a time (`git merge --no-ff`). Resolve conflicts or re-queue failed tasks. Run `/test` once on combined result. Commit each via `/commit`.
 
 ### 1. Read & Understand
 
@@ -81,7 +81,7 @@ Check off `- [x] Implement`.
 
 **Must run `/refactor-code`** unless the task changed < 20 lines total (sum of insertions + deletions). Check with `git diff --stat` against the last commit.
 
-- **≥ 20 lines:** Run `/refactor-code` as background agent. While it runs, read ahead to next task's Context/Files/Acceptance. Process verdict: **Ship it** → continue. **Minor tweaks/Refactor recommended** → stash, apply fixes, re-test (if tests fail: pop stash, keep passing code). **Rethink** → log in Decisions, keep current. Max 3 iterations.
+- **≥ 20 lines:** Run `/refactor-code` as background agent (`model: "sonnet"`). While it runs, read ahead to next task's Context/Files/Acceptance. Process verdict: **Ship it** → continue. **Minor tweaks/Refactor recommended** → stash, apply fixes, re-test (if tests fail: pop stash, keep passing code). **Rethink** → log in Decisions, keep current. Max 3 iterations.
 - **< 20 lines:** Skip per-task refactor — Final Audit catches it. Still read ahead to next task. Check off `- [x] Refactor` with note "(deferred — < 20 lines)".
 
 Check off `- [x] Refactor`. Verify acceptance criteria still met. Take "after" screenshot if UI task.
@@ -107,11 +107,17 @@ Never stop unless all done. 3 fix failures → stash + skip + note. Unclear requ
 
 ## Final Audit
 
-After all tasks: run `/refactor` (full trio — only time docs+tests are reviewed) and `/audit-architecture` on the full branch diff. Both skills will surface rule candidates per `wf-surface-rule-candidates.md`; collect those into a single post-audit prompt instead of two.
+After all tasks committed:
+
+1. Run `/audit-architecture` on the full branch diff. For Overengineered/Rethink findings, prefer **Defer to plan** — major structural rework belongs in its own focused implementation, not buried at the tail of this one.
+2. Run `/refactor` (full trio — only time docs+tests are reviewed). Fixes apply inline; sees post-audit code if step 1 applied any.
+3. If either step changed code: run `/test`. If passing, `/commit "[REFAC] Apply Final Audit fixes"`. If failing, stash, note in report, leave to user.
+4. Rule candidates from both steps → batched into single post-audit prompt per `wf-surface-rule-candidates.md`.
+5. If `/audit-architecture` deferred to a plan, mention its path in the Report so the user can pick it up via `/implement` next.
 
 ## Cleanup
 
-Delete the plan file (and managing plan if applicable) after all tasks are complete and the final audit passes. Plans are working documents, not permanent artifacts — the commit history tells the story.
+Delete the implemented plan file (and managing plan if applicable) after all tasks are complete and Final Audit passes. The deferred-plan from Final Audit, if any, is preserved — it's the next implementation's input. Plans are working documents, not permanent artifacts — the commit history tells the story.
 
 ## Report
 

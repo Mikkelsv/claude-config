@@ -5,6 +5,8 @@ description: Stage all changes with a bracket-tagged message ([FEAT]/[FIX]/[REFA
 
 # Commit
 
+**Execute mechanically.** Follow the steps; no need to weigh alternatives or deliberate.
+
 Stage, commit, and push. Overrides `no-commit` rule when invoked.
 
 ## Message format

@@ -11,7 +11,7 @@ Scripts: `~/.claude/scripts`
 
 ## Phase 1 — Inventory
 
-Launch 2 parallel agents:
+Launch 2 parallel agents (`model: "sonnet"`):
 
 **Agent 1 — Global**: read all `~/.claude/skills/`, `~/.claude/commands/`, `~/.claude/scripts/`, `~/.claude/rules/`, `~/.claude/templates/skills/`, README.md, settings.json, settings.template.json, CLAUDE.md. Record: path, purpose, references.
 
@@ -19,7 +19,7 @@ Launch 2 parallel agents:
 
 ## Phase 2 — Review
 
-Launch 3 background agents with the inventory:
+Launch 3 background agents (`model: "sonnet"`) with the inventory:
 
 **Agent A — Content Quality**:
 - **Correctness**: logic flow, script param mismatches, stale references, JSON output mismatches.

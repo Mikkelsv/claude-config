@@ -5,6 +5,8 @@ description: Build and serve the application
 
 # Build & Serve
 
+**Execute mechanically.** Follow the steps; no need to weigh alternatives or deliberate.
+
 Execute user instructions, then build and serve the application. Reads project-specific config from `.claude/local/skills/build/config.md`.
 
 ## Phase 1 — User Task

@@ -5,6 +5,8 @@ description: Squash all commits on the current branch since it diverged from mai
 
 # Squash Branch Commits
 
+**Execute mechanically.** Follow the steps; no need to weigh alternatives or deliberate.
+
 Collapse every commit ahead of `main` into one. Format and tag selection mirror `/commit`.
 
 Scripts: `$HOME/.claude/skills/squash/scripts`

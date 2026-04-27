@@ -1,5 +1,7 @@
 # Todo Capture
 
+**Execute mechanically.** Follow the steps; no need to weigh alternatives or deliberate.
+
 Capture a question, prompt, or to-do item for Claude to surface in future conversation turns.
 
 Input: `$ARGUMENTS` — the text to save as a todo item.

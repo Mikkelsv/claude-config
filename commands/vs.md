@@ -1,8 +1,10 @@
 # Open VS Code
 
+**Execute mechanically.** Follow the steps; no need to weigh alternatives or deliberate.
+
 Open the current session's project folder in VS Code with a random title bar color.
 
-**Must run as a background agent** so the main conversation isn't blocked.
+**Must run as a background agent** with `model: "haiku"` so the main conversation isn't blocked. Task is trivially mechanical — pick color, run script, report — no reasoning needed.
 
 ## Steps
 
