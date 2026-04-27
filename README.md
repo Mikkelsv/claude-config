@@ -145,6 +145,7 @@ Rules in `rules/` are always loaded:
 - **wf-three-tier-boundaries.md** — Structure rules as *always / ask first / never*
 - **wf-tight-claude-config.md** — Keep rules, skills, commands, and Claude docs terse; every line earns its tokens
 - **wf-agents-on-sonnet.md** — Spawn delegated agents on Sonnet by default; reserve Opus for the orchestrating session
+- **wf-project-specific-blocks.md** — Author skills/templates with stable headings so projects can layer `<ProjectSpecific>` blocks across syncs
 
 New rules use category prefixes: `cq-` (code-quality), `arch-` (architecture), `wf-` (workflow). Older un-prefixed rules stay as-is.
 
@@ -158,7 +159,7 @@ All scripts in `scripts/`.
 | Launching | `launch-vscode`, `launch-dev-server`, `kill-port` |
 | Git | `git-preflight`, `git-branch-scope`, `git-diff-scope`, `commit` |
 | File/Process | `remove-path`, `move-path`, `npm-command`, `node-run` |
-| Config | `sync-config`, `pull-config` |
+| Config | `sync-config`, `pull-config`, `mirror-skill` |
 | Notifications | `notify`, `register-toast-appid` |
 | Migration | `migrate-to-claude-root` (one-time, for machines still on the old `~/claude-config/` + junction layout) |
 

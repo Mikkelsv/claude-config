@@ -13,9 +13,9 @@ At session start in any project, compare global vs project config versions:
 
 ## Version bump awareness
 
-`sync-config.ps1` auto-bumps the version only when `templates/` files are staged. Most config changes (global rules, scripts, skills, settings) do **not** trigger a bump.
+`sync-config.ps1` auto-bumps the version when staged changes touch `templates/`, `rules/`, `skills/`, or `commands/`. The bump is a *signal* that something projects might care about changed — projects with mirrored/duplicated globals see the version mismatch on next session.
 
 When running `/claude-push`:
 - Do **not** assume a version bump occurred — check the script output or compare `config-version.json` before and after.
-- Only add a changelog entry if the version actually changed **and** the change requires project action.
-- Changes that projects pick up automatically (rules, global skills, scripts) never need changelog entries.
+- Add a changelog entry **only** when project action is actually required: re-scaffolding templates, manually re-copying duplicated skills/rules, new gitignore entries, new local config files. Most rule/skill edits propagate automatically (auto-loaded globals) and don't need an entry — the bump alone is enough signal.
+- Skip the changelog for: bug fixes/edits to globals projects don't duplicate, internal tooling changes (`/claude-push`, `/claude-sync`, `/claude-refactor`), and anything obvious from the commit message.

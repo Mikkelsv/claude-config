@@ -2,6 +2,15 @@
 
 Only lists changes that require project action. Global rules, scripts, and global skills are picked up automatically and not tracked here.
 
+## v1.1.1 — 2026-04-24 — `<ProjectSpecific>` tag + broadened version trigger
+
+`/claude-sync` and the new `scripts/mirror-skill.ps1` now look for `<ProjectSpecific>...</ProjectSpecific>` blocks (cleaner than the old comment-style markers). The version trigger in `sync-config.ps1` now bumps on changes to `rules/`, `skills/`, and `commands/` (in addition to `templates/`) — projects with mirrored/duplicated globals will see more version-mismatch signals.
+
+**Project action:**
+
+- **Migrate `<!-- PROJECT-SPECIFIC: ... --> ... <!-- /PROJECT-SPECIFIC -->` blocks** in any project SKILL.md to `<ProjectSpecific>...</ProjectSpecific>`. Old comment-style blocks won't be recognized — `/claude-sync` will treat them as drift. Find them with: `grep -r "PROJECT-SPECIFIC" .claude/`.
+- **New helper for non-template duplicates:** `scripts/mirror-skill.ps1 -Name <skill>` mirrors a global skill into a project, preserving `<ProjectSpecific>` blocks. Drift-detects and refuses to overwrite unmarked changes unless `-Force` is passed.
+
 ## v1.1.0 — 2026-04-23 — Structure flatten
 
 The two-directory `Claude/` + `dotclaude/` split is gone. Everything lives flat at the repo root, and the repo is `~/.claude/` directly (no more `~/claude-config/` wrapper, no junction).

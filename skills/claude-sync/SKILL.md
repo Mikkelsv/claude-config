@@ -141,32 +141,44 @@ Replace `${CLAUDE_SKILL_DIR}` refs with `.claude/skills/{name}/` in generated fi
 
 ### 3.3 Ask via `AskUserQuestion` (multiSelect, pre-select Changed+New).
 
-### 3.4 Apply updates:
-- **Changed**: read config file for stored values, re-generate from new template. Ask for new placeholders. **Preserve PROJECT-SPECIFIC blocks** (see below).
-- **New**: check existing configs for reusable values, ask for the rest, scaffold normally.
+### 3.4 Drift check (parallel Haiku fanout)
 
-#### PROJECT-SPECIFIC block preservation
+Before applying any update, compute drift per Changed skill — independently. For each Changed skill, spawn a Haiku agent (`model: "haiku"`):
 
-Before overwriting any existing project SKILL.md, scan the current file for blocks delimited by:
+> Given the current project SKILL.md and the regenerated content (template + filled placeholders + reinserted `<ProjectSpecific>` blocks), return JSON `{ skill, drift: bool, lines: N, sample: [first 20 +/- lines outside <ProjectSpecific> blocks] }`. Strip `<ProjectSpecific>` blocks from both before comparing.
+
+Wait for all to return.
+
+### 3.5 Apply updates per skill
+
+For each Changed skill, based on its drift result:
+
+- **No drift** → apply silently (regenerate + reinsert blocks).
+- **Drift** → ask via `AskUserQuestion`: **Apply (overwrite drift)** / **Show full diff** / **Skip this skill**. If full diff requested, emit it as text and re-prompt.
+
+For **New** skills: check existing configs for reusable values, ask for the rest, scaffold normally (no drift check — file doesn't exist yet).
+
+#### `<ProjectSpecific>` block preservation
+
+Project skills can carry custom additions wrapped in:
 
 ```markdown
-<!-- PROJECT-SPECIFIC: ... -->
+<ProjectSpecific>
 ...content...
-<!-- /PROJECT-SPECIFIC -->
+</ProjectSpecific>
 ```
 
-Each block is anchored to a stable marker — the most recent heading line above it (e.g. `## Step 3: Architecture`). After regenerating from template:
+Each block is anchored to the most recent heading above it (e.g. `## Step 3: Architecture`). When regenerating from template:
 
-1. Re-scan the regenerated file for the same heading markers.
-2. For each preserved block, find its anchor heading in the new file and re-insert the block **immediately after** that heading.
-3. If the anchor heading no longer exists, append the block to a `## Project additions` section at the end of the file and warn the user.
-4. If the regenerated file already contains a block with the same opening comment, prefer the preserved one (user-edited content wins over template default).
+1. Scan the current project file for `<ProjectSpecific>` blocks, capturing each block's anchor heading.
+2. For each preserved block, find its anchor heading in the regenerated content and re-insert the block immediately after that heading.
+3. If the anchor heading no longer exists, append the block under a `## Project additions` section at the end and warn the user.
 
 This lets project-specific rule references (e.g. *"Apply `.claude/rules/arch-core-principles.md`"*) survive template upgrades. Templates stay project-agnostic; projects keep their additions.
 
-### 3.5 Update version stamp.
+### 3.6 Update version stamp.
 
-### 3.6 Report: updated, added, skipped, current skills. New version number.
+### 3.7 Report: updated, added, skipped, current skills. New version number.
 
 ---
 
@@ -174,5 +186,5 @@ This lets project-specific rule references (e.g. *"Apply `.claude/rules/arch-cor
 
 - **No skills map in version file**: scan for installed skills, treat all as unknown hash, offer re-sync.
 - **New placeholder in template**: detect, ask user, update config.
-- **Manual edits**: re-generation overwrites. User can skip individual skills, OR wrap edits in `<!-- PROJECT-SPECIFIC: ... --> ... <!-- /PROJECT-SPECIFIC -->` blocks (see Step 3.4) to preserve them across syncs.
+- **Manual edits**: drift check (Step 3.4) detects them. User can wrap edits in `<ProjectSpecific>...</ProjectSpecific>` blocks to preserve across syncs without prompting.
 - **Pull fails**: offer to continue with local templates.
