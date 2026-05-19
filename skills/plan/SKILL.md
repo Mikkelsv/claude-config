@@ -25,17 +25,24 @@ If empty, ask what to plan.
 
 ## Phase 1 — Understand
 
-Read the input. **Always read project context first** — even for narrow features:
+Read the input. Two passes — project context (always), then codebase exploration (delegated to `/study`).
+
+### Phase 1.1 — Project Context
 
 1. **`CLAUDE.md`** at the project root — architecture, conventions, stack
 2. **`.claude/rules/`** — project-specific rules that constrain how things are done
 3. **`docs/`** if it exists — deeper architecture documentation
 4. **`plans/`** — check for overlapping or related plans
 
-Then explore code:
+### Phase 1.2 — Codebase Exploration via /study
 
-- **Broad features** (multiple areas): launch parallel agents (`model: "sonnet"`) — (1) project context per above, (2) find relevant code files and patterns, (3) check for overlapping plans. Synthesize findings.
-- **Narrow features** (single area): read project context (steps 1-4 above) + relevant files directly.
+`/study` is the source of truth for "how to explore an area" — parallel sonnet agents + optional external research, synthesized into session.
+
+**Fresh-session heuristic** (no substantive prior tool use, no prior file reads in this area, no prior discussion of the topic): invoke `/study <topic>` automatically.
+
+**Non-fresh session**: ask via `AskUserQuestion` — **Study first** (Recommended if topic unfamiliar) / **I have context, skip study** / **Let's discuss**. If **Study first**, invoke `/study`; otherwise proceed with a focused direct read (`Glob`/`Grep` + targeted `Read`).
+
+**Skip entirely** for trivial work (single-file fix, rename, config tweak).
 
 Present the synthesis at the start of Phase 1.5.
 

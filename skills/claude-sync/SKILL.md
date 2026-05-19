@@ -13,7 +13,7 @@ Templates: `~/.claude/templates/skills/`
 
 ## Project Skills (from templates)
 
-Only skills with genuine project-specific content are scaffolded. Generic global skills (`/plan`, `/implement`, `/refactor`, `/refactor-docs`, `/audit-architecture`) read project context from `CLAUDE.md` and `.claude/rules/` at runtime — no scaffolding needed.
+Only skills with genuine project-specific content are scaffolded. Generic global skills (`/plan`, `/implement`, `/audit-branch`, `/audit-architecture`, `/refactor-docs`, `/study`) read project context from `CLAUDE.md` and `.claude/rules/` at runtime — no scaffolding needed.
 
 | Skill | Notes |
 |---|---|

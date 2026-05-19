@@ -114,11 +114,9 @@ Never stop unless all done. 3 fix failures → stash + skip + note. Unclear requ
 
 After all tasks committed (but before Cleanup + Squash):
 
-1. Run `/audit-architecture` on the full branch diff. For Overengineered/Rethink findings, prefer **Defer to plan** — major structural rework belongs in its own focused implementation, not buried at the tail of this one.
-2. Run `/refactor` (full trio — only time docs+tests are reviewed). Fixes apply inline; sees post-audit code if step 1 applied any.
-3. If either step changed code: run `/test`. If passing, `/commit "[REFAC] Apply Final Audit fixes"`. If failing, stash, note in report, leave to user.
-4. Rule candidates from both steps → batched into single post-audit prompt per `wf-surface-rule-candidates.md`.
-5. If `/audit-architecture` deferred to a plan, mention its path in the Report so the user can pick it up via `/implement` next.
+1. Run `/audit-branch` on the full branch diff. Since this runs at the tail of an implementation, prefer **Defer to plan** for any major architectural rework — it belongs in its own focused plan, not folded into this one. `/audit-branch` handles rule candidates internally.
+2. If `/audit-branch` applied fixes inline: run `/test`. If passing, `/commit "[REFAC] Apply Final Audit fixes"`. If failing, stash, note in report, leave to user.
+3. If `/audit-branch` deferred to a plan, mention its path in the Report so the user can pick it up via `/implement` next.
 
 ## Cleanup
 

@@ -25,7 +25,7 @@ Use `AskUserQuestion` with two questions in one batch:
 - **architecture** — boundaries, dependencies, abstraction, file organization
 - **workflow** — how Claude should behave (when to ask, what to invoke, how to respond)
 
-Make the recommended category the first option, inferred from the rule text. (E.g. "Prefer Result<T>..." → code-quality. "Keep repository methods free..." → architecture. "Always run /refactor after..." → workflow.)
+Make the recommended category the first option, inferred from the rule text. (E.g. "Prefer Result<T>..." → code-quality. "Keep repository methods free..." → architecture. "Always run /audit-branch after..." → workflow.)
 
 **Question 2 — Scope:**
 - **Global** — applies to every project (`~/.claude/rules/`)

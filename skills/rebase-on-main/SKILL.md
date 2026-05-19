@@ -55,35 +55,58 @@ Note whether any of these occur during Phase 1 — they drive Phase 2's presenta
 - Generated files resolved with `--theirs` (build must regenerate correctly).
 - A commit was skipped (`git rebase --skip` used — work dropped).
 
-## Phase 2: Merge Prompt
+## Phase 2: Build → Merge Prompt
 
-Five actions, identical regardless of how they're presented:
+After Phase 1 succeeds (or branch was already up-to-date), always run `/build` before any prompt. Catches breakage from new main; gives the user a running server to test against. `/build` returns success for no-build repos (claude-config, docs-only, etc.) via its graceful-skip path.
 
-- **Merge** — `/build` (one fix attempt on failure), then `git-merge-cleanup.ps1 -Branch <branch> -Mode merge` (PR-style `--no-ff` merge commit).
-- **Fast-forward** — `/build`, then `... -Mode ff` (no merge commit).
-- **Squash** — `/build`, invoke `/squash` (collapses branch commits into one; user confirms inside `/squash`), then `... -Mode ff` (squashed branch is now 1 commit ahead → fast-forward applies). If `/squash` is cancelled, return to this prompt.
-- **Build & test** — run `/build`, loop back to the prompt.
-- **Cancel** — report "Rebase complete, not merged. Branch left as-is." Do NOT revert; the user can `git reset --hard ORIG_HEAD` if they want.
+### Build failure
 
-If build fails after the one fix attempt, report and loop back.
-
-### Prompt presentation
-
-**Default (no critical events):** `AskUserQuestion` with the five options above.
-
-**Critical event flagged:** emit a plain-text warning first — the prompt overlay would cover it. Per `prefer-clickable-prompts.md` (exception: after long text output), use a plain numbered list:
+One fix attempt. If still failing, prompt (numbered list — no clickable):
 
 ```
-Rebase completed with items worth verifying:
+Build failed after rebase. One fix attempt didn't recover.
 
-- <each critical event, one line of context>
-
-Inspect before merging: git log --oneline main..<branch> and git diff main..<branch>.
-
-(1) Merge  (2) Fast-forward  (3) Squash  (4) Build & test  (5) Cancel
+(1) Fix again  (2) Abort  (3) Drop into manual
 ```
 
-Map the numeric reply to the same actions. Loop until a terminal choice (merge or cancel).
+- **Fix again** → another fix attempt, loop back.
+- **Abort** → `git reset --hard ORIG_HEAD`, report, stop.
+- **Drop into manual** → leave repo as-is, print: "Branch is rebased but build is broken. Fix manually then re-invoke `/rebase-on-main`, or merge at your own risk." Stop.
+
+### Audit branch — visibility check
+
+Show the **Audit branch** option in the merge prompt only when:
+
+- `git rev-list --count main..HEAD` returns **≥ 5**, OR
+- `git diff --name-only main..HEAD` returns **≥ 20** files,
+
+AND `git log -1 --format=%s main..HEAD` does NOT start with `[REFAC]` (user hasn't audited recently).
+
+### Merge prompt (numbered list)
+
+Always a plain numbered list — user types a number or freeform text. Drop the `AskUserQuestion` clickable mode for this prompt (contradicts `prefer-clickable-prompts.md` default; justified because dropping Cancel removes the clickable discoverability anchor and freeform-typed exit is the new way out). Critical-event warnings, if any, appear above the prompt as plain text.
+
+```
+Rebase complete. Build passing.
+
+[<critical events, one per line, if any>]
+
+[(1) Audit branch  — if visible]
+(N) Squash
+(N+1) Fast-forward
+(N+2) Merge
+```
+
+Numbering: when Audit is shown it's `(1)`; otherwise the list starts at Squash with `(1)`.
+
+- **Audit branch** — invoke `/audit-branch`. After it returns, loop back to this prompt. If user applied fixes, the new tail commit is `[REFAC]`-tagged → Audit hides on the next round.
+- **Squash** — invoke `/squash`. Then `git-merge-cleanup.ps1 -Branch <branch> -Mode ff`. If `/squash` cancelled, loop back.
+- **Fast-forward** — `git-merge-cleanup.ps1 -Branch <branch> -Mode ff` (no merge commit).
+- **Merge** — `git-merge-cleanup.ps1 -Branch <branch> -Mode merge` (PR-style `--no-ff`).
+
+Freeform text: words like "cancel" / "exit" / "stop" / "leave" → report "Rebase complete, not merged. Branch left as-is." and stop. No revert; user can `git reset --hard ORIG_HEAD` if desired. Other freeform text → interpret intent or ask for clarification.
+
+Loop until a terminal action.
 
 ## Summary
 

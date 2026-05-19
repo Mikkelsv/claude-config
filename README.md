@@ -26,11 +26,12 @@ Available in every project via the global config.
 |---|---|
 | `/build` | Build & serve. Reads project config from `.claude/local/skills/build/config.md`. |
 | `/rebase-on-main` | Rebase on main, resolve conflicts, optionally merge/push. |
-| `/plan [feature]` | Collaborative feature discovery + plan creation. Skeptical senior-engineer persona — challenges premise, flags .NET/web anti-patterns. |
-| `/implement [plan]` | Autonomous dev loop — plan tasks with build/test/refactor/audit gates. Per-task `/refactor-code` if ≥ 20 lines changed. |
-| `/refactor [focus]` | Code quality review orchestrator (spawns refactor-code, refactor-docs, refactor-tests). |
-| `/refactor-docs [focus]` | Documentation sync — checks docs match code changes. |
-| `/audit-architecture [focus]` | Strict, skeptical architecture review (single-pass): boundaries, overengineering, alternatives. |
+| `/study [topic]` | Codebase-first research — parallel sonnet agents map an area, synthesize into session context. No file output. Use before `/plan` when context is thin. |
+| `/plan [feature]` | Collaborative feature discovery + plan creation. Skeptical senior-engineer persona — challenges premise, flags .NET/web anti-patterns. Phase 1 invokes `/study` when session context is thin. |
+| `/implement [plan]` | Autonomous dev loop — plan tasks with build/test/refactor/audit gates. Per-task `/refactor-code` if ≥ 20 lines changed. Final Audit uses `/audit-branch`. |
+| `/audit-branch [focus]` | Branch-level audit — runs `/audit-architecture` + `/refactor-code` + `/refactor-docs` + `/refactor-tests` in parallel against `main..HEAD`, presents one Apply/Defer/Skip prompt. |
+| `/refactor-docs [focus]` | Documentation sync — checks docs match code changes. Usually invoked via `/audit-branch`. |
+| `/audit-architecture [focus]` | Strict, skeptical architecture review (single-pass): boundaries, overengineering, alternatives. Usually invoked via `/audit-branch`. |
 | `/teach [mode]` | Interactive programming lesson — contextual deep-dive, codebase exploration, or random topic. |
 | `/commit [hint]` | Stage all changes, craft a bracket-tagged commit message (`[FEAT]`/`[FIX]`/`[REFAC]`/`[DOCS]` or a custom feature tag like `[GridCreation]`), and push. |
 | `/squash [tag]` | Squash all commits since the branch diverged from main into one, using `/commit`'s tag format and a synthesized message. Force-pushes with lease. |
