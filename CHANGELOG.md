@@ -2,6 +2,16 @@
 
 Only lists changes that require project action. Global rules, scripts, and global skills are picked up automatically and not tracked here.
 
+## v1.1.3 — 2026-05-19 — `/claude-sync` handles forked-global skills
+
+`/claude-sync` now discovers and syncs project-local copies of generic global skills (per `meta-project-local-skill-copies.md`). Templates and forks live side-by-side in `.claude/skills/`; both are tracked in `.claude/local/config-version.json` (templates under `skills`, forks under `forks`). Initial Setup gained a "shared repo?" prompt that scaffolds forks; Sync gained drift detection for existing forks.
+
+**Project action:**
+
+- **Projects with existing forks** (shared repos with checked-in `/implement`, `/plan`, etc. copies): run `/claude-sync` once. Existing forks register as **New** on the first post-v1.1.3 run — accept them to start auto-syncing. Subsequent runs drift-detect and update normally.
+- **Shared projects without forks yet**: during Initial Setup (`/claude-sync fresh`), answer "Yes" to the new shared-repo prompt and multiSelect which generic globals to fork.
+- **Solo projects without forks**: no change. `/claude-sync` behaves identically to pre-1.1.3.
+
 ## v1.1.1 — 2026-04-24 — `<ProjectSpecific>` tag + broadened version trigger
 
 `/claude-sync` and the new `scripts/mirror-skill.ps1` now look for `<ProjectSpecific>...</ProjectSpecific>` blocks (cleaner than the old comment-style markers). The version trigger in `sync-config.ps1` now bumps on changes to `rules/`, `skills/`, and `commands/` (in addition to `templates/`) — projects with mirrored/duplicated globals will see more version-mismatch signals.

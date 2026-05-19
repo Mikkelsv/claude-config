@@ -84,7 +84,7 @@ AND `git log -1 --format=%s main..HEAD` does NOT start with `[REFAC]` (user hasn
 
 ### Merge prompt (numbered list)
 
-Always a plain numbered list — user types a number or freeform text. Drop the `AskUserQuestion` clickable mode for this prompt (contradicts `prefer-clickable-prompts.md` default; justified because dropping Cancel removes the clickable discoverability anchor and freeform-typed exit is the new way out). Critical-event warnings, if any, appear above the prompt as plain text.
+Plain numbered list. Critical-event warnings, if any, appear above the prompt as plain text.
 
 ```
 Rebase complete. Build passing.

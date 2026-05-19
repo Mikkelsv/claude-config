@@ -8,7 +8,7 @@ Personal Claude Code configuration — slash commands, skills, rules, and PowerS
 
 | Command | What it does |
 |---|---|
-| `/claude-sync [skills\|fresh]` | Pull global config, then scaffold or sync project skills. First run = full scaffolding, later runs = targeted template updates. |
+| `/claude-sync [skills\|fresh]` | Pull global config, then scaffold or sync project skills — both templated skills and forked-global copies (per `meta-project-local-skill-copies`). First run = full scaffolding, later runs = targeted updates with drift detection. |
 | `/claude-refactor` | Audit all skills, commands, scripts, rules, and templates. Fixes bugs, stale refs, permission gaps. |
 | `/claude-push` | Commit and push config changes. Auto-bumps version on template changes. |
 | `/allow-defer [prompt]` | Parse a blocked permission prompt and save a suggested allow rule to `~/.claude/suggestions/` for later review (non-interrupting). |
