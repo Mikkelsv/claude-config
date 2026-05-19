@@ -1,63 +1,43 @@
 # Surface Rule Candidates
 
-Watch for judgment calls during work that *generalize* beyond the current task. When the user confirms a pattern (explicitly or by repetition), surface it as a candidate for a new global or project rule.
+Watch for judgment calls during work that *generalize* beyond the current task. **Always log via `/rule-candidate` first**, then surface to the user.
 
 ## When to watch
 
-During substantive dev work — especially:
-- **Refactors and reviews** (`/refactor`, `/audit-architecture`, `/refactor-code`): every simplification or boundary fix is a candidate if it reflects a general preference.
-- **Implementation choices** (`/implement`, ad-hoc coding): when you pick Pattern A over Pattern B and the user doesn't push back — that's weak evidence. When they explicitly approve or ask for it twice — that's strong evidence.
-- **User corrections**: any time the user says "don't do X" or "always do Y," that's a candidate *now*.
-- **Recurring feedback**: if the same nit comes up 2+ times in a session, or across recent sessions (check memory files), surface it.
+- **Refactors / audits** — every simplification, boundary fix, or anti-pattern flag that reflects a general preference.
+- **User corrections** — explicit "don't do X" / "always do Y" is the strongest signal.
+- **Recurring feedback** — same nit comes up 2+ times in a session or across recent sessions.
 
-## What counts as a candidate
+## When NOT
 
-Something that:
-- Would apply in **multiple files or future tasks**, not just the current one.
-- Can be stated as a **terse directive** (1–2 sentences).
-- Fits one of three categories: **code-quality**, **architecture**, or **workflow**.
-
-Skip:
 - One-off decisions tied to a specific file or bug.
-- Style preferences already covered by existing rules or formatter config.
-- Speculation ("the user might want X") — wait for signal.
+- Style preferences already covered by formatter / analyzer / EditorConfig.
+- Speculation — wait for signal (per `wf-question-the-scope`).
 
-## When to surface
+## Always log first
 
-At **natural pause points**, not mid-task:
-- After a task completes (before or alongside the teach-on-completion prompt).
-- At the end of a refactor/audit report.
-- When the user explicitly asks "what did we learn?" or similar.
+Before surfacing the candidate to the user, invoke `/rule-candidate "<directive>"` to write it as a standalone file at `<project>/.claude/rules/candidates/<slug>.md` (gitignored). The candidate is recorded regardless of what the user decides next. Promotion to actual rules happens via `/rule-review` (which `git mv`s the file to the chosen destination).
 
-**Do not interrupt focused work.** Batch multiple candidates into one prompt if they accumulate.
+## Then surface
 
-## Coordination with other post-task prompts
+At natural pause points (post-task, end of audit/refactor, on user "what did we learn?"). Don't interrupt focused work. Batch multiple candidates into one prompt if they accumulate. Don't re-surface a candidate already prompted in this conversation.
 
-- `teach-on-completion.md` fires after substantive dev tasks. If both fire in the same turn, put the teach nugget first, rule candidate second, each with its own numbered selector line. Don't merge them.
-- If you've already surfaced a rule candidate this conversation and the user skipped, don't re-surface the same one.
+Format (after the task result, after any teach nugget):
 
-## Format
-
-Append after the task result (and after any teach nugget):
-
-```
+```text
 ---
 
-**Rule candidate** — [category: code-quality | architecture | workflow]
+**Rule candidate** — [arch | cq | wf | meta]
 
-[One-line directive, in rule-voice. Example: "Prefer Result<T> over exceptions for expected failure modes."]
+[Directive, in rule-voice. One line.]
 
-Signal: [where this came up, 1 short sentence — e.g. "You pushed back on three try/catch blocks in Services/ today."]
+Signal: [where this came up, 1 short sentence]
 
-(1) Draft it (runs /capture-rule)  (2) Skip  (3) Remind next session
+(1) Promote now  (2) Keep pending  (3) Discard from pending
 ```
 
-If (1) — invoke the `capture-rule` skill with the directive as its argument. The skill handles scope (global/project), final wording, and file placement.
-
-If (3) — write the candidate to `~/.claude/projects/<project>/memory/todo-prompts.md` so `todo-surfacing.md` picks it up next session.
+(1) → invoke `/capture-rule` immediately. (2) → leave entry in pending file for `/rule-review`. (3) → remove the entry.
 
 ## Category cues
 
-- **code-quality** (`cq-` prefix): naming, error handling, control flow, tests, idiomatic usage of a language/framework.
-- **architecture** (`arch-` prefix): module boundaries, dependency direction, abstraction level, file organization, data shape.
-- **workflow** (`wf-` prefix): how Claude should *behave* — when to ask, when to act, which skill to invoke, formatting of output.
+`arch-` (module structure, deps) · `cq-` (idiom, error handling, naming) · `wf-` (how Claude behaves) · `meta-` (config / file placement / tooling)

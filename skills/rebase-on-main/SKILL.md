@@ -9,7 +9,13 @@ Execute every step in order. Stop and report on unexpected failure.
 
 Scripts: `$HOME/.claude/skills/rebase-on-main/scripts`
 
-## Phase 1: Rebase
+## Phase 1: Detect & rebase
+
+Check current branch and working-tree state first:
+
+- **On `main` + clean** → "Nothing to do — on main with no changes." Stop.
+- **On `main` + dirty** → Branch-from-main sub-flow (below). Skip to Phase 2 after.
+- **On a feature branch** → run the rebase script and handle status as listed.
 
 Run: `powershell.exe -NoProfile -File "$HOME/.claude/skills/rebase-on-main/scripts/git-rebase-onto.ps1"`
 
@@ -20,6 +26,18 @@ Handle `status`:
 - **up-to-date** → skip to Phase 2.
 - **success** → Phase 2.
 - **conflicts** → resolve (see below).
+
+### Branch-from-main sub-flow
+
+Goal: get the dirty changes onto a feature branch on top of latest main, then proceed to Phase 2.
+
+1. Show changed files. Suggest a branch name (apply `/commit`'s tag-selection on the diff; prefix `feature/<kebab-tag>`). Ask via `AskUserQuestion` for the branch name with the suggestion as the Recommended option.
+2. Run `powershell.exe -NoProfile -File "$HOME/.claude/skills/rebase-on-main/scripts/git-branch-from-main.ps1" -BranchName <name>`. Handle `status`:
+   - **ready** → step 3.
+   - **pop-conflicts** → resolve as in Phase 1 source conflicts, stage, then continue.
+   - error → report `reason`, stop.
+3. Invoke `/commit` to commit the changes on the new branch (bracket-tag format).
+4. Skip to Phase 2 — branch is one commit ahead of latest main, ready to merge.
 
 ### Conflict Resolution
 

@@ -1,13 +1,15 @@
 ---
-name: allow
-description: Parse a blocked permission prompt and save a suggested allow rule for later review via /suggestions.
+name: allow-defer
+description: Parse a blocked permission prompt and save a suggested allow rule for later review via /suggestions. Non-interrupting capture.
 ---
 
-# Suggest Allow Rule
+# Suggest Allow Rule (Deferred)
 
 **Execute mechanically.** Follow the steps; no need to weigh alternatives or deliberate.
 
 Capture a blocked permission prompt as a **suggestion file** in `~/.claude/suggestions/`. Do NOT edit `settings.json` directly — the user reviews and applies suggestions in bulk later via `/suggestions`. Keep this flow fast and non-interrupting.
+
+For immediate application to `settings.json`, use `/allow-now` instead.
 
 Input: `$ARGUMENTS` — whatever the user pastes. Could be any of these formats:
 
@@ -56,14 +58,14 @@ Parse `$ARGUMENTS` to identify the **tool type** and **pattern**:
 ---
 type: allow
 created: <ISO 8601 UTC timestamp>
-source: /allow
+source: /allow-defer
 ---
 
 # Allow rule: `<rule>`
 
 ## Context
 
-User invoked `/allow` with: `<raw $ARGUMENTS>`
+User invoked `/allow-defer` with: `<raw $ARGUMENTS>`
 
 ## Action on accept
 

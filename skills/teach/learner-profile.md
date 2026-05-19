@@ -24,6 +24,7 @@
 - 2026-04-13: Emscripten overview — toolchain, JS glue, syscall shimming, Asyncify, .NET connection (mode: contextual)
 - 2026-04-13: WASM traps — async/Asyncify, Mono vs CoreCLR, interpreter vs AOT, memory limitations (mode: contextual)
 - 2026-04-20: Grid realization / circulant embedding — FFT eigenvalue trick, kriging SVD, normal score, SIMD (mode: contextual)
+- 2026-05-04: Grid creation — pillar + t-value storage, 4-slot CornerTs, faults as slot divergence, HorizonRegular/GridParams, horizon→grid sampling pipeline (mode: contextual; teaching-doc-tracked)
 
 ## Quiz History
 <!-- Add entries as: - YYYY-MM-DD: topic keyword — correct/incorrect/skipped -->
@@ -47,6 +48,11 @@
 - 2026-04-20: Pipeline Q11 (flow: noise → color → condition → output) — correct
 - 2026-04-20: Pipeline Q12 (output is full 3D field honoring wells exactly) — correct
 - 2026-04-20: Pipeline Q13 (many realizations = uncertainty quantification, not averaging) — correct
+- 2026-05-04: Grid creation Q1 (CornerTs size = (Ni+1)(Nj+1)(Nk+1)×4) — incorrect
+- 2026-05-04: Grid creation Q2 (slot c for cell at lower-right pillar = 0; (1-di)(1-dj) inversion) — incorrect
+- 2026-05-04: Grid creation Q3 (one NaN pillar invalidates 4 cell columns, not 1) — incorrect
+- 2026-05-04: Grid creation Q4 (internal horizon at K=80 in zones [50, 30, 20]) — correct
+- 2026-05-04: Grid creation Q5 (CornerTs at K=0 hardcoded to 0.0; horizon Z lives in Pillars) — correct
 
 ## Topics to Review
 <!-- Topics where the user got a quiz wrong, seemed uncertain, or asked to revisit -->

@@ -11,9 +11,12 @@ Personal Claude Code configuration — slash commands, skills, rules, and PowerS
 | `/claude-sync [skills\|fresh]` | Pull global config, then scaffold or sync project skills. First run = full scaffolding, later runs = targeted template updates. |
 | `/claude-refactor` | Audit all skills, commands, scripts, rules, and templates. Fixes bugs, stale refs, permission gaps. |
 | `/claude-push` | Commit and push config changes. Auto-bumps version on template changes. |
-| `/allow [prompt]` | Parse a blocked permission prompt and save a suggested allow rule to `~/.claude/suggestions/` for later review (non-interrupting). |
+| `/allow-defer [prompt]` | Parse a blocked permission prompt and save a suggested allow rule to `~/.claude/suggestions/` for later review (non-interrupting). |
+| `/allow-now [prompt]` | Parse a blocked permission prompt and append it to `~/.claude/settings.json` immediately. Use when you've decided and want the rule active now. |
 | `/suggestions [type]` | Walk through pending suggestions in `~/.claude/suggestions/` one at a time and accept/skip/discard each. |
 | `/capture-rule [idea]` | Capture a new code-quality, architecture, or workflow rule. Asks category + scope, drafts the rule, saves after your approval. |
+| `/rule-candidate [idea]` | Append a rule candidate to the pending file. Lightweight — no commitment. Logged regardless of disposition. Promotion happens via `/capture-rule` or `/rule-review`. |
+| `/rule-review` | Critical single-pass triage of pending candidates AND existing rules. Surfaces dupes, retires stale rules, proposes prefix migrations, promotes candidates. |
 
 ### Global Workflow Skills
 
@@ -147,7 +150,7 @@ Rules in `rules/` are always loaded:
 - **wf-agents-on-sonnet.md** — Spawn delegated agents on Sonnet by default; reserve Opus for the orchestrating session
 - **wf-project-specific-blocks.md** — Author skills/templates with stable headings so projects can layer `<ProjectSpecific>` blocks across syncs
 
-New rules use category prefixes: `cq-` (code-quality), `arch-` (architecture), `wf-` (workflow). Older un-prefixed rules stay as-is.
+New rules use category prefixes: `cq-` (code-quality), `arch-` (architecture), `wf-` (workflow), `meta-` (config / tooling / file placement). `/rule-review` proposes migrations for older un-prefixed rules.
 
 ### Script Catalog
 
@@ -164,5 +167,5 @@ All scripts in `scripts/`.
 | Migration | `migrate-to-claude-root` (one-time, for machines still on the old `~/claude-config/` + junction layout) |
 
 Skill-local scripts:
-- `skills/rebase-on-main/scripts/`: `git-rebase-onto`, `git-merge-cleanup`
+- `skills/rebase-on-main/scripts/`: `git-rebase-onto`, `git-merge-cleanup`, `git-branch-from-main`
 - `skills/squash/scripts/`: `git-squash-inventory`, `git-squash-execute`

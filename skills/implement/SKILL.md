@@ -5,7 +5,7 @@ description: Autonomous development loop — implements a plan task-by-task with
 
 # Implementation Loop
 
-Work through a plan task-by-task with build, test, refactor gates. One task = one commit.
+Work through a plan task-by-task with build, test, refactor gates. One task = one commit during the loop; **all tasks squash to one commit per plan / per phase before Final Audit** (see Squash section below).
 
 ## Input
 
@@ -23,18 +23,23 @@ Work through a plan task-by-task with build, test, refactor gates. One task = on
    - **Managing plan** (has `## Phases`): enter Phase Chain mode (see below).
    - **Task plan** (has `## Tasks`): enter normal Loop mode.
 5. Flag vague tasks — ask targeted questions. **Don't start until user approves.**
-6. Find first unchecked `- [ ] Done` task (or phase). Print: "Resuming at Task/Phase N. M/T done."
+6. **Record squash base** — capture `git rev-parse HEAD` **before any plan-file commit**. The squash folds in both the plan-add and the cleanup-time plan-delete so neither appears in main's history once merged.
+   - If the plan file is **uncommitted** (just authored by `/plan` in this session): record current `HEAD` as squash base, then commit the plan via `git commit -m "[DOCS] Add {plan-name} plan."`.
+   - If the plan file is **already committed** as the last commit (e.g. resuming a session): record `HEAD~1` as squash base. Do not re-commit.
+   - Stash the SHA in your working memory.
+7. Find first unchecked `- [ ] Done` task (or phase). Print: "Resuming at Task/Phase N. M/T done."
 
 ## Phase Chain (Managing Plans)
 
 When the plan has `## Phases` instead of `## Tasks`, process phases sequentially:
 
 1. Find the first phase with unchecked `- [ ] Done`.
-2. Read that phase's `**Plan:**` path and load the task plan.
-3. Run the full Loop (below) on that task plan.
-4. After completing all tasks in the phase, check off `- [x] Done` on the phase in the managing plan.
-5. Auto-start the next unchecked phase. Repeat until all phases are done.
-6. **Final Audit** runs once after all phases complete — not per-phase.
+2. **Re-record squash base** for this phase = current `git rev-parse HEAD` (the commit before this phase's work starts; differs per phase).
+3. Read that phase's `**Plan:**` path and load the task plan.
+4. Run the full Loop (below) on that task plan, **including the Squash step at end**. Each phase produces one squashed commit.
+5. After completing all tasks in the phase, check off `- [x] Done` on the phase in the managing plan.
+6. Auto-start the next unchecked phase. Repeat until all phases are done.
+7. **Final Audit** runs once after all phases complete — not per-phase.
 
 Phase-level decisions are logged in the managing plan's **Decisions & Review Items**. Task-level decisions go in each phase's task plan.
 
@@ -107,7 +112,7 @@ Never stop unless all done. 3 fix failures → stash + skip + note. Unclear requ
 
 ## Final Audit
 
-After all tasks committed:
+After all tasks committed (but before Cleanup + Squash):
 
 1. Run `/audit-architecture` on the full branch diff. For Overengineered/Rethink findings, prefer **Defer to plan** — major structural rework belongs in its own focused implementation, not buried at the tail of this one.
 2. Run `/refactor` (full trio — only time docs+tests are reviewed). Fixes apply inline; sees post-audit code if step 1 applied any.
@@ -117,7 +122,30 @@ After all tasks committed:
 
 ## Cleanup
 
-Delete the implemented plan file (and managing plan if applicable) after all tasks are complete and Final Audit passes. The deferred-plan from Final Audit, if any, is preserved — it's the next implementation's input. Plans are working documents, not permanent artifacts — the commit history tells the story.
+Delete the implemented plan file (and managing plan if applicable). Commit as `[DOCS] Remove implemented {plan-name} plan.`. The deferred-plan from Final Audit, if any, is preserved — it's the next implementation's input. Plans are working documents, not permanent artifacts; the commit history tells the story.
+
+This runs **before Squash** so the plan-delete (and the plan-add committed at Phase 0) both fold into the implementation squash. Net effect on main's history: no plan-file noise.
+
+## Squash
+
+After all tasks + Final Audit + Cleanup committed. **Always run** — collapses the per-task commits, audit-fix commits, plan-add, and plan-delete into one clean implementation commit.
+
+In Phase Chain mode, this runs at the end of each phase's Loop (per-phase squash → one commit per phase). Final Audit + Cleanup still run once at the end of the whole chain.
+
+1. **Compose subject + body.** Subject = imperative summary of the plan (or phase) title. Body = `Squashed from N tasks:` + bullet list of completed task subjects.
+2. **Invoke `/squash` automated mode** via the Skill tool with args:
+
+   ```text
+   base=<sha-recorded-at-Phase-0>
+   message=<subject>\n\n<body>
+   push=true
+   ```
+
+   `/squash` skips its interactive confirmation when `base=` and `message=` are present, executes via `git-squash-execute.ps1 -Base <sha> -Message "..." -Push`.
+3. **Skip** if `git rev-list --count <base>..HEAD` returns 0 or 1 (nothing to squash, or already a single commit).
+4. **On error**: report and continue anyway. Don't block on squash failure — the per-task commits remain valid history.
+
+After squash, the branch is one commit ahead of where it was at Phase 0 (or where the previous phase ended in Phase Chain mode).
 
 ## Report
 

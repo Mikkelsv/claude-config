@@ -1,15 +1,17 @@
-# Squash all commits on the current branch since main into one with the given message.
+# Squash all commits on the current branch since `-Base` (default 'main') into
+# one commit with the given message.
 # Optional -Push uses --force-with-lease.
 # Returns JSON: { ok, commit, pushed, reason? }.
 
 param(
     [Parameter(Mandatory)][string]$Message,
+    [string]$Base = 'main',
     [switch]$Push
 )
 
-$mergeBase = (git merge-base main HEAD 2>$null).Trim()
+$mergeBase = (git merge-base $Base HEAD 2>$null).Trim()
 if (-not $mergeBase) {
-    @{ ok = $false; reason = 'Failed to find merge-base with main' } | ConvertTo-Json -Compress
+    @{ ok = $false; reason = "Failed to find merge-base with $Base" } | ConvertTo-Json -Compress
     exit 1
 }
 
