@@ -19,7 +19,7 @@ try {
     # - templates/ → projects re-scaffold via /claude-sync
     # - rules/, skills/, commands/ → projects with duplicated/mirrored copies need to know to re-pull
     # The bump is a SIGNAL. Whether project action is required is decided by the changelog
-    # entry (only added when manual re-copy is actually needed; see rules/config-version.md).
+    # entry (only added when manual re-copy is actually needed; see rules/meta-user-config.md).
     $trackedDirs = @("templates", "rules", "skills", "commands")
     $staged = git diff --cached --name-only 2>$null
     $meaningful = $staged | Where-Object { $f = $_; $trackedDirs | Where-Object { $f.StartsWith("$_/") } }

@@ -118,18 +118,17 @@ Scaffolded per-project from templates. Embed project-specific knowledge (archite
 
 Rules in `rules/` are always loaded:
 
-- **user-config.md** — Config conventions and sync rules
-- **config-version.md** — Version staleness detection
-- **skill-tiers.md** — 3-tier skill placement (global, project, local config)
-- **no-commit.md** — Never commit (exception: config repo)
-- **no-pipes.md** — Avoid chained shell commands
-- **plans-location.md** — Plan files in project root `plans/`
-- **prefer-clickable-prompts.md** — Clickable options over free-text
-- **worktree-cleanup.md** — Auto-remove worktrees after merge
-- **todo-surfacing.md** — Surface todo items at natural moments
-- **no-read-generated-css.md** — Never read Tailwind output files
-- **teach-on-completion.md** — Offer a teaching nugget + quiz after dev tasks
-- **always-plan.md** — Auto-invoke `/plan` when work warrants a structured plan
+- **meta-user-config.md** — Config conventions, sync rules, version staleness detection
+- **meta-skill-tiers.md** — 3-tier skill placement (global, project, local config)
+- **wf-use-commit-skill.md** — Always commit via `/commit`, never raw git
+- **wf-no-shell-chains.md** — Avoid chained shell commands
+- **meta-plans-location.md** — Plan files in project root `plans/`
+- **wf-prefer-clickable-prompts.md** — Clickable options over free-text
+- **wf-worktree-cleanup.md** — Auto-remove worktrees after merge
+- **wf-surface-todos.md** — Surface todo items at natural moments
+- **wf-no-read-generated-css.md** — Never read Tailwind output files
+- **wf-teach-on-completion.md** — Offer a teaching nugget + quiz after dev tasks
+- **wf-always-plan.md** — Auto-invoke `/plan` when work warrants a structured plan
 - **wf-surface-rule-candidates.md** — Watch for generalizable decisions and surface them as rule candidates
 - **cq-no-future-state-stubs.md** — Don't stub future DU cases / params with `NotImplementedException`; use a module comment instead
 - **cq-async-all-the-way.md** — Once async, always async. No `.Result` / `.Wait()` / `Task.Run` as sync→async bridges
@@ -150,6 +149,7 @@ Rules in `rules/` are always loaded:
 - **wf-tight-claude-config.md** — Keep rules, skills, commands, and Claude docs terse; every line earns its tokens
 - **wf-agents-on-sonnet.md** — Spawn delegated agents on Sonnet by default; reserve Opus for the orchestrating session
 - **wf-project-specific-blocks.md** — Author skills/templates with stable headings so projects can layer `<ProjectSpecific>` blocks across syncs
+- **wf-auto-build-and-serve.md** — Run build/serve commands yourself when verifying code changes; don't prompt the user to run them
 
 New rules use category prefixes: `cq-` (code-quality), `arch-` (architecture), `wf-` (workflow), `meta-` (config / tooling / file placement). `/rule-review` proposes migrations for older un-prefixed rules.
 

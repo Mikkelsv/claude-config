@@ -1,43 +1,33 @@
 # Surface Rule Candidates
 
-Watch for judgment calls during work that *generalize* beyond the current task. **Always log via `/rule-candidate` first**, then surface to the user.
+Watch for judgment calls during work that *generalize* beyond the current task. **Always log via `/rule-candidate`**, then briefly report what was added at the end of the response. Never prompt the user about candidates — capture is cheap, triage happens later via `/rule-review`.
 
-## When to watch
+## When to log
 
-- **Refactors / audits** — every simplification, boundary fix, or anti-pattern flag that reflects a general preference.
-- **User corrections** — explicit "don't do X" / "always do Y" is the strongest signal.
-- **Recurring feedback** — same nit comes up 2+ times in a session or across recent sessions.
+- Refactors / audits — every simplification, boundary fix, or anti-pattern flag reflecting a general preference.
+- User corrections — explicit "don't do X" / "always do Y" is the strongest signal.
+- Recurring feedback — same nit comes up 2+ times in a session or across recent sessions.
 
 ## When NOT
 
 - One-off decisions tied to a specific file or bug.
 - Style preferences already covered by formatter / analyzer / EditorConfig.
-- Speculation — wait for signal (per `wf-question-the-scope`).
+- Speculation with no concrete trigger.
 
-## Always log first
+## How
 
-Before surfacing the candidate to the user, invoke `/rule-candidate "<directive>"` to write it as a standalone file at `<project>/.claude/rules/candidates/<slug>.md` (gitignored). The candidate is recorded regardless of what the user decides next. Promotion to actual rules happens via `/rule-review` (which `git mv`s the file to the chosen destination).
+Invoke `/rule-candidate "<directive>"` to write a standalone file at `<project>/.claude/rules/candidates/<slug>.md` (gitignored). No confirmation needed.
 
-## Then surface
-
-At natural pause points (post-task, end of audit/refactor, on user "what did we learn?"). Don't interrupt focused work. Batch multiple candidates into one prompt if they accumulate. Don't re-surface a candidate already prompted in this conversation.
-
-Format (after the task result, after any teach nugget):
+After the task result (and any teach nugget), append:
 
 ```text
 ---
 
-**Rule candidate** — [arch | cq | wf | meta]
+**Rule candidates added** (N total pending)
 
-[Directive, in rule-voice. One line.]
+- `<slug>` — [directive, one line]
 
-Signal: [where this came up, 1 short sentence]
-
-(1) Promote now  (2) Keep pending  (3) Discard from pending
+Run `/rule-review` to triage.
 ```
 
-(1) → invoke `/capture-rule` immediately. (2) → leave entry in pending file for `/rule-review`. (3) → remove the entry.
-
-## Category cues
-
-`arch-` (module structure, deps) · `cq-` (idiom, error handling, naming) · `wf-` (how Claude behaves) · `meta-` (config / file placement / tooling)
+`N` = total files in `<project>/.claude/rules/candidates/`. Omit the section if nothing was added this turn. Don't repeat candidates already reported earlier in the conversation.

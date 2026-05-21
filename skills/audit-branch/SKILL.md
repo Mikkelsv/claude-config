@@ -61,4 +61,4 @@ Otherwise, prompt via `AskUserQuestion`:
 
 ## Phase 6 — Rule Candidates
 
-Pool the `## Rule candidates` blocks from all sub-agents. Per `wf-surface-rule-candidates.md`, surface up to 3 candidates in one batched prompt at the end. Skip this phase if nothing qualifies — don't fabricate.
+Pool the `## Rule candidates` blocks from all sub-agents. Per `wf-surface-rule-candidates.md`, log up to 3 candidates via `/rule-candidate` and include the standard report block at the end. Skip this phase if nothing qualifies — don't fabricate.

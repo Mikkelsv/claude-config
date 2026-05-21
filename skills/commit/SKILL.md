@@ -7,7 +7,7 @@ description: Stage all changes with a bracket-tagged message ([FEAT]/[FIX]/[REFA
 
 **Execute mechanically.** Follow the steps; no need to weigh alternatives or deliberate.
 
-Stage, commit, and push. Overrides `no-commit` rule when invoked.
+Stage, commit, and push. Satisfies `wf-use-commit-skill` when invoked.
 
 ## Message format
 
