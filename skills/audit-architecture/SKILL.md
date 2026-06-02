@@ -61,3 +61,7 @@ Do not just report and move on.
 ## Step 5: Rule Candidates
 
 After reporting, scan the findings for patterns that would generalize. Boundary violations, overengineering flags, and simpler-alternative preferences often hint at architecture rules worth codifying. Per `wf-surface-rule-candidates.md`, log up to 2 candidates via `/rule-candidate` and include the standard report block. Skip if nothing qualifies — don't fabricate.
+
+## Project rules
+
+Additional project-specific architecture rules to apply alongside the global set. Projects layer a `<ProjectSpecific>` block here listing their `arch-*` rules from `.claude/rules/`.

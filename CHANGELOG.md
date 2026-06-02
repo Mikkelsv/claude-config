@@ -2,6 +2,17 @@
 
 Only lists changes that require project action. Global rules, scripts, and global skills are picked up automatically and not tracked here.
 
+## v1.1.6 — 2026-06-02 — `/audit-branch` inline-apply contract
+
+Sub-skills invoked by `/audit-branch` now apply mechanical findings (comment hygiene, stale references, typos, unused imports, trivial dead code) inline during their pass instead of being report-only. Each agent returns a structured note with `## Applied inline` (what landed in-tree) and `## Deferred` (judgment findings for orchestrator-side disposition). Phase 5 prompt operates on the deferred set only. New Phase 6 Build Verify runs after fixes land (invokes `/build`; no-op in no-build repos via graceful-skip).
+
+**Project action:**
+
+- **Projects with mirrored `audit-branch`** (forked-global, per `meta-project-local-skill-copies.md`): re-sync via `/claude-sync` to absorb the inline-apply contract. Behavior change — sub-agents edit the tree directly instead of only reporting.
+- **Projects without mirrored copies**: nothing to do; the global skill updates automatically.
+- **`audit-architecture` and `plan` skills** got new `## Project rules` anchor headings. Projects that want to layer project-specific arch/planning rules can add a `<ProjectSpecific>` block under either heading; `/claude-sync` preserves it across template updates.
+- **`rebase-on-main`** now invokes `pwsh -NoProfile` instead of `powershell.exe`. Windows users with PowerShell 7 see no change; macOS/Linux machines with PowerShell 7 now work natively.
+
 ## v1.1.3 — 2026-05-19 — `/claude-sync` handles forked-global skills
 
 `/claude-sync` now discovers and syncs project-local copies of generic global skills (per `meta-project-local-skill-copies.md`). Templates and forks live side-by-side in `.claude/skills/`; both are tracked in `.claude/local/config-version.json` (templates under `skills`, forks under `forks`). Initial Setup gained a "shared repo?" prompt that scaffolds forks; Sync gained drift detection for existing forks.

@@ -89,7 +89,7 @@ Draw from these dimensions as needed: **Functional** (what, inputs/outputs, edge
 
 When the user proposes or implies an architectural choice, **must evaluate against idiomatic patterns** before accepting. Flag violations directly — do not hedge.
 
-Apply the user-level `arch-*` rules in `~/.claude/rules/` (auto-loaded) — they cover the common .NET / EF Core / DI anti-patterns. If the project has its own `.claude/rules/arch-anti-patterns.md` (or similar), apply that too — project specifics override generic guidance.
+Apply both the global `arch-*` rules in `~/.claude/rules/` (auto-loaded — covering common .NET / EF Core / DI anti-patterns) and the project-specific `arch-*` rules in `.claude/rules/`. Project specifics override generic guidance where they overlap.
 
 If the user's plan hits any flagged anti-pattern, **must** raise it in Phase 2 and propose the idiomatic alternative as the recommended option — even if they seemed set on the original approach.
 
@@ -134,4 +134,8 @@ Skip if <4 tasks or clearly sequential. Find task pairs with no dependency and d
 ## Phase 4 — Present
 
 Show: feature summary, plan location, task count, open questions/risks. Ask if adjustments needed.
+
+## Project rules
+
+Additional project-specific planning rules — anti-pattern lists, architecture principles, naming conventions. Projects layer a `<ProjectSpecific>` block here pointing at their relevant `.claude/rules/` entries.
 
