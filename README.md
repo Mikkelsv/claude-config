@@ -150,6 +150,18 @@ Rules in `rules/` are always loaded:
 - **wf-agents-on-sonnet.md** — Spawn delegated agents on Sonnet by default; reserve Opus for the orchestrating session
 - **wf-project-specific-blocks.md** — Author skills/templates with stable headings so projects can layer `<ProjectSpecific>` blocks across syncs
 - **wf-auto-build-and-serve.md** — Run build/serve commands yourself when verifying code changes; don't prompt the user to run them
+- **wf-delegate-large-reads.md** — Delegate exploratory reads to Sonnet subagents; orchestrator stays in synthesis mode
+- **wf-think-clearly-on-architecture.md** — Pause and surface trade-offs for architecture-shape decisions
+- **wf-question-the-scope.md** — Default toward less; question whether new infrastructure is needed at the proposed scope
+- **wf-blanket-rename-safety.md** — Multi-file rename checklist (exclude vendor paths, stdlib clobber, build-green-isn't-enough)
+- **git-workflow.md** — Default to feature branches over direct-to-main; use `/commit` and `/rebase-on-main`
+- **arch-docs-over-inline.md** — Heavy context lives in `docs/`; code carries thin pointers, not narration
+- **arch-transient-ui-state-not-in-domain.md** — Per-session UI toggles don't belong on persisted domain records
+- **cq-comments-track-code.md** — Update or delete every stale comment in the same commit as the code change
+- **cq-fallthrough-guard-all-branches.md** — Every routing branch asserts its expected sub-range; no open-ended `else`
+- **cq-option-returning-fn-naming.md** — F# functions returning `option` carry the `try` prefix (`tryGetX`, never `getX`)
+- **meta-markdown.md** — All `.md` files must pass markdownlint (MD022/MD031/MD032/MD040/MD060)
+- **meta-rule-format.md** — Rule file structure: title, imperative directive, optional Why/How/Exceptions
 
 New rules use category prefixes: `cq-` (code-quality), `arch-` (architecture), `wf-` (workflow), `meta-` (config / tooling / file placement). `/rule-review` proposes migrations for older un-prefixed rules.
 
