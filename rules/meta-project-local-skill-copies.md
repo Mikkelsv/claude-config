@@ -1,11 +1,13 @@
-# Project-Local Skill Copies for Shared Repos
+# Project-Local Copies for Shared Repos
 
-Some projects ship local copies of global skills in `.claude/skills/` so colleagues who don't have personal `~/.claude/` config get the workflow on clone. Treat these as **deliberate forks** — not duplicates to delete, not fire-and-forget either.
+Some projects ship local copies of global skills (`.claude/skills/`) **and their supporting scripts** (`.claude/scripts/`) so colleagues who don't have personal `~/.claude/` config get the workflow on clone. Treat these as **deliberate forks** — not duplicates to delete, not fire-and-forget either.
+
+**Never question the duplication.** Do not propose collapsing a project-local copy onto its global equivalent, do not flag it as redundant in audits, do not "clean up" the file thinking it's stale. The duplication is the contract: colleagues without `~/.claude/` need it, the owner uses both project + global. Ask before removing any project-local copy in `.claude/skills/` or `.claude/scripts/`.
 
 ## When local copies are warranted
 
 - Repo is shared with developers who may not have `~/.claude/` set up.
-- Skill is integral to project workflow (build, plan, implement, commit, rebase).
+- Skill (or script) is integral to project workflow (build, plan, implement, commit, rebase, file-size audits).
 
 ## Device-agnostic requirement (project-local copies only)
 
