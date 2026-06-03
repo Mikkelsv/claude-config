@@ -2,6 +2,19 @@
 
 Only lists changes that require project action. Global rules, scripts, and global skills are picked up automatically and not tracked here.
 
+## v1.1.8 — 2026-06-03 — New `/refactor-comments` + `/refactor-file-sizes` templates
+
+Two new Tier 2 templates available via `/claude-sync`:
+
+- `/refactor-comments` — orchestrates parallel Sonnet sweep against the `arch-docs-over-inline` rubric (rule now global as of v1.1.5). Partitions, protection-list categories, and project-specific protected-comment notes layer in via placeholders + `<ProjectSpecific>` blocks.
+- `/refactor-file-sizes` — companion to the new global `/audit-file-sizes` (v1.1.7). Resolves `check-file-sizes.ps1` project-first, fans out per-batch Sonnet sub-agents with language-specific split playbooks. Customize via `{LANGUAGE_PLAYBOOKS}` and `{FACADE_GOTCHAS}` `<ProjectSpecific>` blocks.
+
+**Project action:**
+
+- **Projects that already have these skills locally** (e.g. forked-global copies): no automatic propagation. To pull the template version side-by-side or to scaffold afresh, run `/claude-sync` and accept the new template offers.
+- **Projects without these skills**: run `/claude-sync` to scaffold either or both. Fill in placeholders (`{PARTITIONS}`, `{PROTECTION_LIST_NOTES}`, `{LANGUAGE_PLAYBOOKS}`, `{FACADE_GOTCHAS}`) for your project.
+- **No project action needed** if you don't use these workflows.
+
 ## v1.1.6 — 2026-06-02 — `/audit-branch` inline-apply contract
 
 Sub-skills invoked by `/audit-branch` now apply mechanical findings (comment hygiene, stale references, typos, unused imports, trivial dead code) inline during their pass instead of being report-only. Each agent returns a structured note with `## Applied inline` (what landed in-tree) and `## Deferred` (judgment findings for orchestrator-side disposition). Phase 5 prompt operates on the deferred set only. New Phase 6 Build Verify runs after fixes land (invokes `/build`; no-op in no-build repos via graceful-skip).

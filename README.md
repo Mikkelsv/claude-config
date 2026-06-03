@@ -48,6 +48,8 @@ Scaffolded per-project from templates. Embed project-specific knowledge (archite
 | `/test` | Browser-based smoke tests with optional perf tracking. |
 | `/refactor-code [focus]` | Code quality & architecture review with project-specific criteria. |
 | `/refactor-tests [focus]` | Test coverage review with project-specific framework knowledge. |
+| `/refactor-comments [scope]` | Sweep code comments against `arch-docs-over-inline` rubric; parallel Sonnet agents in non-overlapping partitions, build-verifies after. `--dry-run` for review-only mode. |
+| `/refactor-file-sizes [scope]` | Audit + execute file-size refactors. Companion to `/audit-file-sizes` — splits violators by batch with language-playbook rules in each sub-agent's prompt. |
 
 ### Utility Commands
 
