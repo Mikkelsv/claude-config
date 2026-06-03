@@ -25,6 +25,7 @@
 - 2026-04-13: WASM traps — async/Asyncify, Mono vs CoreCLR, interpreter vs AOT, memory limitations (mode: contextual)
 - 2026-04-20: Grid realization / circulant embedding — FFT eigenvalue trick, kriging SVD, normal score, SIMD (mode: contextual)
 - 2026-05-04: Grid creation — pillar + t-value storage, 4-slot CornerTs, faults as slot divergence, HorizonRegular/GridParams, horizon→grid sampling pipeline (mode: contextual; teaching-doc-tracked)
+- 2026-06-03: Skill instruction persistence — SKILL.md as durable text in context, 3 layers (global rules / project / skills), token cost of bloat, exit-by-contract not runtime-unload, compaction as eviction (mode: nugget→deeper)
 
 ## Quiz History
 <!-- Add entries as: - YYYY-MM-DD: topic keyword — correct/incorrect/skipped -->

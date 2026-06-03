@@ -27,6 +27,7 @@ Available in every project via the global config.
 | `/build` | Build & serve. Reads project config from `.claude/local/skills/build/config.md`. |
 | `/rebase-on-main` | Rebase on main, resolve conflicts, optionally merge/push. |
 | `/study [topic]` | Codebase-first research — parallel sonnet agents map an area, synthesize into session context. No file output. Use before `/plan` when context is thin. |
+| `/voice-mode [opening]` | Install a voice-input contract for the conversation — parse rambly dictated input for intent, not literal text. Stays on until "voice mode off" or `/implement`. Pair with `/plan` for big dictated planning sessions. |
 | `/plan [feature]` | Collaborative feature discovery + plan creation. Skeptical senior-engineer persona — challenges premise, flags .NET/web anti-patterns. Phase 1 invokes `/study` when session context is thin. |
 | `/implement [plan]` | Autonomous dev loop — plan tasks with build/test/refactor/audit gates. Per-task `/refactor-code` if ≥ 20 lines changed. Final Audit uses `/audit-branch`. |
 | `/audit-branch [focus]` | Branch-level audit — runs `/audit-architecture` + `/refactor-code` + `/refactor-docs` + `/refactor-tests` in parallel against `main..HEAD`, presents one Apply/Defer/Skip prompt. |
