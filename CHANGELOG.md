@@ -2,6 +2,19 @@
 
 Only lists changes that require project action. Global rules, scripts, and global skills are picked up automatically and not tracked here.
 
+## v1.1.9 — 2026-06-03 — Template tightening: `/refactor-code` inline-apply, `/refactor-tests` concretized
+
+Two existing templates updated to match the inline-apply + defer-judgment contract that landed in `/audit-branch` at v1.1.6:
+
+- `/refactor-code` template — new Step 6 "Apply mechanical, defer judgment" + Step 7 report split between `## Applied inline` and the deferred set. Aligns with `/audit-branch` Phase 3 expectations. `{PROJECT_ARCHITECTURE_CHECKS}` placeholder removed; project-specific arch rules now layer in via the `## Project rules` `<ProjectSpecific>` block.
+- `/refactor-tests` template — Steps 3–4 concretized (no longer placeholder-only). Step 4 categorizes tests by concern from the actual test source rather than relying on a hardcoded list. `{EXISTING_TEST_MAPPING}` placeholder removed; `{TEST_FRAMEWORK_FILES}` survives only inside the `## Project rules` `<ProjectSpecific>` block.
+
+**Project action:**
+
+- **Projects with `/refactor-code` scaffolded**: re-sync via `/claude-sync` to pick up the inline-apply contract. Behavior change — the skill now applies mechanical fixes in-tree instead of report-only.
+- **Projects with `/refactor-tests` scaffolded**: re-sync via `/claude-sync` for tighter Step 3–4 content. Behavior is similar; the template is just less placeholder-shaped now.
+- **No project action needed** if you haven't scaffolded these.
+
 ## v1.1.8 — 2026-06-03 — New `/refactor-comments` + `/refactor-file-sizes` templates
 
 Two new Tier 2 templates available via `/claude-sync`:

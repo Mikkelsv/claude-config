@@ -9,9 +9,7 @@ Check if the test suite covers touched functionality. Only make straightforward 
 
 ## Step 1: Load Test Framework
 
-Read project test patterns and conventions:
-
-{TEST_FRAMEWORK_FILES}
+Read project test patterns and conventions from `.claude/rules/` and the test source(s) listed in **Project rules** below.
 
 ## Step 2: Scope
 
@@ -23,13 +21,17 @@ If orchestrator provided scope, skip to Step 3.
 
 ## Step 3: Map Changes to Testable Behavior
 
-For each changed file: new public APIs? Changed behavior? New types/components? New state transitions? Removed functionality?
+For each changed file: new public APIs / handlers / commands? Changed behavior in existing APIs? New types / components / scene elements? New / modified state transitions? Removed functionality that existing tests reference?
 
 ## Step 4: Cross-Reference Tests
 
-{EXISTING_TEST_MAPPING}
+Read the test source(s) for the current inventory. Categorize tests by concern (state roundtrips, perf instrumentation, command serialization, UI interaction, domain logic, etc.) — derive the categories from what's actually in the test files; don't rely on a hardcoded list.
 
-Look for: new functionality without tests, stale tests referencing removed APIs, partial coverage.
+Look for:
+
+- New functionality without tests.
+- Stale tests referencing removed/renamed APIs.
+- Partial coverage (only happy-path tested; edge cases missing).
 
 ## Step 5: Report
 
@@ -38,8 +40,16 @@ Look for: new functionality without tests, stale tests referencing removed APIs,
 **Stale Tests** — tests referencing removed/renamed APIs.
 **Verdict**: **Covered** / **Minor gaps** / **Needs new tests**. For trivial gaps (adding a check to existing test), apply directly.
 
+## Project rules
+
+<ProjectSpecific>
+{TEST_FRAMEWORK_FILES}
+</ProjectSpecific>
+
 ---
 
 ## Customization Guide
 
-Replace `{TEST_FRAMEWORK_FILES}` and `{EXISTING_TEST_MAPPING}`. Shell must include `$ARGUMENTS`.
+Replace `{TEST_FRAMEWORK_FILES}` at scaffold time with the project's test-framework file references — typically: relevant `.claude/rules/` test-pattern rules, the test source directory, and heuristics for which kinds of changes warrant which kinds of tests (e.g. "new command → serialization test; new state field → roundtrip test").
+
+The `<ProjectSpecific>` block under "Project rules" is preserved by `/claude-sync` re-syncs; layer additional test-coverage notes there without losing them on update.
