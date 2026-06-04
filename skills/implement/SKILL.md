@@ -17,11 +17,19 @@ Work through a plan task-by-task with build, test, refactor gates. One task = on
 2. **Branch / worktree** — branch on the `git-workflow.md` rule:
    - **Direct to main**: skip branch creation. Work on main directly.
    - **Worktree per feature**: create a worktree for `implement/{plan-name}` without asking.
-   - **Feature branches** (or rule missing): ask via `AskUserQuestion`: **Worktree (Recommended)** or **Current directory**. If on `main`, create branch `implement/{plan-name}` (worktree creates its own).
+   - **Feature branches** (or rule missing): default to the current directory — do NOT ask about worktrees. If on `main`, create branch `implement/{plan-name}` and `git checkout` it. Only create a worktree if the user explicitly asks for one in their request.
 3. Verify clean working tree. If dirty, ask: stash or continue?
 4. Read and validate plan format (see below). **Detect plan type:**
    - **Managing plan** (has `## Phases`): enter Phase Chain mode (see below).
    - **Task plan** (has `## Tasks`): enter normal Loop mode.
+
+   **Resolve execution mode** (inline vs agentic) in this priority order:
+
+   - CLI flag in `$ARGUMENTS`: `--inline` or `--agentic` wins outright.
+   - Plan front matter: `mode: agentic` (or `inline`) — sticky per-plan.
+   - Auto-detect: **agentic** when task count > 5, else **inline**.
+
+   Print one line: `Mode: <inline|agentic>`. In agentic mode, each task runs in a fresh Sonnet sub-agent so context doesn't drift across the loop; the plan file becomes durable cross-task state via the sub-agent's `**Implementation notes:**` mandate (see Loop step 2).
 5. Flag vague tasks — ask targeted questions. **Don't start until user approves.**
 6. **Record squash base** — capture `git rev-parse HEAD` **before any plan-file commit**. The squash folds in both the plan-add and the cleanup-time plan-delete so neither appears in main's history once merged.
    - If the plan file is **uncommitted** (just authored by `/plan` in this session): record current `HEAD` as squash base, then commit the plan via `git commit -m "[DOCS] Add {plan-name} plan."`.
@@ -45,6 +53,16 @@ Phase-level decisions are logged in the managing plan's **Decisions & Review Ite
 
 ## Plan Format
 
+Optional front matter at the top of the file pins the execution mode (otherwise auto-detected by task count):
+
+```yaml
+---
+mode: agentic  # or inline; omit for auto-detect
+---
+```
+
+Task block:
+
 ```markdown
 ## Task 1: Short description
 - [ ] Implement
@@ -58,6 +76,8 @@ Phase-level decisions are logged in the managing plan's **Decisions & Review Ite
 **Test:** how to verify
 **Dependencies:** Task N (if any)
 **Parallel group:** A (or — for sequential)
+**Implementation notes:** (appended by the executing sub-agent in agentic mode)
+- <gotcha, deviation, or cross-cutting flag>
 ```
 
 ## Loop
@@ -70,11 +90,28 @@ If task has a group letter, collect all unchecked tasks in that group. Main thre
 
 ### 1. Read & Understand
 
-Read current task + scan remaining tasks (don't paint into a corner). Read all `Files:` listed. Take `preview_screenshot` if task touches UI.
+Scan remaining tasks in the plan (don't paint into a corner). Take `preview_screenshot` if task touches UI.
+
+**Inline mode**: also read all `Files:` listed before implementing.
+**Agentic mode**: skip the `Files:` read — the sub-agent reads them itself with a fresh context.
 
 ### 2. Implement
 
-Make changes following CLAUDE.md conventions. Add tests for new user-facing functionality.
+**Inline mode**: make changes following CLAUDE.md conventions. Add tests for new user-facing functionality.
+
+**Agentic mode**: spawn a Sonnet sub-agent via the `Agent` tool (`model: "sonnet"`) with a brief containing:
+
+- Full plan file contents (carries prior tasks' `**Implementation notes:**`)
+- Target task ID + its `Context:` / `Files:` / `Acceptance:` / `Test:` block
+- Project root path
+- Mandate:
+  1. Implement the task following `CLAUDE.md` + project rules. Add tests for new user-facing functionality.
+  2. **Before returning, append a `**Implementation notes:**` bullet list under this task in the plan file** — gotchas, deviations from plan, helpers/types introduced, anything future tasks need to know.
+  3. DO NOT run `/test` (orchestrator handles).
+  4. DO NOT commit.
+  5. Return a brief structured summary: files touched, work summary, any cross-cutting flags affecting future tasks.
+
+Read the agent's returned summary. Don't re-read the touched files — trust the summary + the Implementation notes in the plan.
 
 ### 3. Build & Test
 
@@ -93,7 +130,7 @@ Check off `- [x] Refactor`. Verify acceptance criteria still met. Take "after" s
 
 ### 5. Design Decisions
 
-Log non-obvious choices to **Decisions & Review Items** in the plan. Check off `- [x] Docs & tests`.
+Log non-obvious choices to **Decisions & Review Items** in the plan. In agentic mode, also promote any cross-cutting items from the sub-agent's `**Implementation notes:**` (issues that affect future tasks, not just local quirks) into Decisions & Review Items so they're visible at plan-level, not buried under one task. Check off `- [x] Docs & tests`.
 
 ### 6. Checkpoint
 

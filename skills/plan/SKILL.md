@@ -133,7 +133,11 @@ Skip if <4 tasks or clearly sequential. Find task pairs with no dependency and d
 
 ## Phase 4 — Present
 
-Show: feature summary, plan location, task count, open questions/risks. Ask if adjustments needed.
+Show: feature summary, plan location, task count, open questions/risks. Ask if adjustments needed; loop until the user has no more.
+
+When the adjustment loop closes, decide whether to offer `/plan-optimizer`. Lean toward offering — it's just an option, and overprompting is preferable to underprompting. Trigger when any of: **>5 tasks**, or a managing plan was created in Phase 2.5. For very small features (1-4 focused tasks, single area), skip the offer — Phase 2's discovery covered it.
+
+When offering: `AskUserQuestion` — **Optimize now** (Recommended) / **Skip**. On Optimize, invoke the `plan-optimizer` skill with the plan path.
 
 ## Project rules
 

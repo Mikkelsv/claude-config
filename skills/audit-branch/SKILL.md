@@ -1,11 +1,27 @@
 ---
 name: audit-branch
-description: Branch-level audit. Runs audit-architecture + refactor-code + refactor-docs + refactor-tests against main..HEAD in parallel; sub-skills apply mechanical findings inline and defer judgment to a unified report. Use to review a feature branch before merge or as a Final Audit gate.
+description: Branch-level audit across architecture, code, docs, tests, file-sizes, and comments. Phase 3a runs all 6 sub-skills in parallel (audits + refactors). Phase 3b conditionally runs refactor-file-sizes if 3a flagged cap violations. Mechanical findings inline; judgment routes to /resolve-audit-findings. Self-paces 1-3 passes.
 ---
 
 # Audit Branch
 
-Branch-level review combining architecture audit and the full refactor trio. Spawns up to 4 parallel sonnet sub-agents; each applies its own mechanical findings inline and returns judgment findings in a structured note. Orchestrator synthesizes deferred findings into one report and prompts once for disposition. After inline edits land, verifies the build.
+Branch-level review combining architecture audit + refactor sweeps across code, docs, tests, file-sizes, and comments. Spawns up to 6 parallel sonnet sub-agents in Phase 3a; each applies its own mechanical findings inline and returns judgment findings in a structured note. Orchestrator synthesizes deferred findings into one report and hands disposition to `/resolve-audit-findings`. After inline edits land, verifies the build.
+
+**Multi-pass — decided mid-stride.** Always runs at least 1 pass. After each pass, decide whether another is warranted based on what the pass actually surfaced — not the diff size upfront. Re-pass triggers (any one is enough):
+
+- Verdict was **Needs work** or **Rethink**
+- 5+ findings landed (applied or deferred) across the sub-agents
+- A single sub-agent reported a structural finding that touched files outside its original scope (e.g. refactor-code applied changes that may have invalidated refactor-tests' assertions)
+- **Phase 3b ran at all** — file splits create new files with potentially stale top-of-file comments, carryover imports, and fresh refactoring opportunities; the next pass re-audits the post-split structure
+
+Stop conditions:
+
+- Verdict **Sound** with no deferred findings → done
+- The latest pass surfaced nothing new (verdict OK, < 5 minor findings) → done
+- Phase 6 build failed → stop and surface the break, don't compound it
+- Hard cap at **3 passes** regardless
+
+Phase 7 (rule candidates) runs once after the final pass — pool candidates from all passes.
 
 ## Phase 1 — Scope
 
@@ -13,24 +29,46 @@ Run `~/.claude/scripts/git-diff-scope.ps1` to capture the `main..HEAD` diff scop
 
 ## Phase 2 — Resolve Sub-Skills
 
-For each of the four reviews, look up the SKILL.md (project-first, global fallback):
+For each review, look up the SKILL.md (project-first, global fallback):
 
 - `audit-architecture` — global available.
-- `refactor-code` — typically project-scoped (no global fallback).
+- `refactor-code` — typically project-scoped.
 - `refactor-docs` — global available.
 - `refactor-tests` — typically project-scoped.
+- `audit-file-sizes` — global available.
+- `refactor-comments` — typically project-scoped.
+- `refactor-file-sizes` — typically project-scoped.
 
-If a sub-skill is unavailable (no project copy and no global copy), **skip its agent and note the absence in the report**. Do not error.
+If a sub-skill is unavailable (no project copy, no global copy), **skip its agent and note the absence in the report**. Do not error.
 
-## Phase 3 — Parallel Audit (inline-small + defer-big)
+## Phase 3a — Parallel Audit
 
-Spawn all available sub-skills in **parallel** (one message, multiple `Agent` calls) with `model: "sonnet"`. Each agent's prompt:
+Spawn all available sub-skills below in **parallel** (one message, multiple `Agent` calls) with `model: "sonnet"`:
 
-1. Prepend the captured scope output so the agent skips its own scope-detection step.
-2. Pass the sub-skill's SKILL.md contents as the procedure.
-3. **Apply mechanical findings inline** per the sub-skill's own inline tier — comment hygiene, stale references, typos, unused imports, trivial dead code, etc. Stay strictly within the sub-skill's file partition (audit-architecture: read-mostly; refactor-code: source files; refactor-docs: `.md` files; refactor-tests: test files) so two agents never edit the same file concurrently.
-4. **Defer judgment findings** — architectural restructures, public API changes, removal decisions, ambiguous test assertions, etc. — to the structured note. Do NOT call `AskUserQuestion` (that's the orchestrator's job at Phase 5).
-5. Return two halves in the structured note: `## Applied inline` (counts + brief `file:line` list of what landed) and `## Deferred` (full detail per finding: file path, description, recommended fix). Also `## Rule candidates` as before.
+- `audit-architecture` — read-only
+- `refactor-code` — source files (writes)
+- `refactor-docs` — `.md` files (writes)
+- `refactor-tests` — test files (writes)
+- `audit-file-sizes` — read-only scan
+- `refactor-comments` — source-file comments (writes)
+
+`refactor-code` and `refactor-comments` both write source files. They coexist safely because the `Edit` tool's `old_string` match is fail-on-mismatch — a collided edit fails and the agent retries with a fresh read. No silent lost updates, just transient retries.
+
+Each agent's prompt:
+
+1. Prepend the captured scope so the agent skips its own scope-detection step.
+2. Pass the sub-skill's SKILL.md as the procedure.
+3. **Apply mechanical findings inline** per the sub-skill's inline tier — comment hygiene, stale references, typos, unused imports, trivial dead code, etc. Read-only agents (`audit-architecture`, `audit-file-sizes`) apply nothing; they report.
+4. **Defer judgment findings** to the structured note. Do NOT call `AskUserQuestion` (orchestrator owns Phase 5).
+5. Return: `## Applied inline` (counts + brief `file:line` list), `## Deferred` (file, description, recommended fix per finding), `## Rule candidates`.
+
+## Phase 3b — Conditional File-Size Refactor
+
+Run only if Phase 3a's `audit-file-sizes` reported cap violations. File splits change the file structure mid-run (one file becomes two), which would invalidate any other agent's in-flight reads — that's why this can't live in 3a.
+
+- `refactor-file-sizes` — applies splits inline.
+
+If audit-file-sizes had no findings, skip 3b entirely. The agent merges its `## Applied inline` and `## Deferred` halves into the unified report.
 
 ## Phase 4 — Unified Report
 
@@ -55,13 +93,11 @@ One section per area listing remaining findings:
 
 ## Phase 5 — Disposition (deferred items only)
 
-If every sub-agent returned `Sound` or all findings landed in `## Applied inline` — just report; no prompt.
+If every sub-agent returned `Sound` or all findings landed in `## Applied inline` — just report; no further action this pass.
 
-Otherwise, prompt via `AskUserQuestion` against the deferred set only:
+Otherwise, **invoke `/resolve-audit-findings`** with the deferred set. The skill researches each finding, applies inline when the solution is obviously better, and defers substantial findings to `plans/post-audit-{slug}.md`. Slug = current branch name (sans `implement/` prefix) or a short feature name. Surface its report (applied / deferred / skipped counts + paths) as part of this pass's output.
 
-- **Apply inline** — orchestrator iterates the deferred findings and applies via `Edit`/`Write` directly. For complex changes that can't be reduced to a precise edit, note "left to user" with the recommendation in the summary. Report what changed.
-- **Defer to plan** — write `plans/post-audit-{slug}.md` using `plan-template.md` from the implement skill directory. Each deferred finding becomes one Task with `**Files:**`, `**Acceptance:**`, and the agent's recommended fix as `**Context:**`. Slug = current branch name (sans `implement/` prefix) or a short description. Report the plan path.
-- **Skip** — note in report only.
+No `AskUserQuestion` prompt here — `/resolve-audit-findings` owns the apply/defer decision per finding. The user reviews the diff before committing.
 
 ## Phase 6 — Build Verify
 
