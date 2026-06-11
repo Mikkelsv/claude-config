@@ -169,6 +169,7 @@ Rules in `rules/` are always loaded:
 - **cq-option-returning-fn-naming.md** — F# functions returning `option` carry the `try` prefix (`tryGetX`, never `getX`)
 - **meta-markdown.md** — All `.md` files must pass markdownlint (MD022/MD031/MD032/MD040/MD060)
 - **meta-rule-format.md** — Rule file structure: title, imperative directive, optional Why/How/Exceptions
+- **meta-operation-safety-in-skill-not-rule.md** — Operation-specific safety/checklists live in the performing skill, not an always-loaded rule
 
 New rules use category prefixes: `cq-` (code-quality), `arch-` (architecture), `wf-` (workflow), `meta-` (config / tooling / file placement). `/rule-review` proposes migrations for older un-prefixed rules.
 
