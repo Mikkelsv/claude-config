@@ -32,7 +32,7 @@ For each `.claude/skills/<name>/SKILL.md`:
 
 - **Templated** — `~/.claude/templates/skills/<name>/SKILL.md` exists. Handled by existing template flow.
 - **Forked-global** — `~/.claude/skills/<name>/SKILL.md` exists AND no template. Handled by fork flow (new logic).
-- **Project-unique** — neither global nor template exists. Leave alone (e.g., `cartographer`).
+- **Project-unique** — neither global nor template exists. Leave alone.
 
 ### Transformations (applied when syncing global → project)
 
@@ -237,5 +237,5 @@ This lets project-specific rule references (e.g. *"Apply `.claude/rules/arch-cor
 - **New placeholder in template**: detect, ask user, update config.
 - **Manual edits**: drift check (Step 3.4) detects them. User can wrap edits in `<ProjectSpecific>...</ProjectSpecific>` blocks to preserve across syncs without prompting.
 - **Fork has no matching global**: warn ("Local fork `<name>` has no matching global — was it removed or renamed?") and skip. User decides whether to delete the orphan.
-- **Project-unique skills**: skills in `.claude/skills/` that have neither a template nor a matching global (e.g. `cartographer`) are left alone — never treated as forks.
+- **Project-unique skills**: skills in `.claude/skills/` that have neither a template nor a matching global are left alone — never treated as forks.
 - **Pull fails**: offer to continue with local templates.

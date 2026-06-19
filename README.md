@@ -35,9 +35,7 @@ Available in every project via the global config.
 | `/resolve-audit-findings` | Per-finding triage. Spawns one Sonnet agent per finding (parallel) for full research; applies inline when confidence is high, defers substantial findings to `plans/post-audit-{slug}.md`. Typically invoked by `/audit-branch` Phase 5. |
 | `/refactor-docs [focus]` | Documentation sync — checks docs match code changes. Usually invoked via `/audit-branch`. |
 | `/audit-architecture [focus]` | Strict, skeptical architecture review (single-pass): boundaries, overengineering, alternatives. Usually invoked via `/audit-branch`. |
-| `/audit-file-sizes [mode]` | Mechanical scan vs. 400-line soft / 800-line hard caps. Respects top-of-file `SIZE-EXEMPT:` markers. |
-| `/cartographer [plan]` | Wrap `/implement` with research-driven discipline: atomize tasks, decision-log every task, citation validators at phase boundaries, halt only when an external SME is the only source. |
-| `/teach [mode]` | Interactive programming lesson — contextual deep-dive, codebase exploration, or random topic. |
+| `/audit-file-sizes [mode]` | Mechanical scan vs. 400-line soft / 800-line hard caps. Respects top-of-file `SIZE-EXEMPT:` markers. || `/teach [mode]` | Interactive programming lesson — contextual deep-dive, codebase exploration, or random topic. |
 | `/commit [hint]` | Stage all changes, craft a bracket-tagged commit message (`[FEAT]`/`[FIX]`/`[REFAC]`/`[DOCS]` or a custom feature tag like `[GridCreation]`), and push. |
 | `/squash [tag]` | Squash all commits since the branch diverged from main into one, using `/commit`'s tag format and a synthesized message. Force-pushes with lease. |
 
