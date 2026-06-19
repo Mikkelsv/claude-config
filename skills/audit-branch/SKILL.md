@@ -39,11 +39,11 @@ For each review, look up the SKILL.md (project-first, global fallback):
 - `refactor-comments` — typically project-scoped.
 - `refactor-file-sizes` — typically project-scoped.
 
-If a sub-skill is unavailable (no project copy, no global copy), **skip its agent and note the absence in the report**. Do not error.
+All sub-skills are always run — resolve each SKILL.md **from disk**, never from the session's invocable-skill list. `disable-model-invocation: true` hides `audit-file-sizes`, `refactor-comments`, and `refactor-file-sizes` from that list, but their files are on disk and this orchestration always spawns them.
 
 ## Phase 3a — Parallel Audit
 
-Spawn all available sub-skills below in **parallel** (one message, multiple `Agent` calls) with `model: "sonnet"`:
+Spawn all 6 sub-skills below in **parallel** (one message, multiple `Agent` calls) with `model: "sonnet"`:
 
 - `audit-architecture` — read-only
 - `refactor-code` — source files (writes)

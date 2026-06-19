@@ -45,8 +45,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$exts = @('.fs', '.cs', '.js', '.ts', '.tsx', '.razor', '.wgsl', '.glsl')
-$excludePattern = '[\\/](bin|obj|node_modules|\.git|dist|build|out|_framework|worktrees|assets)[\\/]'
+$exts = @('.fs', '.cs', '.js', '.ts', '.tsx', '.razor', '.wgsl', '.glsl', '.py')
+$excludePattern = '[\\/](bin|obj|node_modules|\.git|dist|build|out|_framework|worktrees|assets|\.venv)[\\/]'
 
 function Test-Exempt {
     param([string] $FilePath)
