@@ -1,10 +1,14 @@
 # Auto-Build and Serve
 
-When code changes need verification (build success, runtime check, browser UI), **run the build/serve yourself** — don't tell the user to run `dotnet build`, `npm run dev`, `/build`, etc.
+After any code change, run `/build` — it compiles and brings up the dev server via `preview_start`. **Default assumption: every iteration warrants a build + running server.** Don't tell the user to run it themselves; don't stop at "build passed" without bringing the app up. For UI checks, drive the dev server via `preview_*` tools yourself afterward.
 
-The `build` skill handles the mechanics (port cleanup, build, `preview_start`). Invoke it, or run the equivalent commands directly. For UI checks, drive the dev server via `preview_*` tools yourself.
+## Why
+
+Type checks and tests verify code correctness, not feature correctness. The user usually wants to see the change actually running in the app or browser. "Tests pass" isn't enough confirmation for UI, runtime, or integration changes — and almost every iteration touches one of those.
 
 ## Exceptions
 
-- No build config (`.claude/launch.json` missing) — skip silently.
-- User says "I'll run it" / "don't build" — respect for the session.
+- **Committing to main right after a build was tested** — the prior build still covers it; don't rebuild on the commit itself.
+- **No build config** (`.claude/launch.json` missing) — skip silently.
+- **Pure non-runnable changes** — `.md`, `.gitignore`, license, comments-only edits. Skip build.
+- **User says "don't build" / "I'll run it"** — respect for the session.
