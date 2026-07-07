@@ -32,7 +32,7 @@ $currentBranch = git rev-parse --abbrev-ref HEAD 2>$null
 if ($currentBranch -eq $BaseBranch) {
     @{
         status = "error"
-        reason = "Already on $BaseBranch — cannot rebase onto itself"
+        reason = "Already on $BaseBranch - cannot rebase onto itself"
         branch = $currentBranch
     } | ConvertTo-Json -Compress
     exit 1
