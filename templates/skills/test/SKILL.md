@@ -1,6 +1,6 @@
 ---
 name: test
-description: Build, serve, and run tests with optional performance tracking
+description: "Build, serve, and run the debug smoke suite with perf tracking, reporting a single verdict (ALL GOOD / TEST FAILURE / PERF REGRESSION). Use whenever the user wants to run tests, verify the build, smoke-test the app, or check everything works before merging. Pass \"background\" to run detached."
 ---
 
 # Test
@@ -11,7 +11,7 @@ Build the project, start the server, and run tests.
 
 **Standard mode** (default): Runs the full test cycle inline and reports the verdict. Use when you need to gate on the result before continuing.
 
-**Background mode**: When `$ARGUMENTS` contains `background`, wrap the entire test cycle (all phases) in a single background Agent call and return immediately with "Tests running in background." The agent executes all phases and reports the verdict on completion. Use for fire-and-forget testing when you want to continue working (e.g., reading ahead to the next task) while tests run. The caller should check the agent's completion notification before proceeding with any step that depends on test results.
+**Background mode**: When `$ARGUMENTS` contains `background`, wrap the entire test cycle (all phases) in a single background Agent call and return immediately with "Tests running in background." The agent executes all phases and reports the verdict on completion. Use for fire-and-forget testing when you want to continue working (e.g., reading ahead to the next task) while tests run. The caller should check the agent's completion notification before proceeding with any step that depends on test results. Example invocation: `> /test background`
 
 ## Notes
 
@@ -26,7 +26,7 @@ Build the project, start the server, and run tests.
 
 ## Phase 2 — Run All Tests & Gather Data
 
-Run a single `preview_eval` that executes all tests and collects data in one round-trip. Copy the script verbatim from `${CLAUDE_SKILL_DIR}/scripts/smoke-test.js`.
+Run a single `preview_eval` that executes all tests and collects data in one round-trip. Read `${CLAUDE_SKILL_DIR}/scripts/smoke-test.js` and execute its contents via `preview_eval`.
 
 The script should return an object with at minimum:
 - `ready` — server readiness info (including `loadMs`)

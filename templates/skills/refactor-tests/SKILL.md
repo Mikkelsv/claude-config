@@ -1,11 +1,11 @@
 ---
 name: refactor-tests
-description: Review test coverage against code changes and flag gaps
+description: "Audit test coverage after a code change and apply trivial test additions directly, deferring heavier gaps to a plan. Use whenever the user asks \"are we covered?\", \"do we need tests?\", adds a new command/handler/type, or after /audit-branch flags a test gap."
 ---
 
 # Test Coverage Review
 
-Check if the test suite covers touched functionality. Only make straightforward additions.
+Check if the test suite covers touched functionality. Trivial additions (adding a check to an existing test, one small new test) are applied directly inline. Heavier gaps — new test files, significant scaffolding, or coverage that requires design decisions — are deferred to a plan.
 
 ## Step 1: Load Test Framework
 
@@ -21,7 +21,7 @@ If orchestrator provided scope, skip to Step 3.
 
 ## Step 3: Map Changes to Testable Behavior
 
-For each changed file: new public APIs / handlers / commands? Changed behavior in existing APIs? New types / components / scene elements? New / modified state transitions? Removed functionality that existing tests reference?
+For each changed file, ask: Are there new public APIs, handlers, or commands? Did existing API behavior change? Are there new types, components, or scene elements? Were state transitions added or modified? Did any removed functionality leave existing tests referencing dead code? These are thinking prompts, not a fixed checklist — let what's actually in the diff shape the questions.
 
 ## Step 4: Cross-Reference Tests
 

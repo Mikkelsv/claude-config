@@ -1,9 +1,11 @@
 ---
 name: refactor-code
-description: Review code changes for architecture, quality, and simplicity. Applies mechanical findings inline; defers judgment calls to the report.
+description: "Breadth code-quality sweep of recent changes — naming, dead code, duplication, simplicity, idiom conformance; applies mechanical fixes inline and defers judgment calls to a report. Use whenever the user asks to review, clean up, or check code quality. This is the breadth/quality pass; for deep design/overengineering analysis use /audit-architecture."
 ---
 
 # Code Review
+
+**Output contract:** when called by `/audit-branch`, return both halves (inline-applied + deferred findings); standalone, apply mechanical fixes inline first, then surface judgment calls via `AskUserQuestion`.
 
 Reviews code changes; applies mechanical findings inline and defers judgment to the report. When called by `audit-branch`, returns the two-half contract; standalone invocation applies inline then asks once for the deferred set.
 

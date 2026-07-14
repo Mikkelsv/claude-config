@@ -1,6 +1,6 @@
 ---
 name: refactor-file-sizes
-description: Audit + execute file-size refactors. Identifies violators and their coupling, dispatches Sonnet sub-agents per batch (rules in each agent's prompt for drift protection), build-verifies, and proposes candidate rules from observed gotchas. Companion to /audit-file-sizes.
+description: "Audit AND execute file-size refactors — finds violators plus their coupling, dispatches Sonnet sub-agents per batch (rules embedded per agent for drift protection), build-verifies, and proposes candidate rules from observed gotchas. Use when the user wants to act on size violations — \"split this file\", \"fix the size-cap violations\", or after /audit-file-sizes reports hard-cap hits. For the read-only check only, use /audit-file-sizes."
 disable-model-invocation: true
 ---
 
@@ -18,7 +18,7 @@ Sweep the codebase for files over the project's 800-line hard cap and split them
 1. **Resolve `check-file-sizes.ps1`.** Prefer project-local (`.claude/scripts/check-file-sizes.ps1`) if present, else fall back to global (`~/.claude/scripts/check-file-sizes.ps1`). Per `meta-project-local-skill-copies`, project copies are deliberate forks that may carry a customized extension list.
 2. Run the script (mode A: changed files; mode C: full tree per scope above). Parse the JSON.
 3. **Drop** `justified` entries (SIZE-EXEMPT) and `soft` entries — only hard-cap violators (>800 lines) are in scope.
-4. **Coupling detection.** For each pair of violators, `Grep` the basename (no extension) of one in the other's file content. If matched, mark them coupled. Coupled violators group into a single batch; standalone violators are their own batch.
+4. **Coupling detection.** For each pair of violators, `Grep` the basename (no extension) of one in the other's file content. If matched, mark them coupled. Coupled violators group into a single batch; standalone violators are their own batch. Note: this grep is loud and cheap — false positives (comment mentions, doc references) are fine; over-grouping is harmless, under-grouping risks broken consumers.
 5. Report: `N violators in M batches` (e.g., "10 violators in 8 batches; 2 coupled pairs").
 
 ## Phase 2 — Scope decision
@@ -27,7 +27,7 @@ If `M > 8`, ask the user via `AskUserQuestion`: "Found M batches. How many to ad
 
 ## Decomposition strategy — choose per batch
 
-Before splitting, pick *how* to split by looking at the file's **entrypoints** (who imports/references it). This determines the shape of the result, so decide it up front.
+**Decide this first:** before splitting, pick *how* to split by looking at the file's **entrypoints** (who imports/references it). This determines the shape of the result, so decide it up front.
 
 - **Default: true split (redistribute references).** Break the file into sub-modules and update each consumer to import the specific sub-module it needs. No aggregator left behind. Cleaner dependency graph, no cross-module wiring glue. **Prefer this.**
 - **Facade/barrel only when fan-in is high.** If many consumers reach the file through one stable surface and rewriting all those imports is large churn, keep the original path as a thin re-export/orchestrator over the new sub-files so consumer imports stay put.
@@ -66,7 +66,7 @@ Invoke `/build` once all sub-agents finish. If errors, list them by file; don't 
 
 ## Phase 5 — Rule capture
 
-Collect "new gotchas" reported by sub-agents. For each distinct pattern observed twice or more across this run (or once on a high-confidence call), draft a candidate rule via the **content** suitable for `/rule-candidate`. Don't auto-invoke `/rule-candidate` — surface the proposals in the final report so the user triages.
+Collect "new gotchas" reported by sub-agents. For each distinct pattern observed twice or more across this run (or once on a high-confidence call), draft a candidate rule via the **content** suitable for `/rule-candidate`. Don't auto-invoke `/rule-candidate` — surface the proposals in the final report so the user triages — a single size-refactor run surfaces many false-positive patterns, so the user triages before they become candidates.
 
 ## Phase 6 — Report
 
@@ -86,7 +86,6 @@ Next: /commit to land, or revert via `git checkout .` if anything looks off.
 
 ## Notes
 
-- The audit step's "coupling-by-basename-grep" is loud + cheap. False positives (comment mentions, doc references) are fine — over-grouping is harmless; under-grouping risks broken consumers.
 - SIZE-EXEMPT files are skipped entirely; the script handles this. To exempt a file, add `// SIZE-EXEMPT: <reason>` in its first 10 lines.
 - Path-scoped project rules load in the main session when matching files are read, but **not** in sub-agent sessions — so the agent prompt must name the rule path explicitly.
 - Drift protection comes from each sub-agent starting with a fresh context plus the rule in its prompt. The skill itself doesn't need to "restate rules between iterations" — the parallel-with-rules-in-prompt pattern handles it.

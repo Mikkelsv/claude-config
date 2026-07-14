@@ -1,12 +1,14 @@
 ---
 name: refactor-comments
-description: Sweep code comments against the arch-docs-over-inline rubric. Mechanical inline edits via parallel Sonnet agents in non-overlapping file partitions; build-verifies after. Supports --dry-run for review-only mode.
+description: "Sweep code comments against the arch-docs-over-inline rubric — mechanical inline edits via parallel Sonnet agents in non-overlapping file partitions, build-verified after; supports --dry-run for review-only. Use whenever the user wants comment cleanup or hygiene, says comments are stale/noisy/redundant, or as part of a branch audit."
 disable-model-invocation: true
 ---
 
 # Refactor Comments
 
 Sweep source files for verbose, stale, or low-density comments per `arch-docs-over-inline` (rubric) and `cq-comments-track-code` (protection list). Both rules are auto-loaded globally; this skill orchestrates the sweep. Agents edit comments only; build verifies after. The skill does not commit — review the diff first, then `/commit`.
+
+**Note:** This is an orchestrator-only skill — it must spawn the partition sub-agents, never run the sweep inline; `disable-model-invocation` reflects that.
 
 ## Mode
 

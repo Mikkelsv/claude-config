@@ -1,11 +1,11 @@
 ---
 name: build
-description: Build and serve the application
+description: "Build and serve the application via the project's launch config. Use whenever the user says \"build\", \"run the app\", \"start the server\", or \"check if it compiles\" — or automatically after any code change per the auto-build rule. Reads .claude/launch.json and no-ops gracefully when it's absent."
 ---
 
 # Build & Serve
 
-**Execute mechanically.** Follow the steps; no need to weigh alternatives or deliberate.
+Mechanical execution — follow the steps in order.
 
 Execute user instructions, then build and serve the application. Reads project-specific config from `.claude/local/skills/build/config.md`.
 
@@ -25,17 +25,17 @@ Once the task is complete (or immediately if no task was given):
 1. Read `.claude/launch.json` for the server config (name, port, command).
 2. If `.claude/local/skills/build/config.md` exists, read it for overrides (e.g., a separate build command that differs from the serve command). This file is optional.
 3. Stop any existing preview server (use `preview_stop` if one is running, check with `preview_list` first).
-4. Kill any orphaned processes on the port:
+4. Kill any orphaned processes on the port (cross-platform via `pwsh`):
 
    ```bash
-   powershell.exe -NoProfile -File "$HOME/.claude/scripts/kill-port.ps1" -Port <port>
+   pwsh -NoProfile -File "$HOME/.claude/scripts/kill-port.ps1" -Port <port>
    ```
 
 5. Build using the build command from config.md if present, otherwise infer from `launch.json` (can run in parallel with steps 3–4).
 6. If the build **fails**, fix the errors and rebuild. If it still fails after 2 attempts, stop and report.
-7. If the build **succeeds**, start the dev server via `preview_start` with the server name from `launch.json`.
+7. If the build **succeeds**, start the dev server via `preview_start` with the server name from `launch.json`. If `preview_start` fails after a successful build, re-run the port-kill step and retry once before reporting.
 8. Report: "Build OK. Dev server running in preview."
 
 ## Auto-build Rule
 
-Whenever you make code changes (bug fixes, feature additions, refactoring, etc.), **always build and serve automatically** using the Phase 2 steps above. Do not wait for the user to type `/build` — if you changed code, build it.
+Implements the auto-build rule — see `wf-auto-build-and-serve.md`.

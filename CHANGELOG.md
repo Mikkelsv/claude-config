@@ -2,6 +2,15 @@
 
 Only lists changes that require project action. Global rules, scripts, and global skills are picked up automatically and not tracked here.
 
+## v1.1.14 — 2026-07-14 — Skill-template descriptions + polish
+
+Trigger-phrase descriptions and generic body polish propagated to five Tier 2 templates: `/refactor-code`, `/refactor-comments`, `/refactor-file-sizes`, `/refactor-tests`, `/test`. Each description now leads with "use when…" trigger phrases (the primary auto-trigger mechanism) and disambiguates confusable siblings. Body polish: `/refactor-code` gains an output-contract line; `/refactor-file-sizes` a "Decide this first" decomposition heading + rule-candidate rationale; `/refactor-tests` an apply-vs-defer intro; `/refactor-comments` an orchestrator-only note.
+
+**Project action:**
+
+- **Projects with any of these scaffolded**: re-sync via `/claude-sync` to pick up the sharper descriptions + polish. No behavior change — descriptions and framing only.
+- **No project action needed** otherwise.
+
 ## v1.1.9 — 2026-06-03 — Template tightening: `/refactor-code` inline-apply, `/refactor-tests` concretized
 
 Two existing templates updated to match the inline-apply + defer-judgment contract that landed in `/audit-branch` at v1.1.6:
