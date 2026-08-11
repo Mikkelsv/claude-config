@@ -167,6 +167,7 @@ Rules in `rules/` are always loaded:
 - **cq-comments-track-code.md** — Update or delete every stale comment in the same commit as the code change
 - **cq-fallthrough-guard-all-branches.md** — Every routing branch asserts its expected sub-range; no open-ended `else`
 - **cq-option-returning-fn-naming.md** — F# functions returning `option` carry the `try` prefix (`tryGetX`, never `getX`)
+- **wf-plain-phrasing-for-colleagues.md** — Suggested messages to colleagues stay short, plain, unformatted, and specific
 - **meta-markdown.md** — All `.md` files must pass markdownlint (MD022/MD031/MD032/MD040/MD060)
 - **meta-rule-format.md** — Rule file structure: title, imperative directive, optional Why/How/Exceptions
 - **meta-operation-safety-in-skill-not-rule.md** — Operation-specific safety/checklists live in the performing skill, not an always-loaded rule
