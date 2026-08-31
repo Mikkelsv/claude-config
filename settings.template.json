@@ -49,30 +49,5 @@
       "Write(**/plans/**)"
     ]
   },
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"<USERPROFILE>/.claude/scripts/notify.ps1\"",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "matcher": "permission_prompt",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"<USERPROFILE>/.claude/scripts/notify.ps1\"",
-            "timeout": 30
-          }
-        ]
-      }
-    ]
-  },
   "defaultMode": "acceptEdits"
 }

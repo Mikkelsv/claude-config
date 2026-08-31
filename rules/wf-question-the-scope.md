@@ -12,7 +12,7 @@ Before substantive work — adding a new rule, abstraction, feature, or skill �
 
 ## When to spawn a scope-skeptic agent
 
-When about to commit substantive new infrastructure (new rule, new abstraction, new skill, new agent, multi-file refactor) and a second opinion before shipping is warranted. If the project has a scope-skeptic agent at `.claude/agents/scope-skeptic.md`, spawn it — it applies these lenses adversarially. Otherwise spawn a general subagent and hand it this rule as the prompt.
+When about to commit substantive new infrastructure (new rule, new abstraction, new skill, new agent, multi-file refactor) and a second opinion before shipping is warranted. Spawn the `scope-skeptic` agent — it applies these lenses adversarially. A project-local `.claude/agents/scope-skeptic.md` takes precedence over the global one.
 
 ## Why
 

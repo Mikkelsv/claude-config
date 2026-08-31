@@ -48,14 +48,6 @@ if (-not (Test-Path $settingsPath) -and (Test-Path $templatePath)) {
     Write-Host "settings.json already exists, skipping template." -ForegroundColor Green
 }
 
-# Register toast notification AppID so the Stop hook can show banners.
-# Idempotent — safe to re-run.
-$toastSetup = "$claudeDir\scripts\register-toast-appid.ps1"
-if (Test-Path $toastSetup) {
-    Write-Host "Registering toast notification AppID..." -ForegroundColor Cyan
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $toastSetup
-}
-
 Write-Host ""
 Write-Host "Setup complete!" -ForegroundColor Green
 Write-Host "  Config repo: $claudeDir" -ForegroundColor Cyan

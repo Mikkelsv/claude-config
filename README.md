@@ -79,10 +79,6 @@ Scaffolded per-project from templates. Embed project-specific knowledge (archite
 - **Sync changes** with `/claude-push` (commit + push) or `/claude-sync` (pull + sync project skills).
 - **Add project skills** with `/claude-sync` in any project directory.
 
-### Notifications
-
-`scripts/notify.ps1` fires on Stop and permission-prompt hooks. Shows a Windows toast banner, flashes the Claude desktop icon, plays a sound. Registration handled by `scripts/register-toast-appid.ps1` (run by `setup.ps1` on first install).
-
 ---
 
 ## For Claude (Reusable Setup Guide)
@@ -100,6 +96,7 @@ Scaffolded per-project from templates. Embed project-specific knowledge (archite
   setup.ps1                       # Fresh-machine bootstrap
   settings.json                   # Live, machine-specific (gitignored)
   settings.template.json          # Portable template (committed)
+  agents/                         # Global subagent definitions
   commands/                       # Slash commands
   rules/                          # Global rules (always loaded)
   skills/                         # Global skill implementations (one SKILL.md per skill)
@@ -179,15 +176,17 @@ New rules use category prefixes: `cq-` (code-quality), `arch-` (architecture), `
 All scripts in `scripts/`.
 
 | Category | Scripts |
-|----------|---------|
-| Worktree | `get-worktrees`, `create-worktree`, `remove-worktree`, `escape-worktree` |
-| Launching | `launch-vscode`, `launch-dev-server`, `kill-port` |
-| Git | `git-preflight`, `git-branch-scope`, `git-diff-scope`, `commit` |
-| File/Process | `remove-path`, `move-path`, `npm-command`, `node-run` |
+| --- | --- |
+| Worktree | `get-worktrees`, `remove-worktree` |
+| Launching | `launch-vscode`, `kill-port` |
+| Git | `git-preflight`, `git-diff-scope` |
 | Config | `sync-config`, `pull-config`, `mirror-skill` |
-| Audit | `check-file-sizes` (backs `/audit-file-sizes`) |
-| Notifications | `notify`, `register-toast-appid` |
+| Audit | `check-file-sizes` (backs `/audit-file-sizes`), `audit-instructions` |
 | Migration | `migrate-to-claude-root` (one-time, for machines still on the old `~/claude-config/` + junction layout) |
+
+Worktree creation and exit are handled by Claude Code's native `EnterWorktree` / `ExitWorktree` tools.
+
+`audit-instructions` is a **temporary instrument**, wired as an `InstructionsLoaded` hook in `settings.json` to measure which rule files load into each session and why. It writes JSONL to `debug/instruction-loads/` (gitignored); read it with `-Report`. It spawns one `pwsh` per loaded instruction file per session, including subagent sessions, so unregister the hook once rule-scope measurement is finished.
 
 Skill-local scripts:
 - `skills/rebase-on-main/scripts/`: `git-rebase-onto`, `git-merge-cleanup`, `git-branch-from-main`

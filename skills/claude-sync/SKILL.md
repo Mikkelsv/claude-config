@@ -188,7 +188,9 @@ Compute hash of each fork's **transformed** content — stored in 2.8 under the 
 
 Before applying any update, compute drift per Changed skill — independently. For each Changed skill (template **or** fork), spawn a Haiku agent (`model: "haiku"`):
 
-> Given the current project SKILL.md and the regenerated content (template + filled placeholders + reinserted `<ProjectSpecific>` blocks **for templates**, or transformed global + reinserted `<ProjectSpecific>` blocks **for forks**), return JSON `{ skill, drift: bool, lines: N, sample: [first 20 +/- lines outside <ProjectSpecific> blocks] }`. Strip `<ProjectSpecific>` blocks from both before comparing.
+> Given the current project SKILL.md and the regenerated content (template + filled placeholders + reinserted `<ProjectSpecific>` blocks **for templates**, or transformed global + reinserted `<ProjectSpecific>` blocks **for forks**), return JSON `{ skill, drift: bool, lines: N, projectOnlyLines: N, sectionsAtRisk: [headings], sample: [first 20 +/- lines outside <ProjectSpecific> blocks] }`. Strip `<ProjectSpecific>` blocks from both before comparing.
+>
+> `projectOnlyLines` counts lines present in the project copy but absent from the regenerated content — the work an overwrite would destroy. `sectionsAtRisk` names the headings those lines sit under.
 
 Wait for all to return.
 
@@ -198,6 +200,10 @@ For each Changed skill, based on its drift result:
 
 - **No drift** → apply silently (regenerate + reinsert blocks).
 - **Drift** → ask via `AskUserQuestion`: **Apply (overwrite drift)** / **Show full diff** / **Skip this skill**. If full diff requested, emit it as text and re-prompt.
+
+**Name the loss in the prompt.** State `projectOnlyLines` and `sectionsAtRisk` in the Apply option's description — "discards 82 project-only lines under Phase 6.5, Phase 8", not a bare "overwrite drift". Project content that was never wrapped in `<ProjectSpecific>` is indistinguishable from stale drift to the diff, so the user is the only safeguard and needs the magnitude up front.
+
+When `projectOnlyLines` exceeds ~25, default the selection to **Skip** rather than Apply. A fork that far ahead of global is an unmerged feature branch, not drift — reconcile it deliberately instead of resolving it inside a sync.
 
 For **New** skills: check existing configs for reusable values, ask for the rest, scaffold normally (no drift check — file doesn't exist yet).
 

@@ -43,7 +43,7 @@ Goal: get the dirty changes onto a feature branch on top of latest main, then pr
 
 Main is the foundation — start from main's version, apply feature's intent on top.
 
-**Generated files** (e.g., `wwwroot/app.tailwind.css`): `git checkout --theirs <file>`, stage, move on. Build will regenerate.
+**Generated files** (compiled CSS, bundled JS, lockfiles): `git checkout --theirs <file>`, stage, move on. Build will regenerate.
 
 For source conflicts: read both sides, resolve favoring main's structure + feature's changes, stage, `git rebase --continue`. Repeat for subsequent commits. Bail after 3 failed attempts on one commit (`git rebase --skip`). Full bail if unrecoverable (`git rebase --abort`).
 
