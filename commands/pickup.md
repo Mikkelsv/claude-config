@@ -20,6 +20,17 @@ Once context is loaded, briefly summarize:
 - Any open decisions or blockers
 - Current branch and state of the repo (`git status`, `git branch`)
 
+## Release a locked worktree
+
+Only when the handoff named a worktree, or `git worktree list` shows the branch you're resuming checked out elsewhere. Git allows one working tree per branch, so `git checkout <branch>` in the main directory fails until that worktree is gone.
+
+1. Confirm this session is in the main checkout — `git rev-parse --git-dir` and `--git-common-dir` match. If they differ you're inside a worktree yourself; say so and stop.
+2. Check the worktree is clean: `git -C <worktree-path> status --porcelain`. Report any output.
+3. Offer the choice with `AskUserQuestion`: remove the worktree and check the branch out here (recommended when clean), or leave it and work in the worktree instead.
+4. On approval: `git worktree remove <worktree-path>`, then `git checkout <branch>`.
+
+Never pass `--force` to `git worktree remove`, and never use `checkout --ignore-other-worktrees`. If removal refuses, surface the reason and let the user decide.
+
 Then ask: "What would you like to work on?"
 
 ## Rules
