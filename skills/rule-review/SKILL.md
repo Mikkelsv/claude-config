@@ -1,6 +1,6 @@
 ---
 name: rule-review
-description: Critical single-pass triage of pending candidates AND existing rules. Promote via git mv; retire stale; propose prefix migrations.
+description: Critical single-pass triage of pending candidates AND existing rules. Promote drafts into rules; retire stale; propose prefix migrations.
 ---
 
 # Rule Review
@@ -10,7 +10,7 @@ Triage candidates + audit existing rules in one critical pass. **Default stance:
 ## Steps
 
 1. **Load inventory.**
-   - Candidates: `<project>/.claude/rules/candidates/*.md` (pending, gitignored).
+   - Candidates: `<project>/.claude/local/rule-candidates/*.md` (pending, gitignored).
    - Existing global: `~/.claude/rules/*.md`.
    - Existing project: `<project>/.claude/rules/*.md` (committed, team-visible).
 
@@ -27,10 +27,10 @@ Triage candidates + audit existing rules in one critical pass. **Default stance:
    - **Existing rule (unprefixed):** Propose prefix + migration plan — accept / skip / keep unprefixed.
    - **Dupe pair:** show both, ask: keep A / keep B / merge / keep both (with why).
 
-5. **Apply edits.** Promotion is `git mv` to the destination — no rewrite needed (candidate files are already in rule format):
-   - **Global (personal only)** → `git mv .claude/rules/candidates/<slug>.md ~/.claude/rules/<slug>.md`
-   - **Project (team-visible)** → `git mv .claude/rules/candidates/<slug>.md .claude/rules/<slug>.md`. **Always confirm — this commits to the team's history.**
-   - **Edit-then-promote** → rewrite first, then `git mv`.
+5. **Apply edits.** Candidates are gitignored and therefore untracked, so promotion is a plain `mv` then `git add` — `git mv` fails on an untracked source. No rewrite needed (candidate files are already in rule format):
+   - **Global (personal only)** → `mv .claude/local/rule-candidates/<slug>.md ~/.claude/rules/<slug>.md`, then `git -C ~/.claude add rules/<slug>.md`
+   - **Project (team-visible)** → `mv .claude/local/rule-candidates/<slug>.md .claude/rules/<slug>.md`, then `git add .claude/rules/<slug>.md`. **Always confirm — this commits to the team's history.**
+   - **Edit-then-promote** → rewrite first, then move and add.
    - **Retire** → `git rm` (confirm via `AskUserQuestion`).
    - **Rename** → `git mv <old> <new>`; grep-replace `<old>` references in `~/.claude/` and project `.claude/`.
    - **Discard candidate** → plain `rm` (the file is gitignored, no `git rm`).
@@ -48,7 +48,7 @@ Resist new prefixes — split the namespace only when rules genuinely accumulate
 
 ## Pre-flight
 
-If `<project>/.claude/rules/candidates/` is not present in `.gitignore`, surface a single warning at the start: "Add `.claude/rules/candidates/` to `.gitignore` to keep drafts private." Accept user confirmation to do it, or proceed regardless.
+If `<project>/.claude/local/` is not present in `.gitignore`, surface a single warning at the start: "Add `.claude/local/` to `.gitignore` to keep drafts private." Accept user confirmation to do it, or proceed regardless.
 
 ## Rules
 

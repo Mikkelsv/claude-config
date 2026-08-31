@@ -16,7 +16,7 @@ Watch for judgment calls during work that *generalize* beyond the current task. 
 
 ## How
 
-Invoke `/rule-candidate "<directive>"` to write a standalone file at `<project>/.claude/rules/candidates/<slug>.md` (gitignored). No confirmation needed.
+Invoke `/rule-candidate "<directive>"` to write a standalone file at `<project>/.claude/local/rule-candidates/<slug>.md` (gitignored). No confirmation needed.
 
 After the task result (and any teach nugget), append:
 
@@ -30,4 +30,4 @@ After the task result (and any teach nugget), append:
 Run `/rule-review` to triage.
 ```
 
-`N` = total files in `<project>/.claude/rules/candidates/`. Omit the section if nothing was added this turn. Don't repeat candidates already reported earlier in the conversation.
+`N` = total files in `<project>/.claude/local/rule-candidates/`. Omit the section if nothing was added this turn. Don't repeat candidates already reported earlier in the conversation.

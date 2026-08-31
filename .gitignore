@@ -28,7 +28,7 @@ sessions/
 scheduled-tasks/
 mcp-needs-auth-cache.json
 /suggestions/
-rules/candidates/
+local/
 
 # Legacy
 setup-claude-sync.ps1
