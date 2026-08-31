@@ -2,6 +2,17 @@
 
 Only lists changes that require project action. Global rules, scripts, and global skills are picked up automatically and not tracked here.
 
+## v1.1.15 — 2026-08-31 — Junction layout retired for real
+
+`~/.claude/` is now genuinely the git repo. The junction to `~/claude-config/` is gone and the wrapper directory no longer exists. v1.1.0 claimed this in April but the migration had not actually been run; see the correction on that entry below.
+
+The first attempt today stopped half-way — it removed the junction but its `Move-Item` failed, which orphaned 639 session transcripts and left global config inert for a few hours. `scripts/migrate-to-claude-root.ps1` was hardened to refuse to run while any `claude` process holds a handle, to self-relocate out of the folder being renamed, and to recover the runtime-only `~/.claude/` that Claude Code recreates in the gap. It then completed successfully and has been retired.
+
+**Project action:**
+
+- **None for projects.** This is a per-machine layout change.
+- **Any other machine still on the `~/claude-config/` + junction layout:** the migration script was deleted after use. Recover it from git history at commit `80124c2` (`git show 80124c2:scripts/migrate-to-claude-root.ps1`) rather than writing a fresh one — that version carries the handle and resumability guards learned the hard way.
+
 ## v1.1.14 — 2026-07-14 — Skill-template descriptions + polish
 
 Trigger-phrase descriptions and generic body polish propagated to five Tier 2 templates: `/refactor-code`, `/refactor-comments`, `/refactor-file-sizes`, `/refactor-tests`, `/test`. Each description now leads with "use when…" trigger phrases (the primary auto-trigger mechanism) and disambiguates confusable siblings. Body polish: `/refactor-code` gains an output-contract line; `/refactor-file-sizes` a "Decide this first" decomposition heading + rule-candidate rationale; `/refactor-tests` an apply-vs-defer intro; `/refactor-comments` an orchestrator-only note.
@@ -69,11 +80,13 @@ Sub-skills invoked by `/audit-branch` now apply mechanical findings (comment hyg
 
 ## v1.1.0 — 2026-04-23 — Structure flatten
 
-The two-directory `Claude/` + `dotclaude/` split is gone. Everything lives flat at the repo root, and the repo is `~/.claude/` directly (no more `~/claude-config/` wrapper, no junction).
+The two-directory `Claude/` + `dotclaude/` split is gone. Everything lives flat at the repo root.
+
+> **Correction (2026-08-31):** this entry also claimed the repo was `~/.claude/` directly with no wrapper and no junction. That was the intended end state, not the shipped one — the junction survived until v1.1.15, four months later.
 
 **Project action:**
 
-- **Existing machines on the old layout:** run `$env:USERPROFILE\claude-config\scripts\migrate-to-claude-root.ps1` from plain PowerShell (outside a Claude Code session) once you've pulled this commit. The script renames `~/claude-config/` to `~/.claude/` and deletes the junction. Close all Claude Code sessions before running.
+- **Existing machines on the old layout:** see v1.1.15. The migration landed on 2026-08-31 and the script has since been retired.
 - **Fresh machines:** new `setup.ps1` clones directly into `~/.claude/` — no junction step.
 - **Per-project scaffolded skills (`refactor-code`, `refactor-tests`, `build`, `test`):** templates moved from `Claude/templates/skills/` to `templates/skills/`. Run `/claude-sync` in each project to refresh scaffolded copies.
 - **Per-project local config (Tier 3):** convention moved from `<project>/Claude/local/` to `<project>/.claude/local/`. If you have a local config (e.g. `<project>/Claude/local/skills/build/config.md`), move it to `<project>/.claude/local/skills/build/config.md` and update the project's `.gitignore`.

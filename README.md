@@ -182,7 +182,6 @@ All scripts in `scripts/`.
 | Git | `git-preflight`, `git-diff-scope` |
 | Config | `sync-config`, `pull-config`, `mirror-skill` |
 | Audit | `check-file-sizes` (backs `/audit-file-sizes`), `audit-instructions` |
-| Migration | `migrate-to-claude-root` (one-time, for machines still on the old `~/claude-config/` + junction layout) |
 
 Worktree creation and exit are handled by Claude Code's native `EnterWorktree` / `ExitWorktree` tools.
 
