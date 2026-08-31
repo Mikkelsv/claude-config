@@ -5,6 +5,7 @@ history.jsonl
 cache/
 backups/
 debug/
+.last-cleanup
 file-history/
 ide/
 paste-cache/

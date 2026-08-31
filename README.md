@@ -70,7 +70,7 @@ Scaffolded per-project from templates. Embed project-specific knowledge (archite
    git clone https://github.com/Mikkelsv/claude-config.git "$env:USERPROFILE\.claude"
    powershell -File "$env:USERPROFILE\.claude\setup.ps1"
    ```
-4. `setup.ps1` generates `settings.json` from the template and registers the toast-notification AppID (Start Menu shortcut + banner permissions, required by Windows 11).
+4. `setup.ps1` generates `settings.json` from the template. Machine-specific wiring (model provider, credentials) is not templated — add it to `settings.json` by hand.
 5. Open Claude Code — rules, commands, and skills are active immediately.
 
 ### Day-to-day
