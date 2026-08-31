@@ -49,5 +49,6 @@
       "Write(**/plans/**)"
     ]
   },
-  "defaultMode": "acceptEdits"
+  "defaultMode": "acceptEdits",
+  "cleanupPeriodDays": 3650
 }
