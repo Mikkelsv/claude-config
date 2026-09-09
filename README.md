@@ -33,6 +33,7 @@ Available in every project via the global config.
 | `/implement [plan] [--inline\|--agentic]` | Autonomous dev loop with build/test/refactor/audit gates. Mode resolves via CLI flag → plan front matter (`mode: agentic\|inline`) → auto-detect (agentic for >5 tasks). Agentic spawns one Sonnet sub-agent per task; plan file carries cross-task state via `**Implementation notes:**`. Final Audit uses `/audit-branch`. |
 | `/audit-branch [focus]` | Branch-level audit across architecture, code, docs, tests, file-sizes, and comments. Phase 3a runs all 6 sub-skills in parallel against `main..HEAD`; Phase 3b only fires if `audit-file-sizes` flagged cap violations (file splits need a stable file structure to operate on). Self-paces 1-3 passes (decided after each pass). Hands disposition to `/resolve-audit-findings`. |
 | `/resolve-audit-findings` | Per-finding triage. Spawns one Sonnet agent per finding (parallel) for full research; applies inline when confidence is high, defers substantial findings to `plans/post-audit-{slug}.md`. Typically invoked by `/audit-branch` Phase 5. |
+| `/verify [plan\|none]` | Decides whether implemented work actually holds: executes each task's `**Verify:**` entries against the running app, reports pass / fail / can't-tell / human / no-instrument per criterion, triages every test result by class, and records provenance for any assertion edited in response to observed red. Delegates execution to the `verifier` agent above ~5 criteria but never delegates adjudication. `/test` measures; `/verify` decides. |
 | `/refactor-docs [focus]` | Documentation sync — checks docs match code changes. Usually invoked via `/audit-branch`. |
 | `/audit-architecture [focus]` | Strict, skeptical architecture review (single-pass): boundaries, overengineering, alternatives. Usually invoked via `/audit-branch`. |
 | `/audit-file-sizes [mode]` | Mechanical scan vs. 400-line soft / 800-line hard caps. Respects top-of-file `SIZE-EXEMPT:` markers. |
@@ -96,7 +97,7 @@ Scaffolded per-project from templates. Embed project-specific knowledge (archite
   setup.ps1                       # Fresh-machine bootstrap
   settings.json                   # Live, machine-specific (gitignored)
   settings.template.json          # Portable template (committed)
-  agents/                         # Global subagent definitions
+  agents/                         # Global subagent definitions (scope-skeptic, verifier)
   commands/                       # Slash commands
   rules/                          # Global rules (always loaded)
   skills/                         # Global skill implementations (one SKILL.md per skill)
@@ -158,6 +159,8 @@ Rules in `rules/` are always loaded:
 - **wf-think-clearly-on-architecture.md** — Pause and surface trade-offs for architecture-shape decisions
 - **wf-question-the-scope.md** — Default toward less; question whether new infrastructure is needed at the proposed scope
 - **wf-overengineering-not-volume.md** — Critique abstractions without a consumer, not line count; large-and-justified is fine
+- **wf-check-the-artifact-not-the-self-report.md** — Judge a sub-agent by its `git diff`, never by its summary
+- **wf-repro-test-first.md** — Write the failing test before the change; watch it go red for the right reason
 - **wf-blanket-rename-safety.md** — Multi-file rename checklist (exclude vendor paths, stdlib clobber, build-green-isn't-enough)
 - **git-workflow.md** — Default to feature branches over direct-to-main; use `/commit` and `/rebase-on-main`
 - **arch-docs-over-inline.md** — Heavy context lives in `docs/`; code carries thin pointers, not narration
