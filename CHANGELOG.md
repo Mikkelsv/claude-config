@@ -2,6 +2,16 @@
 
 Only lists changes that require project action. Global rules, scripts, and global skills are picked up automatically and not tracked here.
 
+## v1.1.16 — 2026-09-09 — /verify, verifier, design-scout, and richer /plan
+
+Harvested from GridPreviewPoc as it winds down. New global skill `/verify` (decides whether work holds, distinct from `/test` which measures) and two new agents: `verifier` (read-only by capability, so it cannot launder a failing assertion) and `design-scout` (triages design decisions so only genuinely-open ones become questions). `/plan` gains the design-agreement pass with a `## UI Contract`, plus `**Verify:**` / `**Test:**` / milestone / cold-executable task contracts; `/plan-optimizer` gains verifiability and design-coverage lenses. Two new rules (`wf-check-the-artifact-not-the-self-report`, `wf-repro-test-first`) and two backports. `cq-option-returning-fn-naming` retired — F# is no longer in the stack.
+
+**Project action:**
+
+- **Projects with `plan` or `plan-optimizer` forks (notably GridPreviewPoc):** global is now ahead in a *genericized* form while your fork holds the project-specific original. Do **not** accept a `/claude-sync` overwrite of either — confirm both are registered under `forks` (not `skills`) in `.claude/local/config-version.json` and marked `source`, so they are reported rather than offered for overwrite.
+- **GridPreviewPoc specifically:** `plan-optimizer`, `resolve-audit-findings`, `setup-data`, and `verify` are tracked in neither map, so a sync can silently overwrite them. Register all four before running `/claude-sync` there again.
+- **All other projects:** none. New skills, agents, and rules load automatically.
+
 ## v1.1.15 — 2026-08-31 — Junction layout retired for real
 
 `~/.claude/` is now genuinely the git repo. The junction to `~/claude-config/` is gone and the wrapper directory no longer exists. v1.1.0 claimed this in April but the migration had not actually been run; see the correction on that entry below.
