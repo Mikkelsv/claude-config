@@ -97,7 +97,7 @@ Scaffolded per-project from templates. Embed project-specific knowledge (archite
   setup.ps1                       # Fresh-machine bootstrap
   settings.json                   # Live, machine-specific (gitignored)
   settings.template.json          # Portable template (committed)
-  agents/                         # Global subagent definitions (scope-skeptic, verifier)
+  agents/                         # Global subagent definitions (scope-skeptic, verifier, design-scout)
   commands/                       # Slash commands
   rules/                          # Global rules (always loaded)
   skills/                         # Global skill implementations (one SKILL.md per skill)
