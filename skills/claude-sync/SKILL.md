@@ -49,7 +49,7 @@ Forks depend on scripts at `.claude/scripts/*.ps1` and `.claude/skills/<fork>/sc
 
 ## Step 0 — Pull
 
-Run: `powershell.exe -NoProfile -File "$HOME/.claude/scripts/pull-config.ps1"`
+Run: `pwsh -NoProfile -File "$HOME/.claude/scripts/pull-config.ps1"`
 
 If pull fails: ask user — continue with local templates or abort?
 

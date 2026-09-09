@@ -46,9 +46,19 @@
       "Write(**/Documents/**)",
       "Write(~/Documents/**)",
       "Edit(**/plans/**)",
-      "Write(**/plans/**)"
-    ]
+      "Write(**/plans/**)",
+      "mcp__Claude_Browser__preview_start",
+      "mcp__Claude_Browser__preview_stop",
+      "mcp__Claude_Browser__preview_list",
+      "mcp__Claude_Browser__preview_eval",
+      "mcp__Claude_Browser__preview_snapshot",
+      "mcp__Claude_Browser__preview_console_logs",
+      "mcp__Claude_Browser__preview_logs",
+      "mcp__Claude_Browser__preview_network",
+      "mcp__Claude_Browser__preview_inspect",
+      "mcp__Claude_Browser__preview_screenshot"
+    ],
+    "defaultMode": "acceptEdits"
   },
-  "defaultMode": "acceptEdits",
   "cleanupPeriodDays": 3650
 }

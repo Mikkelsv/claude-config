@@ -21,7 +21,7 @@ else if (idx >= 0 && idx <= 2) RouteLegacy(idx);
 else throw new ArgumentOutOfRangeException(nameof(idx), $"outside 0..6: {idx}");
 ```
 
-For discriminated-union / sum-type matches the compiler enforces exhaustiveness already (F# `match`, Rust `match`, TypeScript `switch (true)` with `never`). The rule applies to integer / string / bool gates where the compiler doesn't enforce coverage.
+Where the compiler already enforces exhaustiveness — a Rust `match`, a TypeScript `switch` narrowed to `never`, a C# switch expression over a closed enum with no `_` arm — this rule adds nothing. It applies to integer, string, and bool gates, where nothing checks coverage for you.
 
 ## Exceptions
 

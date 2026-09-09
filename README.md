@@ -132,7 +132,6 @@ Rules in `rules/` are always loaded:
 - **wf-prefer-clickable-prompts.md** — Clickable options over free-text
 - **wf-worktree-cleanup.md** — Auto-remove worktrees after merge
 - **wf-surface-todos.md** — Surface todo items at natural moments
-- **wf-no-read-generated-css.md** — Never read Tailwind output files
 - **wf-teach-on-completion.md** — Offer a teaching nugget + quiz after dev tasks
 - **wf-always-plan.md** — Auto-invoke `/plan` when work warrants a structured plan
 - **wf-surface-rule-candidates.md** — Watch for generalizable decisions and surface them as rule candidates
