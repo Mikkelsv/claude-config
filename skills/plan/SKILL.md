@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Plan out a new feature through collaborative discovery and create an implementation plan
+description: "Collaborative feature planning through discovery, external research, and architecture scrutiny — produces a structured task plan in plans/ that feeds /implement. Use whenever the user describes a new feature, says \"I want to build X\", \"let's plan Y\", or \"how should we approach Z\", or when work spans 3+ files or has design decisions. This is design and discovery — not execution (/implement) and not read-only research (/study)."
 ---
 
 # Feature Planning
@@ -91,7 +91,7 @@ When the user proposes or implies an architectural choice, **must evaluate again
 
 Apply both the global `arch-*` rules in `~/.claude/rules/` (auto-loaded — covering common .NET / EF Core / DI anti-patterns) and the project-specific `arch-*` rules in `.claude/rules/`. Project specifics override generic guidance where they overlap.
 
-If the user's plan hits any flagged anti-pattern, **must** raise it in Phase 2 and propose the idiomatic alternative as the recommended option — even if they seemed set on the original approach.
+If the user's plan hits any flagged anti-pattern, **must** raise it in Phase 2 and propose the idiomatic alternative as the recommended option — even if they seemed set on the original approach. Accepting a plan that hits an anti-pattern buys future refactor cost, not just a style nit.
 
 Guidelines:
 - Offer your own suggestions — make one option your recommendation, but your recommendation is often "don't build it this way"
@@ -99,12 +99,27 @@ Guidelines:
 - Raise edge cases the user hasn't mentioned
 - If you genuinely agree with the user's approach after scrutiny, say so and why — but only after scrutiny
 
+### Design agreement (features with a UI surface)
+
+Skip this subsection if the feature has no UI surface at all — record that plainly in Phase 3's `## UI Contract` rather than omitting the section.
+
+Before drafting, spawn `design-scout` (`subagent_type: "design-scout"` — **never** `general-purpose`, which has every tool and would silently erase the read-only restriction). Hand it the feature brief; it returns a constraint inventory plus candidate decisions triaged into **design-system-determined** / **existing-component-precedent** / **genuinely-open**. It has no `AskUserQuestion` and never decides anything — **only the genuinely-open bucket becomes a question you ask here**, with options grounded in the tokens and components it cited.
+
+Reach agreement on **structure**, never inferred from surrounding code: where the feature lives (new page / panel in existing chrome / modal / inline), the primary interaction model, the information hierarchy, and the scale of the change ("adds a panel" vs "restructures the sidebar").
+
+**The instrument is a concrete artifact, not a questionnaire.** Draw one ASCII mockup and ask "is this what you pictured?" via `AskUserQuestion`. Default to **one** mockup; use the `preview` field to offer 2–3 alternatives only where the genuinely-open bucket surfaces a real fork worth the user's time — divergence surfaces on the first picture, so three drawings rarely buy three times the signal. This instrument **replaces** a battery of detail questions rather than supplementing one: **detail-level UI — spacing, hover, empty/loading/error/disabled/overflow states — is out of scope here.** It's cheap to fix once built and the design system already determines most of it; chasing it here is failing this pass's job, not being thorough.
+
+The agreed mockup becomes Phase 3's `## UI Contract` verbatim — the artifact itself, not a paragraph describing it. It is a structural agreement, not a spec: an implementing agent settles undecided detail within it rather than treating silence as a blocker.
+
+**An undecided design question never stops the implementation loop.** If one surfaces mid-run, the agent makes the recommended call and continues, logging it to `Decisions & Review Items` as an in-flight decision (rejected alternative + rough cost-to-change). Escalation is reserved for architectural shape via `wf-think-clearly-on-architecture`. Because of this, **this subsection's agreement is the only place design gets settled** — a thin pass here is what produces guessed UI later, not a gap some later stage catches.
+
 ## Phase 2.5 — Scope Check
 
-Evaluate if the feature should be split into phases. **Split** if: 3+ unrelated areas, >8 tasks, distinct shippable capabilities, natural foundation piece. **Keep together** if: single user story end-to-end, <8 tasks, splitting leaves broken intermediate states.
+**Default: one plan per shippable feature, regardless of task count.** A large task count is not a reason to fragment — milestone tasks (Phase 3, below) bound how much unattended work piles on top of an undetected regression, which is what phase-splitting used to be for. A single long plan also keeps one continuous context; a managing plan plus separate task plans hands each phase's agent a fresh context with no memory of the others.
 
-If splitting into phases:
-1. Propose phases with names, order, and dependencies via `AskUserQuestion`.
+**Split only when the user identifies distinct shippable increments** — never from task or area count alone. If they do:
+
+1. Propose the increments with names, order, and dependencies via `AskUserQuestion`.
 2. Create a **managing plan** in the plans directory using `managing-plan-template.md` from the implement skill directory.
 3. Create a separate **task plan** for each phase (using `plan-template.md` as usual).
 4. The managing plan links to each phase's task plan by path.
@@ -117,15 +132,60 @@ Managing plan format: `## Phases` with `### Phase N: {name}` entries listing `**
 
 Create a plan file in `plans/` at the project root. Read `plan-template.md` from the implement skill directory for the task format.
 
-Include sections: **Context** (before tasks), **Design Decisions** (before tasks), **Future Considerations** (after tasks), **Decisions & Review Items** (empty, for implementation).
+Include sections: **Context** (before tasks), **Design Decisions** (before tasks), **UI Contract** (before tasks; required whenever the feature has a UI surface, per "Design agreement" above — write "None." if it doesn't, since an absent section can't be distinguished from an unasked question), **Future Considerations** (after tasks), **Decisions & Review Items** (empty, for implementation).
 
 Task guidelines:
+
 - Atomic and independently testable
 - First task = smallest vertical slice (end-to-end)
 - DB/model changes early (others depend on them)
 - One component/page per UI task
 - Last task = polish and cleanup
 - Populate `**Dependencies:**` and `**Parallel group:**` (Phase 3.5)
+- Populate `**Verify:**` per acceptance criterion — see below
+- Populate `**Test:**` per the tier ladder — see below
+- Mark milestone tasks by appending ` — **milestone**` to the heading — see below
+- Check each task is cold-executable — see below
+
+### The `**Verify:**` field
+
+One entry per `**Acceptance:**` criterion, naming the instrument that settles it — never prose a verifier has to interpret. Preference order:
+
+1. **A named test the project already exposes** — the general case.
+2. **A state probe read** — whatever inspection surface the app offers.
+3. **A standing scenario** — one of the project's durable end-to-end scenarios.
+4. **A direct command dispatch** — the narrow case. Dispatch reach is often partial, so never assume a given command is reachable just because it exists.
+5. **`human: <what to look at>`** — first-class, not a fallback of last resort. Anything needing actual pixels needs a displayed pane and can't be settled unattended; an honest escalation beats a criterion silently passed.
+
+**Wall rule:** a criterion needing an instrument that doesn't exist yet gets a task that builds it — never weaken the criterion to fit current tooling.
+
+`/verify` reports `can't-tell` as distinct from `pass` — a criterion it can't settle is never counted as met.
+
+### The `**Test:**` field
+
+States which per-task gate `/implement` runs for this task — distinct from `**Verify:**` above, which names the instrument for each acceptance criterion. `**Test:**` names the tier.
+
+- **Default: build plus the unit suite.** No browser needed. Write "existing tests sufficient" or name the new unit test; don't request a browser tier you don't need.
+- **Name a browser-tier check only when the task needs one** — a standing scenario, a task-written scenario, the integration suite, or `human: <what to look at>`. Naming one runs exactly that check, not the full stack.
+- **Prefer a task-specific scenario over the project's generic standing scenarios.** Those exist for coarse regression coverage, not as a stand-in for exercising what this task actually changed.
+- **`human: <what to look at>` is first-class, and the expected value for a task implementing UI** — no tier verifies visual conformance to an agreed mockup, so naming a human check is the honest answer, not a probe standing in for eyes.
+- Per `wf-repro-test-first`: for a bug fix or new behavior, say "write first" and name the expected red before the fix.
+
+Milestone tasks and the plan's last task always add the full suite regardless of what's written here.
+
+### Milestone marking
+
+Append ` — **milestone**` to a task's heading — e.g. `### Task 7: {short description} — **milestone**`. `/implement` detects this literal marker and runs the full suite plus `/verify`, instead of the per-task default.
+
+Place tighter around rendering-heavy or state-shape work, where the browser suite is often the only rung that reaches the rendered layer at all — a regression there stays invisible until the next milestone. Place looser around docs, prose, and refactor tasks; those can wait for the next real milestone or the plan's last task.
+
+A milestone doubles as a re-grounding point: before running the gate, `/implement` re-reads the plan file and its `## UI Contract`. Placement is a lever on drift control, not just gate frequency.
+
+### Cold-executable tasks
+
+Plan-time check, applied per task before Phase 3.5: **could this task be handed to a fresh agent with only the plan file** — no memory of this conversation, no memory of an earlier task? `Context:` / `Files:` / `Acceptance:` must name actual paths, functions, and decided values — never "as discussed" or "per the approach above." State what the agent should **verify against the live repo** (grep for X, confirm Y exists), not only what was decided — a decision can drift between when it was made and when the task runs, and only a verify step catches that.
+
+A task that fails this check gets rewritten now, not flagged for later — the check exists to catch exactly the gap that would otherwise surface as a stuck sub-agent hours into an unattended run.
 
 ## Phase 3.5 — Parallel Analysis
 
@@ -133,11 +193,9 @@ Skip if <4 tasks or clearly sequential. Find task pairs with no dependency and d
 
 ## Phase 4 — Present
 
-Show: feature summary, plan location, task count, open questions/risks. Ask if adjustments needed; loop until the user has no more.
+Show: feature summary, plan location, task count, open questions/risks, and the `## UI Contract` mockup if the plan has one — restated here for convenience, but the file remains the source of truth. Ask if adjustments needed; loop until the user has no more.
 
-When the adjustment loop closes, decide whether to offer `/plan-optimizer`. Lean toward offering — it's just an option, and overprompting is preferable to underprompting. Trigger when any of: **>5 tasks**, or a managing plan was created in Phase 2.5. For very small features (1-4 focused tasks, single area), skip the offer — Phase 2's discovery covered it.
-
-When offering: `AskUserQuestion` — **Optimize now** (Recommended) / **Skip**. On Optimize, invoke the `plan-optimizer` skill with the plan path.
+When the adjustment loop closes, **auto-run** `/plan-optimizer` for any plan with **3+ tasks**, or when a managing plan was created in Phase 2.5 — invoke the `plan-optimizer` skill with the plan path directly, no prompt. At this size the optimizer is always wanted, so the confirmation step was pure friction. For very small features (1-2 focused tasks, single area), skip it — Phase 2's discovery already covered them.
 
 ## Project rules
 
