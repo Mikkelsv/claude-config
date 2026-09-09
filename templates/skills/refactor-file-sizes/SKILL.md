@@ -16,7 +16,7 @@ Sweep the codebase for files over the project's 800-line hard cap and split them
 ## Phase 1 — Audit
 
 1. **Resolve `check-file-sizes.ps1`.** Prefer project-local (`.claude/scripts/check-file-sizes.ps1`) if present, else fall back to global (`~/.claude/scripts/check-file-sizes.ps1`). Per `meta-project-local-skill-copies`, project copies are deliberate forks that may carry a customized extension list.
-2. Run the script (mode A: changed files; mode C: full tree per scope above). Parse the JSON.
+2. Run it as `pwsh -NoProfile -File <resolved path>` (mode A: changed files; mode C: full tree per scope above). Parse the JSON. `-NoProfile` keeps a user profile from polluting the output.
 3. **Drop** `justified` entries (SIZE-EXEMPT) and `soft` entries — only hard-cap violators (>800 lines) are in scope.
 4. **Coupling detection.** For each pair of violators, `Grep` the basename (no extension) of one in the other's file content. If matched, mark them coupled. Coupled violators group into a single batch; standalone violators are their own batch. Note: this grep is loud and cheap — false positives (comment mentions, doc references) are fine; over-grouping is harmless, under-grouping risks broken consumers.
 5. Report: `N violators in M batches` (e.g., "10 violators in 8 batches; 2 coupled pairs").
@@ -60,6 +60,10 @@ For each batch in parallel:
    - **DO NOT commit.** Leave changes unstaged.
    - Return: file list with new line counts, grouping rationale (1 sentence per new file), any consumer files touched + why, any *new* gotchas hit that weren't already in the rule.
 
+## Phase 3.5 — A split must clear the cap, not relocate it
+
+Before treating a split as done, verify each *extracted* file also clears the cap — not just the shrunken original. A split can drop the original below the threshold while leaving a new file above it, and that file is easy to overlook because the headline number reads like success. If an extracted file is still oversized, split it again or justify a `SIZE-EXEMPT` marker. Recount with the sizing script, not by hand.
+
 ## Phase 4 — Consolidated build verify
 
 Invoke `/build` once all sub-agents finish. If errors, list them by file; don't auto-retry — surface to the user for decision (per design: failure recovery is the orchestrator's job, not the skill's). `/build` no-ops gracefully in no-build repos.
@@ -96,7 +100,7 @@ Next: /commit to land, or revert via `git checkout .` if anything looks off.
 
 Replace these placeholders at scaffold time:
 
-- `{LANGUAGE_PLAYBOOKS}` — bullet list mapping file extensions to project-specific split-pattern rules (e.g. `.fs / .fsi / .fsx → .claude/rules/cq-fsharp-cross-file-split.md`). Only include languages your project actually uses.
+- `{LANGUAGE_PLAYBOOKS}` — bullet list mapping file extensions to the project's own split-pattern rules (e.g. `.cs / .razor → <the project's C# split rule>`, `.py → <its Python one>`). Only include languages the project actually uses, and point at rule files that exist.
 - `{FACADE_GOTCHAS}` — project-specific facade/barrel-wiring war stories (concrete example of a dropped injector or cross-sub-module ref that bit you). Helps the next sub-agent recognize the pattern before reproducing the bug.
 
 Both `<ProjectSpecific>` blocks are preserved by `/claude-sync` re-syncs; layer additional notes there without losing them on update.

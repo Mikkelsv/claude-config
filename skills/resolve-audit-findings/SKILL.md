@@ -7,7 +7,7 @@ description: Per-finding triage — researches each finding, applies inline when
 
 Per-finding triage. Every item gets researched first — even ones that look like easy applies — then applied inline or deferred based on what the research surfaced. The skill's value is informed confidence, not reflexive disposition.
 
-**Apply by default.** Defer only when:
+**Apply by default — defer is the exception, not the path.** Defer only when:
 
 - Scope is substantial (multi-file restructure, public API change, framework-level decision)
 - The fix needs deep consideration (architectural choice with multiple defensible paths)

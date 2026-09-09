@@ -1,6 +1,6 @@
 ---
 name: audit-branch
-description: Branch-level audit across architecture, code, docs, tests, file-sizes, and comments. Phase 3a runs all 6 sub-skills in parallel (audits + refactors). Phase 3b conditionally runs refactor-file-sizes if 3a flagged cap violations. Mechanical findings inline; judgment routes to /resolve-audit-findings. Self-paces 1-3 passes.
+description: Branch-level audit across architecture, code, docs, tests, file-sizes, and comments. Phase 3a runs all 6 sub-skills in parallel (audits + refactors). Phase 3b conditionally runs refactor-file-sizes if 3a flagged cap violations. Mechanical findings inline; judgment routes to /resolve-audit-findings. Self-paces 1-3 passes, then closes with one /verify run (Phase 8) — the skill's only suite run.
 ---
 
 # Audit Branch
@@ -21,7 +21,7 @@ Stop conditions:
 - Phase 6 build failed → stop and surface the break, don't compound it
 - Hard cap at **3 passes** regardless
 
-Phase 7 (rule candidates) runs once after the final pass — pool candidates from all passes.
+Phase 7 (rule candidates) and Phase 8 (`/verify`) both run once after the final pass — not per pass. Phase 7 pools candidates from all passes; Phase 8 is the skill's only suite run, so budget it once rather than 3×.
 
 ## Phase 1 — Scope
 
@@ -106,3 +106,18 @@ After inline fixes have landed (whether from agents in Phase 3 or orchestrator i
 ## Phase 7 — Rule Candidates
 
 Pool the `## Rule candidates` blocks from all sub-agents. Per `wf-surface-rule-candidates.md`, surface up to 3 candidates in one batched prompt at the end. Skip this phase if nothing qualifies — don't fabricate.
+
+## Phase 8 — Verify
+
+Runs **once, after the final pass** — not per pass.
+
+Invoke `/verify`. Plan-path resolution:
+
+- **Called from `/implement`'s Final Audit** → the plan path passes through, and `/verify` executes that plan's `**Verify:**` entries on top of the fleet's edits. This passthrough is conversational, not a formal parameter — neither skill declares an `$ARGUMENTS` hand-off for it; the orchestrating session simply still has the plan path in context. Note that rather than assuming a literal parameter binding exists.
+- **Standalone, with no plan** → pass `/verify` the explicit `none` sentinel, **not** an empty argument. `/verify`'s default for an empty argument is "most recent file in `plans/`", which in an active implementation loop is very likely a real plan with real `**Verify:**` entries — silently defeating the standalone case. `/verify` still runs its Phase C triage on the suite (that half is unconditional); the criteria half reports `no-instrument`, never a pass and never silently omitted.
+
+This is the **one and only** suite run this skill triggers. Phase 6 is `/build` only — it compiles and serves, it does not run tests. That distinction matters: Phase 3a checks dangling references and error-log entries, and neither measures whether the suite passes, so any "the app is healthy" claim made before this phase would be asserted rather than backed.
+
+**Not a re-pass trigger.** A non-green verdict here is the fleet's own damage or a pre-existing failure to report, not something re-running the audit fleet resolves. That decision belongs to `/resolve-audit-findings` (already run in Phase 5) or the user — never an automatic re-pass.
+
+**Cost note.** `/verify`'s Phase C runs the suite, so this phase is not free. Budget it as part of the skill's overall cost: up to 6 sub-agents × up to 3 passes, plus one `/verify` at the end.

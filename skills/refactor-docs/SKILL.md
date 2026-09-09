@@ -15,9 +15,12 @@ If orchestrator provided scope, skip to Step 2.
 **Mode B** (path/area): Glob relevant files, cross-reference with docs.
 **Mode C** (`all`): read all docs, cross-reference full codebase.
 
-## Step 2: Read All Docs
+## Step 2: Read Relevant Docs
 
-Read in full: `CLAUDE.md`, all `docs/` files, all `.claude/rules/` files.
+Scope the reading to the mode — a full sweep on every invocation is wasted context when the diff only touches one area.
+
+- **Scoped modes (A or B, diff-based)**: read only the docs relevant to the changed areas.
+- **Full-review mode (C)**: read in full `CLAUDE.md`, all `docs/` files, all `.claude/rules/` files.
 
 ## Step 3: Cross-Reference
 

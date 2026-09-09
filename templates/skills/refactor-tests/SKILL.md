@@ -32,6 +32,8 @@ Look for:
 - New functionality without tests.
 - Stale tests referencing removed/renamed APIs.
 - Partial coverage (only happy-path tested; edge cases missing).
+- **"Verified live: N/N" standing in for coverage.** A live-verification note in a plan or commit records that someone watched it work once; it is a checklist for the permanent test, not a filled-in box. Diff those notes against the committed tests and either write the missing test or record the gap explicitly — an unrecorded one reads as covered forever, and the next reader has no way to tell the difference.
+- **A "can't unit test this" note being inherited by proximity.** Such a note is scoped to the function it sits on, not its neighbours or the rest of the file. Re-check it per function — a file-level or nearby disclaimer is how a genuinely testable pure helper ends up permanently uncovered, because every later reviewer reads the note and moves on.
 
 ## Step 5: Report
 
@@ -39,6 +41,8 @@ Look for:
 **Gaps** — what's untested, severity (high/med/low), suggested test, effort (trivial/small/significant).
 **Stale Tests** — tests referencing removed/renamed APIs.
 **Verdict**: **Covered** / **Minor gaps** / **Needs new tests**. For trivial gaps (adding a check to existing test), apply directly.
+
+Adding a new test is always fair game here — a failure cannot supply the content of a test that did not exist. But changing an existing assertion *in response to a failing test* belongs to `/verify` (Phase D), which records the ordering; defer that one case rather than applying it inline.
 
 ## Project rules
 

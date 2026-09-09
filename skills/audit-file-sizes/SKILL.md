@@ -30,7 +30,8 @@ Mechanical scan of source files vs. the soft (400) and hard (800) line-count cap
 4. **Parse the JSON** — `hard`, `soft`, `justified`, `totalScanned`.
 5. **Report** grouped by tier:
    - **Hard cap (>800, unjustified)** — flagged findings. For each, propose splitting the file (suggest a seam if obvious) or adding a top-of-file `SIZE-EXEMPT: <reason>` comment.
-   - **Soft warnings (>400, ≤800)** — informational. List with line counts; no action required.
+   - **Near-cap (>760, ≤800)** — call these out as their own tier, not buried in the soft list. A file 40 lines from the hard cap will cross it on the next ordinary edit, at which point the split is someone's surprise blocker mid-feature. Flag as "resolve before merge" while the split is still cheap and unhurried.
+   - **Soft warnings (>400, ≤760)** — informational. List with line counts; no action required.
    - **Justified exemptions (>800, with `SIZE-EXEMPT`)** — list with reason so a reviewer can verify the justification still holds.
 6. **Verdict**: **Clean** / **Soft warnings only** / **Hard-cap violations**.
 
