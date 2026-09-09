@@ -157,13 +157,13 @@ Rules in `rules/` are always loaded:
 - **wf-delegate-large-reads.md** — Delegate exploratory reads to Sonnet subagents; orchestrator stays in synthesis mode
 - **wf-think-clearly-on-architecture.md** — Pause and surface trade-offs for architecture-shape decisions
 - **wf-question-the-scope.md** — Default toward less; question whether new infrastructure is needed at the proposed scope
+- **wf-overengineering-not-volume.md** — Critique abstractions without a consumer, not line count; large-and-justified is fine
 - **wf-blanket-rename-safety.md** — Multi-file rename checklist (exclude vendor paths, stdlib clobber, build-green-isn't-enough)
 - **git-workflow.md** — Default to feature branches over direct-to-main; use `/commit` and `/rebase-on-main`
 - **arch-docs-over-inline.md** — Heavy context lives in `docs/`; code carries thin pointers, not narration
 - **arch-transient-ui-state-not-in-domain.md** — Per-session UI toggles don't belong on persisted domain records
 - **cq-comments-track-code.md** — Update or delete every stale comment in the same commit as the code change
 - **cq-fallthrough-guard-all-branches.md** — Every routing branch asserts its expected sub-range; no open-ended `else`
-- **cq-option-returning-fn-naming.md** — F# functions returning `option` carry the `try` prefix (`tryGetX`, never `getX`)
 - **wf-plain-phrasing-for-colleagues.md** — Suggested messages to colleagues stay short, plain, unformatted, and specific
 - **meta-markdown.md** — All `.md` files must pass markdownlint (MD022/MD031/MD032/MD040/MD060)
 - **meta-rule-format.md** — Rule file structure: title, imperative directive, optional Why/How/Exceptions
