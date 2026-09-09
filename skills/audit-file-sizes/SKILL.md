@@ -1,12 +1,12 @@
 ---
 name: audit-file-sizes
-description: Audit source files against soft (400) / hard (800) line-count caps. Reports violations grouped by tier; respects top-of-file `SIZE-EXEMPT:` comments. Run before merge or when a file feels overgrown.
+description: Audit source files against soft (400) / near-cap (760) / hard (800) line-count caps. Reports violations grouped by tier; respects top-of-file `SIZE-EXEMPT:` comments. Run before merge or when a file feels overgrown.
 disable-model-invocation: true
 ---
 
 # Audit File Sizes
 
-Mechanical scan of source files vs. the soft (400) and hard (800) line-count caps. The line-count work runs in `check-file-sizes.ps1`.
+Mechanical scan of source files vs. the soft (400) and hard (800) line-count caps, with a near-cap band called out separately. The line-count work runs in `check-file-sizes.ps1`.
 
 ## Mode
 
@@ -27,7 +27,7 @@ Mechanical scan of source files vs. the soft (400) and hard (800) line-count cap
    - Mode A: `-Files <list>` (pass the collected files).
    - Mode B: `-Path <dir>`.
    - Mode C: no args.
-4. **Parse the JSON** — `hard`, `soft`, `justified`, `totalScanned`.
+4. **Parse the JSON** — `hard`, `soft`, `justified`, `totalScanned`. The script emits only two violation buckets; **split its `soft` array at 760 here in the skill** to produce the near-cap tier below. There is no `-NearCap` parameter, so don't look for one.
 5. **Report** grouped by tier:
    - **Hard cap (>800, unjustified)** — flagged findings. For each, propose splitting the file (suggest a seam if obvious) or adding a top-of-file `SIZE-EXEMPT: <reason>` comment.
    - **Near-cap (>760, ≤800)** — call these out as their own tier, not buried in the soft list. A file 40 lines from the hard cap will cross it on the next ordinary edit, at which point the split is someone's surprise blocker mid-feature. Flag as "resolve before merge" while the split is still cheap and unhurried.

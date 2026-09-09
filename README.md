@@ -31,7 +31,7 @@ Available in every project via the global config.
 | `/plan [feature]` | Collaborative feature discovery + plan creation. Skeptical senior-engineer persona — challenges premise before accepting the framing. Phase 1 invokes `/study` when session context is thin. UI features spawn `design-scout` and settle one ASCII mockup as the plan's `## UI Contract`. Tasks carry `**Verify:**` instruments, a `**Test:**` tier, optional ` — **milestone**` markers, and must be cold-executable by a fresh agent. Auto-runs `/plan-optimizer` at 3+ tasks. Default is one plan per shippable feature — split only when the user names distinct increments. |
 | `/plan-optimizer [plan]` | Second-pass critique across 6 lenses (shape, data, performance reality-check, risk/feasibility, verifiability, design coverage). Requires each task to name a real instrument rather than restate its acceptance prose, and checks the plan against its agreed `## UI Contract` for structural drift via `design-scout`. Overwrites the plan in place — `git diff` to see changes. |
 | `/implement [plan] [--inline\|--agentic]` | Autonomous dev loop with build/test/refactor/audit gates. Mode resolves via CLI flag → plan front matter (`mode: agentic\|inline`) → auto-detect (agentic for >5 tasks). Agentic spawns one Sonnet sub-agent per task; plan file carries cross-task state via `**Implementation notes:**`. Final Audit uses `/audit-branch`. |
-| `/audit-branch [focus]` | Branch-level audit across architecture, code, docs, tests, file-sizes, and comments. Phase 3a runs all 6 sub-skills in parallel against `main..HEAD`; Phase 3b only fires if `audit-file-sizes` flagged cap violations (file splits need a stable file structure to operate on). Self-paces 1-3 passes (decided after each pass). Hands disposition to `/resolve-audit-findings`. |
+| `/audit-branch [focus]` | Branch-level audit across architecture, code, docs, tests, file-sizes, and comments. Phase 3a runs all 6 sub-skills in parallel against `main..HEAD`; Phase 3b only fires if `audit-file-sizes` flagged cap violations (file splits need a stable file structure to operate on). Self-paces 1-3 passes (decided after each pass). Hands disposition to `/resolve-audit-findings`, then closes with one `/verify` run (Phase 8) — the skill's only suite run. |
 | `/resolve-audit-findings` | Per-finding triage. Spawns one Sonnet agent per finding (parallel) for full research; applies inline when confidence is high, defers substantial findings to `plans/post-audit-{slug}.md`. Typically invoked by `/audit-branch` Phase 5. |
 | `/verify [plan\|none]` | Decides whether implemented work actually holds: executes each task's `**Verify:**` entries against the running app, reports pass / fail / can't-tell / human / no-instrument per criterion, triages every test result by class, and records provenance for any assertion edited in response to observed red. Delegates execution to the `verifier` agent above ~5 criteria but never delegates adjudication. `/test` measures; `/verify` decides. |
 | `/refactor-docs [focus]` | Documentation sync — checks docs match code changes. Usually invoked via `/audit-branch`. |
@@ -103,6 +103,7 @@ Scaffolded per-project from templates. Embed project-specific knowledge (archite
   skills/                         # Global skill implementations (one SKILL.md per skill)
   scripts/                        # PowerShell automation
   templates/skills/               # Project-skill templates (used by /claude-sync)
+  local/                          # Gitignored, machine-local — holds rule-candidates/ drafts
 ```
 
 **No junctions, no wrapper directories.** The repo lives at `~/.claude/` directly.
@@ -161,16 +162,19 @@ Rules in `rules/` are always loaded:
 - **wf-overengineering-not-volume.md** — Critique abstractions without a consumer, not line count; large-and-justified is fine
 - **wf-check-the-artifact-not-the-self-report.md** — Judge a sub-agent by its `git diff`, never by its summary
 - **wf-repro-test-first.md** — Write the failing test before the change; watch it go red for the right reason
+- **wf-verify-premises-before-acting.md** — Verify a claimed premise (a plan's bug, an audit finding, a "missing" feature) against current code before acting on it
 - **wf-blanket-rename-safety.md** — Multi-file rename checklist (exclude vendor paths, stdlib clobber, build-green-isn't-enough)
 - **git-workflow.md** — Default to feature branches over direct-to-main; use `/commit` and `/rebase-on-main`
 - **arch-docs-over-inline.md** — Heavy context lives in `docs/`; code carries thin pointers, not narration
 - **arch-transient-ui-state-not-in-domain.md** — Per-session UI toggles don't belong on persisted domain records
 - **cq-comments-track-code.md** — Update or delete every stale comment in the same commit as the code change
 - **cq-fallthrough-guard-all-branches.md** — Every routing branch asserts its expected sub-range; no open-ended `else`
+- **cq-no-alias-functions-as-documentation.md** — Don't add a same-semantics alias function for "caller clarity"; use a comment instead
 - **wf-plain-phrasing-for-colleagues.md** — Suggested messages to colleagues stay short, plain, unformatted, and specific
 - **meta-markdown.md** — All `.md` files must pass markdownlint (MD022/MD031/MD032/MD040/MD060)
 - **meta-rule-format.md** — Rule file structure: title, imperative directive, optional Why/How/Exceptions
 - **meta-operation-safety-in-skill-not-rule.md** — Operation-specific safety/checklists live in the performing skill, not an always-loaded rule
+- **meta-project-local-skill-copies.md** — Project-local copies of global skills/scripts are deliberate forks, not duplicates — never propose collapsing them
 
 New rules use category prefixes: `cq-` (code-quality), `arch-` (architecture), `wf-` (workflow), `meta-` (config / tooling / file placement). `/rule-review` proposes migrations for older un-prefixed rules.
 
