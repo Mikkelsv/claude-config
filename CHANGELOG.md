@@ -8,12 +8,12 @@ Tier 3 was defined as per-machine and gitignored. That was wrong for its actual 
 
 New home: **`<project>/.claude/skill-config/<name>.md`, committed.** `rules/meta-skill-tiers.md` is corrected, and the justification for a config existing at all is now stated: rules and `CLAUDE.md` load into *every* session, whereas a skill config is read only when its skill runs. Measured 2026-09-10, `CLAUDE.md` alone was 23% of a 119 KB eager load — so parameters belong in a config, standing behaviour in a rule.
 
-A gitignored `.claude/local/skills/<name>/config.md` still shadows the committed file for the rare value that genuinely differs by developer. Don't create that layer speculatively.
+**One location, no shadowing layer.** An earlier draft of this entry kept the old gitignored path as a fallback; that was a speculative branch with no consumer and has been removed. Nothing reads `.claude/local/skills/<name>/config.md`.
 
 **Project action:**
 
-- **Move any existing config**: `.claude/local/skills/<name>/config.md` → `.claude/skill-config/<name>.md`, and **commit it**. `/build` and `/test` read the new path first and fall back to the old one, so nothing breaks before you move — but until you do, colleagues get a degraded skill.
-- **While you're there**, check whether the file contains anything that genuinely differs by developer. It almost certainly doesn't; if it does, leave just that value behind in the gitignored location.
+- **Move any existing config**: `.claude/local/skills/<name>/config.md` → `.claude/skill-config/<name>.md`, and **commit it**. Nothing reads the old path, so the skill degrades until you move it.
+- **Never put a machine-specific value in one** — these files are committed and shared. If you ever hit a value that genuinely differs by developer, that's a design question to raise, not something to hide in a gitignored file.
 
 ## v1.1.17 — 2026-09-09 — Tier 2 templates retired; every skill is global
 

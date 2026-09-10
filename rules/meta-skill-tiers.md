@@ -22,9 +22,7 @@ Carries the values a *generic* skill can't guess about a *specific* project — 
 
 **Why not a rule or `CLAUDE.md`?** Because those are **always-on**: they load into every session whether or not the owning skill runs. Measured 2026-09-10 in one project — `CLAUDE.md` alone was 27,678 bytes, 23% of a 119 KB eager load. A skill config is **read on demand**, so `/test`'s tier table costs nothing until `/test` runs. The axis is always-loaded vs read-when-needed, not committed vs ignored.
 
-**Committed, because colleagues need it.** A build command is repo-wide truth, identical for every developer. Putting it somewhere gitignored means anyone cloning the repo gets a skill that silently degrades — which is exactly what happened when this rule previously specified `local/`.
-
-**Per-machine values are the rare exception.** If something genuinely differs by developer (a local data root, a personal port), that one file goes in gitignored `<project>/.claude/local/skills/<name>/config.md` and shadows the committed one. Don't create that layer until something actually needs it.
+**Committed, because colleagues need it.** A build command is repo-wide truth, identical for every developer. Putting it somewhere gitignored means anyone cloning the repo gets a skill that silently degrades — which is exactly what happened when this rule previously specified `local/`. Corollary: never put a machine-specific path in one. There is no gitignored shadowing layer, and nothing needs one.
 
 **Shape:** one `##` section per project fact. Values are **commands, paths, names, or small tables** — never architecture prose. `/test`'s config is the reference: build command, a tier table (name → command → result shape), baseline path, and a per-tier drift mapping.
 

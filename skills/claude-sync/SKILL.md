@@ -15,7 +15,7 @@ Input: `$ARGUMENTS` (optional — `fresh` to force re-scaffold, or skill names t
 
 Global skills that need project-specific values read `.claude/skill-config/<name>.md`, **committed** so colleagues get it on clone. Currently `/build` (build command, preview server) and `/test` (build command, tier table, baseline path, drift mapping); `/refactor-comments` optionally takes a curated partition table. The config is always optional — every skill degrades honestly without one — so scaffold on request rather than by default.
 
-A gitignored `.claude/local/skills/<name>/config.md` still shadows the committed file, for the rare value that genuinely differs by developer. Older projects may have their only config there; treat that as the legacy location and offer to move it.
+There is one location, and it is committed. If a project has a config in the old gitignored `.claude/local/skills/<name>/config.md`, move it — nothing reads that path any more.
 
 ## Forked-Global Skills (project-local copies)
 
