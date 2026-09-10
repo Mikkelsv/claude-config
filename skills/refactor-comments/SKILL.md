@@ -24,8 +24,9 @@ Excluded everywhere: `bin/`, `obj/`, `node_modules/`, generated CSS and build ou
 
 ## Steps
 
-1. **Determine scope + partition.** Path mode narrows to that path; no-args uses the partitions above. For `--dry-run`, partition strategy is identical.
-2. **Spawn Sonnet agents in parallel** (one per partition), `model: "sonnet"` per `wf-agents-on-sonnet`. Each agent's prompt must include:
+1. **Size the problem first.** Run `pwsh -NoProfile -File ~/.claude/scripts/audit-comment-blocks.ps1 -Path <scope>` (project-local copy if present). It returns `{findings:[{path,startLine,lineCount}], totalScanned}` — runs of consecutive comment-only lines, sorted longest first. This is **quantify-only**: a long run isn't automatically wrong, since `arch-docs-over-inline` is a qualitative rubric. Use it to aim the sweep at the worst files and to have a before/after number. A `totalScanned` of 0 means the scope resolved to nothing — treat that as a bug, not a clean result.
+2. **Determine scope + partition.** Path mode narrows to that path; no-args uses the partitions above. For `--dry-run`, partition strategy is identical.
+3. **Spawn Sonnet agents in parallel** (one per partition), `model: "sonnet"` per `wf-agents-on-sonnet`. Each agent's prompt must include:
    - **Rubric** — read `arch-docs-over-inline` for the 5 practices (link don't inline, why-only, name identifiers as greppable anchors, invariants as checkable claims, no history prose).
    - **Protection list** — read `cq-comments-track-code`, plus any project overlay in the project's own `.claude/rules/`. Load-bearing comments must NOT be cut. Sub-agents don't auto-load project rules, so name the rule paths explicitly in the prompt.
    - **Action only when unambiguous.** **CUT**: WHAT-narration, signature paraphrase, migration history ("Phase 3 introduced…", "Stage N retires…"), typos in comments, PR/task/issue references. **SLIM**: load-bearing line buried in restatement (keep the why, cut the rest). **KEEP**: protection list + invariants + cross-file links + workarounds-with-condition.
@@ -33,9 +34,9 @@ Excluded everywhere: `bin/`, `obj/`, `node_modules/`, generated CSS and build ou
    - **Comments only** — never edit code. If a "comment" looks like commented-out logic, leave it.
    - **Return a one-paragraph summary**: "Cut N comments, slimmed M, kept K; flagged X borderline (with brief `file:line` list)."
    - For `--dry-run`: return structured `file:line | verdict (CUT/SLIM/KEEP) | proposed | rationale` instead of editing.
-3. **(Default) Round 2** — re-spawn the same agents on the same partitions. Same prompt; LLM non-determinism alone surfaces more candidates, and Round 2 sees Round 1's cleaned state. Skip on `--dry-run`.
-4. **Build verify** — invoke `/build`. A break signals an agent slipped from comments into code; report it and stop before commit. `/build` no-ops gracefully in no-build repos.
-5. **Report** — collate agent summaries + totals across rounds. Per `wf-check-the-artifact-not-the-self-report`, read the diff before trusting those summaries: confirm the touched-file set stayed inside each partition and that no code changed.
+4. **(Default) Round 2** — re-spawn the same agents on the same partitions. Same prompt; LLM non-determinism alone surfaces more candidates, and Round 2 sees Round 1's cleaned state. Skip on `--dry-run`.
+5. **Build verify** — invoke `/build`. A break signals an agent slipped from comments into code; report it and stop before commit. `/build` no-ops gracefully in no-build repos.
+6. **Report** — collate agent summaries + totals across rounds. Per `wf-check-the-artifact-not-the-self-report`, read the diff before trusting those summaries: confirm the touched-file set stayed inside each partition and that no code changed.
 
 ## A stale doc citation needs diagnosis before you "fix" it
 

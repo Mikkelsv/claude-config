@@ -201,7 +201,7 @@ All scripts in `scripts/`.
 | Launching | `launch-vscode`, `kill-port` |
 | Git | `git-preflight`, `git-diff-scope` |
 | Config | `sync-config`, `pull-config`, `mirror-skill` |
-| Audit | `check-file-sizes` (backs `/audit-file-sizes`), `audit-instructions` |
+| Audit | `check-file-sizes` (backs `/audit-file-sizes`), `audit-comment-blocks` (backs `/refactor-comments`), `check-config-references` (backs `/claude-push`), `audit-instructions` |
 
 Worktree creation and exit are handled by Claude Code's native `EnterWorktree` / `ExitWorktree` tools.
 

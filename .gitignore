@@ -6,6 +6,7 @@ cache/
 backups/
 debug/
 .last-cleanup
+.last-update-result.json
 file-history/
 ide/
 paste-cache/

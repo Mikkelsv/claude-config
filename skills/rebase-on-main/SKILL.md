@@ -73,6 +73,18 @@ Build failed after rebase. One fix attempt didn't recover.
 - **Abort** → `git reset --hard ORIG_HEAD`, report, stop.
 - **Drop into manual** → leave repo as-is, print: "Branch is rebased but build is broken. Fix manually then re-invoke `/rebase-on-main`, or merge at your own risk." Stop.
 
+### Test verdict
+
+After the build gate passes, invoke `/test` — **before** rendering the merge prompt.
+
+- **After the build**, so a compile break is never reported as a test failure.
+- **Before the prompt renders**, so the verdict is on screen when the merge choice is made. Merging first and testing after inverts the point.
+- **Compute it once per invocation and reuse it** across the whole prompt loop. The loop can re-render up to four times (audit → back to prompt, squash cancelled → back to prompt); re-running `/test` each pass runs the suite four times for one merge.
+
+A non-green verdict is a **critical event: it warns, it never blocks.** Render it in the prompt's critical-events area carrying `/test`'s classification and the failing test names, then let the user choose. Per `git-workflow.md` this prompt is the last backstop before main in a repo without CI, so the warning has to be visible — but the user decides, not the skill.
+
+If `/test` reports `baseline: none` its classification is degraded (no `TEST REGRESSION` / `NEEDS REVIEW` / `TEST DRIFT` split — every failure reads as `TEST FAILURE`). Say so in the warning rather than presenting the rows as authoritative. `/test` no-ops gracefully in repos with no test config.
+
 ### Audit branch — visibility check
 
 Show the **Audit branch** option in the merge prompt only when:

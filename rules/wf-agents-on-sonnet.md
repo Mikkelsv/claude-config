@@ -13,3 +13,9 @@ Sonnet is ~5× cheaper than Opus per token and entirely capable of file inventor
 - **Haiku**: trivial mechanical agents with no reasoning required (e.g. `/vs` background launcher), per-item drift/diff fanout (e.g. `/claude-sync` evaluates each Changed skill in parallel), and project-specific mechanical detection where the spec is concrete (e.g. "find all uses of our `LegacyClient`"). Don't use Haiku for generic rule-violation scans — Roslyn/SonarLint and auto-loaded rules handle those at the orchestrator level. Never give Haiku subjective judgment, cross-file reasoning, or open-ended synthesis.
 
 When in doubt, Sonnet.
+
+## Spawn a tool-restricted agent by its own name
+
+An agent in `agents/<name>.md` whose frontmatter declares `tools:` is restricted **by capability**, and that allowlist is the point — `verifier` cannot launder a failing assertion because it has no `Edit`, `Write` or `Bash`. Spawn it as `subagent_type: "<its frontmatter name>"`. Spawning the same prompt as `general-purpose` hands it every tool and **silently erases the restriction** — no error, no warning, and the agent still reports as if it were the restricted one.
+
+Always run an agent in its own context; never paste an agent file's body into the main session as an inline prompt, which loses the restriction the same way.

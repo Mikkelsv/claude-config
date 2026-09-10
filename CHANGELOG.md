@@ -2,6 +2,17 @@
 
 Only lists changes that require project action. Global rules, scripts, and global skills are picked up automatically and not tracked here.
 
+## v1.1.20 — 2026-09-10 — Two scripts promoted, and a reference gate on `/claude-push`
+
+`audit-comment-blocks.ps1` is now global and wired into `/refactor-comments` as Step 1 (it previously had zero callers anywhere). `check-file-sizes.ps1`'s two-way merge is finished. New `check-config-references.ps1` runs as `/claude-push` step 1: config cross-references are prose, so nothing type-checks them, and a citation to a rule that was never promoted or has since been renamed reads as authoritative while doing nothing. Report-only — it never blocks a push.
+
+`rebase-on-main` gains a `### Test verdict` section between the build gate and the merge prompt. `wf-agents-on-sonnet` gains the rule that a tool-restricted agent must be spawned by its own `subagent_type`, never `general-purpose`, which hands it every tool and silently erases the restriction.
+
+**Project action:**
+
+- **Refresh any fork of `rebase-on-main` or `refactor-comments`.** The former has a net-new section; the latter has a new Step 1 that shells out to the script. Global wins on same-named skills, so a stale fork affects colleagues only.
+- **Refresh any project-local `audit-comment-blocks.ps1`.** Project copies match the exclusion pattern against `$item.FullName` instead of the path relative to the scan root. When the scan root is itself inside a `worktrees/` checkout — routine for agent work — every candidate is excluded and the script reports **zero findings with no error**, which reads as "clean". Verified in GridPreviewPoc at line 66. Its `check-file-sizes.ps1` already carried the fix; that copy is what global's merge took it from, so that one needs nothing.
+
 ## v1.1.19 — 2026-09-10 — Stack rules, a verdict-routing fix, and a 50-line rule cap
 
 Eight C#/Blazor/WASM stack rules promoted from GridPreviewPoc, six carrying `paths:` frontmatter so they load only when a matching `.cs` / `.razor` / `.js` / `.css` / `.csproj` file is opened — 8.4 KB that stays lazy, against 2.7 KB added to the always-on set. `paths:`-at-user-level was verified working by probe on 2026-09-10; issue #21858 did not reproduce.

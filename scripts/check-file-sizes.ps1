@@ -45,8 +45,29 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$exts = @('.fs', '.cs', '.js', '.ts', '.tsx', '.razor', '.wgsl', '.glsl', '.py')
-$excludePattern = '[\\/](bin|obj|node_modules|\.git|dist|build|out|_framework|worktrees|assets|\.venv)[\\/]'
+$exts = @('.fs', '.cs', '.js', '.ts', '.tsx', '.razor', '.wgsl', '.glsl', '.py', '.css')
+
+# `external` and `vendor` cover foreign or generated code copied in verbatim — it must not be
+# hand-edited, so a SIZE-EXEMPT marker inside the file isn't an option. `reset.css` is the same
+# case without a vendor path: a stylesheet kept byte-identical to its upstream so a re-sync stays
+# diffable, so it can carry neither a split nor a marker.
+$excludePattern = '[\\/](bin|obj|node_modules|\.git|dist|build|out|_framework|worktrees|assets|external|vendor|\.venv)[\\/]|[\\/]reset\.css$'
+
+# Match the exclusion against each file's path RELATIVE to the scan root, never its FullName.
+# `worktrees` is in the pattern to skip a NESTED `.claude/worktrees/*` checkout, but the scan root
+# is itself often inside one (agent work runs there routinely). Matching FullName then excludes
+# every candidate and reports totalScanned: 0 — a clean-looking empty result with no error, which
+# is worse than a crash because it reads as "no violations".
+$scanRoot = (Resolve-Path -LiteralPath $Path -ErrorAction SilentlyContinue).Path
+function Test-Excluded {
+    param([string] $FullName)
+    $relative = $FullName
+    if ($scanRoot -and $FullName.StartsWith($scanRoot, [StringComparison]::OrdinalIgnoreCase)) {
+        $relative = $FullName.Substring($scanRoot.Length)
+    }
+    # Leading separator so a first-segment match (e.g. "bin/x.cs") still hits the pattern.
+    return (('/' + $relative.TrimStart('\', '/')) -match $excludePattern)
+}
 
 function Test-Exempt {
     param([string] $FilePath)
@@ -82,7 +103,7 @@ if ($PSBoundParameters.ContainsKey('Files') -and $Files -and $Files.Count -gt 0)
     $allItems = Get-ChildItem -LiteralPath $Path -Recurse -File -ErrorAction SilentlyContinue
     foreach ($item in $allItems) {
         if (($exts -contains $item.Extension.ToLower()) -and
-            ($item.FullName -notmatch $excludePattern)) {
+            (-not (Test-Excluded -FullName $item.FullName))) {
             [void]$candidates.Add($item)
         }
     }
