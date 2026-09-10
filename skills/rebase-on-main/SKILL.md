@@ -92,7 +92,7 @@ Show the **Audit branch** option in the merge prompt only when:
 - `git rev-list --count main..HEAD` returns **≥ 5**, OR
 - `git diff --name-only main..HEAD` returns **≥ 20** files,
 
-AND `git log -1 --format=%s main..HEAD` does NOT start with `[REFAC]` (user hasn't audited recently).
+AND `git log -1 --format=%s main..HEAD` does NOT start with `[Refac]`, matched case-insensitively so pre-rename `[REFAC]` commits still count (user hasn't audited recently).
 
 ### Merge prompt (numbered list)
 
@@ -111,7 +111,7 @@ Rebase complete. Build passing.
 
 Numbering: when Audit is shown it's `(1)`; otherwise the list starts at Squash with `(1)`.
 
-- **Audit branch** — invoke `/audit-branch`. After it returns, loop back to this prompt. If user applied fixes, the new tail commit is `[REFAC]`-tagged → Audit hides on the next round.
+- **Audit branch** — invoke `/audit-branch`. After it returns, loop back to this prompt. If user applied fixes, the new tail commit is `[Refac]`-tagged → Audit hides on the next round.
 - **Squash** — invoke `/squash`. Then `git-merge-cleanup.ps1 -Branch <branch> -Mode ff`. If `/squash` cancelled, loop back.
 - **Fast-forward** — `git-merge-cleanup.ps1 -Branch <branch> -Mode ff` (no merge commit).
 - **Merge** — `git-merge-cleanup.ps1 -Branch <branch> -Mode merge` (PR-style `--no-ff`).

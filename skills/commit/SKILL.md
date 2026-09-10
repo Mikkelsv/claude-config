@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Stage all changes with a bracket-tagged message ([FEAT]/[FIX]/[REFAC]/[DOCS] or a custom feature tag for bigger changes), optionally amend, and push
+description: Stage all changes with a bracket-tagged message (a custom feature tag by default, or fallback [Feat]/[Fix]/[Refac]/[Docs]), optionally amend, and push
 ---
 
 # Commit
@@ -13,9 +13,11 @@ Stage, commit, and push. Satisfies `wf-use-commit-skill` when invoked.
 
 `[TAG] Imperative message.` with optional body for multi-file changes.
 
-**Standard tags:** `FEAT` (new features), `FIX` (fixes/minor improvements), `REFAC` (renaming, moving, cleanup), `DOCS` (docs/Claude setup).
+**Custom feature tags are the default.** Name the feature area the change belongs to, PascalCase: `[GridCreation]`, `[WebXr]`, `[AuthFlow]`, `[Harness]`. A tag that names the area tells a reader where to look; `Feat` tells them nothing they couldn't get from the diff.
 
-**Custom tags (PascalCase feature names):** for bigger changes that belong to a specific feature area, use the feature name instead of `FEAT`. Examples: `[GridCreation]`, `[WebXr]`, `[AuthFlow]`. One tag per commit — either standard or custom.
+**Fallback tags,** when no coherent feature area exists: `Fix` (fixes/minor improvements), `Refac` (renaming, moving, cleanup), `Docs` (docs/Claude setup), `Feat` (last resort — a new feature you genuinely can't name an area for). Title case, never all-caps.
+
+One tag per commit — either custom or fallback.
 
 ## Tag selection
 
@@ -25,16 +27,18 @@ Parse `$ARGUMENTS`:
 - Single PascalCase word (no spaces, e.g. `GridCreation`) → treat as custom tag; Claude drafts the message from the diff.
 - Longer text → treat as message hint; Claude picks the tag per below.
 
-When Claude picks the tag:
+When Claude picks the tag, try custom first — reach for a fallback only when the attempt fails:
 
-- **Small/moderate** change (≲ 100 lines or < 5 files, or diffuse/routine work) → standard tag. No confirmation.
-- **Big coherent change** (≳ 100 lines AND ≥ ~5 files clustered around one feature area) → propose a custom tag via `AskUserQuestion`:
+- **Can you name the feature area?** Ask what a reader six months out would want the tag to say. The branch name, the directory the diff clusters in, and the plan being implemented are all good sources. If a name is obvious → use it, no confirmation. This is the common path.
+- **Area plausible but ambiguous** (two defensible names, or you'd be guessing at the boundary) → propose via `AskUserQuestion`:
   - **Use `[<Proposed>]`** (Recommended)
-  - **Use `[FEAT]`**
+  - **Use `[<Alternative>]`**
   - **Edit** (free-text override)
 
   Wait for the answer before committing.
-- **Big but scattered** change (no coherent feature) → best-fit standard tag, no confirm.
+- **Genuinely no coherent area** — a scattered sweep, a routine one-liner, a docs touch → best-fit fallback tag, no confirmation.
+
+A confirmation prompt on every commit would defeat the preference, so don't ask when the area is clear. Ask only when you'd otherwise be inventing a boundary.
 
 ## Steps
 
@@ -54,8 +58,8 @@ When Claude picks the tag:
 ## Rules
 
 - No Co-Authored-By — use the user's git auth only.
-- Do not confirm standard tags — commit and push immediately.
-- Custom-tag **proposals** confirm via `AskUserQuestion`. User-supplied tags (in `$ARGUMENTS`) do not.
+- Do not confirm a clear custom tag or a fallback tag — commit and push immediately.
+- Confirm only an **ambiguous** custom tag, via `AskUserQuestion`. User-supplied tags (in `$ARGUMENTS`) never confirm.
 - Always push. Amend uses `--force-with-lease`, never `--force`.
 - Imperative mood: "Add user auth" not "Added user auth".
-- **No plan references in commit messages.** Never include task IDs, phase labels, or plan names (e.g. `A1 —`, `Task 3:`). Bad: `[FEAT] A1 — Add user auth`. Good: `[FEAT] Add user auth`.
+- **No plan references in commit messages.** Never include task IDs, phase labels, or plan names (e.g. `A1 —`, `Task 3:`). Bad: `[AuthFlow] A1 — Add user auth`. Good: `[AuthFlow] Add user auth`.
