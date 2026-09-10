@@ -2,6 +2,19 @@
 
 Only lists changes that require project action. Global rules, scripts, and global skills are picked up automatically and not tracked here.
 
+## v1.1.18 — 2026-09-10 — Skill configs move to a committed path
+
+Tier 3 was defined as per-machine and gitignored. That was wrong for its actual content: a build command, a test-tier table and a baseline path are **repo-wide truth**, identical for every developer, so anyone cloning the repo needs them. Under the old definition they were invisible to colleagues, and a global skill reading them silently degraded — which is exactly what happened to `/test` in the one project that had a config.
+
+New home: **`<project>/.claude/skill-config/<name>.md`, committed.** `rules/meta-skill-tiers.md` is corrected, and the justification for a config existing at all is now stated: rules and `CLAUDE.md` load into *every* session, whereas a skill config is read only when its skill runs. Measured 2026-09-10, `CLAUDE.md` alone was 23% of a 119 KB eager load — so parameters belong in a config, standing behaviour in a rule.
+
+A gitignored `.claude/local/skills/<name>/config.md` still shadows the committed file for the rare value that genuinely differs by developer. Don't create that layer speculatively.
+
+**Project action:**
+
+- **Move any existing config**: `.claude/local/skills/<name>/config.md` → `.claude/skill-config/<name>.md`, and **commit it**. `/build` and `/test` read the new path first and fall back to the old one, so nothing breaks before you move — but until you do, colleagues get a degraded skill.
+- **While you're there**, check whether the file contains anything that genuinely differs by developer. It almost certainly doesn't; if it does, leave just that value behind in the gitignored location.
+
 ## v1.1.17 — 2026-09-09 — Tier 2 templates retired; every skill is global
 
 `templates/skills/` is **deleted**. All six templated skills are now global skills that discover project specifics at runtime — the project's own `CLAUDE.md` and `.claude/rules/`, plus an optional Tier-3 `.claude/local/skills/<name>/config.md` for values that can't be derived. `/test` in particular is new to global (harvested and generalized, 296 → 102 lines) and is what `/verify` Phase C's classification contract has been depending on. `/claude-sync` keeps its forked-globals path for shared repos and loses the template half; `rules/meta-skill-tiers.md` redefines Tier 2 as project-local *forks* rather than templated skills.

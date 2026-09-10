@@ -9,11 +9,13 @@ Pull global config, then set up or refresh the two things a project can legitima
 
 Input: `$ARGUMENTS` (optional — `fresh` to force re-scaffold, or skill names to scope)
 
-**There is no longer a template tier.** Every skill is global and discovers project context at runtime from `CLAUDE.md`, the project's `.claude/rules/`, and an optional `.claude/local/skills/<name>/config.md`. See `rules/meta-skill-tiers.md`.
+**There is no longer a template tier.** Every skill is global and discovers project context at runtime from `CLAUDE.md`, the project's `.claude/rules/`, and an optional committed `.claude/skill-config/<name>.md`. See `rules/meta-skill-tiers.md`.
 
 ## Tier-3 skill configs
 
-Global skills that need per-machine project values read `.claude/local/skills/<name>/config.md`. Currently `/build` (build command, preview server) and `/test` (build command, tier table, baseline path, drift mapping); `/refactor-comments` optionally takes a curated partition table. The config is always optional — every skill degrades honestly without one — so scaffold on request rather than by default.
+Global skills that need project-specific values read `.claude/skill-config/<name>.md`, **committed** so colleagues get it on clone. Currently `/build` (build command, preview server) and `/test` (build command, tier table, baseline path, drift mapping); `/refactor-comments` optionally takes a curated partition table. The config is always optional — every skill degrades honestly without one — so scaffold on request rather than by default.
+
+A gitignored `.claude/local/skills/<name>/config.md` still shadows the committed file, for the rare value that genuinely differs by developer. Older projects may have their only config there; treat that as the legacy location and offer to move it.
 
 ## Forked-Global Skills (project-local copies)
 
@@ -113,7 +115,7 @@ This project uses git worktrees + feature branches for parallel development.
 
 Ask via `AskUserQuestion` (multiSelect): which global skills should get a project config? Offer `build` and `test`; mention `refactor-comments` only if the project is large enough that a curated partition table beats a derived one.
 
-Read `CLAUDE.md` for context first, then gather per skill — build command, dev server name and port, test tiers and their commands, baseline path. Write each to `.claude/local/skills/<name>/config.md` as headed sections per the schema in `meta-skill-tiers.md`: commands, paths, names, small tables. Never architecture prose.
+Read `CLAUDE.md` for context first, then gather per skill — build command, dev server name and port, test tiers and their commands, baseline path. Write each to `.claude/skill-config/<name>.md` as headed sections per the schema in `meta-skill-tiers.md`: commands, paths, names, small tables. Never architecture prose. These are **committed** — they are repo-wide truth, not per-machine state.
 
 ### 2.3 Forked-globals (for shared repos)
 

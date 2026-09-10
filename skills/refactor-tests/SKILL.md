@@ -9,7 +9,7 @@ Check if the test suite covers touched functionality. Trivial additions (adding 
 
 ## Step 1: Load test framework
 
-Discover the project's test setup at runtime rather than assuming one: read any test-pattern rules in the project's `.claude/rules/`, then locate the test projects or directories. `.claude/local/skills/test/config.md` — if present — already names the tiers and their commands; reuse it rather than re-deriving. Say what you found.
+Discover the project's test setup at runtime rather than assuming one: read any test-pattern rules in the project's `.claude/rules/`, then locate the test projects or directories. `.claude/skill-config/test.md` — if present — already names the tiers and their commands; reuse it rather than re-deriving. Say what you found.
 
 ## Step 2: Scope
 

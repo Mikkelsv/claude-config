@@ -18,7 +18,7 @@ Sweep source files for verbose, stale, or low-density comments per `arch-docs-ov
 
 ## Partitions (non-overlapping; no two agents touch the same file)
 
-Derive them at runtime: glob the project's top-level source directories and group them into 2–6 roughly balanced partitions. **They must not overlap** — two agents editing one file will clobber each other. If `.claude/local/skills/refactor-comments/config.md` names a partition table, use it instead of deriving; a curated split usually balances better than a mechanical one.
+Derive them at runtime: glob the project's top-level source directories and group them into 2–6 roughly balanced partitions. **They must not overlap** — two agents editing one file will clobber each other. If `.claude/skill-config/refactor-comments.md` names a partition table, use it instead of deriving; a curated split usually balances better than a mechanical one.
 
 Excluded everywhere: `bin/`, `obj/`, `node_modules/`, generated CSS and build output, and files whose first 10 lines contain `SIZE-EXEMPT:` (intentionally large; defer comment hygiene to their own audit).
 

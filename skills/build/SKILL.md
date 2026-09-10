@@ -7,7 +7,7 @@ description: "Build and serve the application via the project's launch config. U
 
 Mechanical execution — follow the steps in order.
 
-Execute user instructions, then build and serve the application. Reads project-specific config from `.claude/local/skills/build/config.md`.
+Execute user instructions, then build and serve the application. Reads project-specific config from `.claude/skill-config/build.md` (committed), falling back to the older gitignored `.claude/local/skills/build/config.md`.
 
 ## Phase 1 — User Task
 
@@ -23,7 +23,7 @@ Once the task is complete (or immediately if no task was given):
 
 0. **Check for build config.** If `.claude/launch.json` does not exist, report "No build configured for this repo; skipping build/serve." and return success. Phase 2 ends here. The Auto-build Rule inherits this no-op for repos without a build config (e.g., docs-only or config repos).
 1. Read `.claude/launch.json` for the server config (name, port, command).
-2. If `.claude/local/skills/build/config.md` exists, read it for overrides (e.g., a separate build command that differs from the serve command). This file is optional.
+2. Read the skill config for overrides (e.g. a separate build command that differs from the serve command). Prefer `.claude/skill-config/build.md`; if absent, fall back to `.claude/local/skills/build/config.md`. Both are optional — infer from `launch.json` when neither exists, and say so.
 3. Stop any existing preview server (use `preview_stop` if one is running, check with `preview_list` first).
 4. Kill any orphaned processes on the port (cross-platform via `pwsh`):
 

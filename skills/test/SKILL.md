@@ -11,7 +11,7 @@ Build, run every configured test tier, classify each result against the baseline
 
 ## Config
 
-Reads `.claude/local/skills/test/config.md` for project specifics: the **build command**, a **tier table** (name → command → result shape), the **baseline path**, and optionally a **per-tier drift mapping** (how a touched test file maps to test names — necessarily per-project, since it tracks each framework's declaration syntax: xUnit attributes, `def test_*`, a registering constructor).
+Reads `.claude/skill-config/test.md` — **committed**, so colleagues cloning the repo get it too — for project specifics: the **build command**, a **tier table** (name → command → result shape), the **baseline path**, and optionally a **per-tier drift mapping** (how a touched test file maps to test names — necessarily per-project, since it tracks each framework's declaration syntax: xUnit attributes, `def test_*`, a registering constructor). Falls back to the older gitignored `.claude/local/skills/test/config.md`.
 
 **No config → degrade honestly, never guess.** Infer what you can from `.claude/launch.json` and obvious conventions, state plainly in the report which tiers you ran and which you could not find, and treat the baseline as absent (below). Never report ALL GOOD for a tier you never ran.
 
