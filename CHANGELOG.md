@@ -2,6 +2,17 @@
 
 Only lists changes that require project action. Global rules, scripts, and global skills are picked up automatically and not tracked here.
 
+## v1.1.19 — 2026-09-10 — Stack rules, a verdict-routing fix, and a 50-line rule cap
+
+Eight C#/Blazor/WASM stack rules promoted from GridPreviewPoc, six carrying `paths:` frontmatter so they load only when a matching `.cs` / `.razor` / `.js` / `.css` / `.csproj` file is opened — 8.4 KB that stays lazy, against 2.7 KB added to the always-on set. `paths:`-at-user-level was verified working by probe on 2026-09-10; issue #21858 did not reproduce.
+
+`/verify` is now wired into `/implement` (it was promoted with no caller), and `/implement`'s per-task gate was routing on three verdicts `/test` no longer emits while three current ones had no handling at all. Rule length: aim ≤ 25 lines, **hard cap 50** — soft/hard like the 400/800 file-size caps.
+
+**Project action:**
+
+- **Refresh any fork of `implement`, `test`, `claude-refactor` or `claude-sync`.** The `implement` fix is a correctness fix, not a polish pass: the old gate branched on `NEW BEST` / `PERF REGRESSION` / `THROTTLED` and had no handling for `TEST REGRESSION`, `NEEDS REVIEW` or `TEST DRIFT`. **Global wins on same-named skills, so a stale fork affects colleagues only — you will not see it yourself.** That is precisely why it needs refreshing deliberately.
+- **No action for rules.** The eight new ones auto-load (or lazily glob-load) everywhere.
+
 ## v1.1.18 — 2026-09-10 — Skill configs move to a committed path
 
 Tier 3 was defined as per-machine and gitignored. That was wrong for its actual content: a build command, a test-tier table and a baseline path are **repo-wide truth**, identical for every developer, so anyone cloning the repo needs them. Under the old definition they were invisible to colleagues, and a global skill reading them silently degraded — which is exactly what happened to `/test` in the one project that had a config.
