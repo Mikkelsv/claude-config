@@ -8,14 +8,14 @@ Personal Claude Code configuration — slash commands, skills, rules, and PowerS
 
 | Command | What it does |
 |---|---|
-| `/claude-sync [skills\|fresh]` | Pull global config, then scaffold or sync project skills — both templated skills and forked-global copies (per `meta-project-local-skill-copies`). First run = full scaffolding, later runs = targeted updates with drift detection. |
-| `/claude-refactor` | Audit all skills, commands, scripts, rules, and templates. Fixes bugs, stale refs, permission gaps. |
-| `/claude-push` | Commit and push config changes. Auto-bumps version on template changes. |
+| `/claude-sync [skills\|fresh]` | Pull global config, scaffold committed `.claude/skill-config/` files, and sync project-local forks of global skills for shared repos (per `meta-project-local-skill-copies`). Step 3.1b migrates a project off the retired template tier. |
+| `/claude-refactor` | Audit all skills, commands, scripts, rules, and agents. Fixes bugs, stale refs, permission gaps. |
+| `/claude-push` | Commit and push config changes. Auto-bumps version when `rules/`, `skills/` or `commands/` change. |
 | `/allow-defer [prompt]` | Parse a blocked permission prompt and save a suggested allow rule to `~/.claude/suggestions/` for later review (non-interrupting). |
 | `/allow-now [prompt]` | Parse a blocked permission prompt and append it to `~/.claude/settings.json` immediately. Use when you've decided and want the rule active now. |
 | `/suggestions [type]` | Walk through pending suggestions in `~/.claude/suggestions/` one at a time and accept/skip/discard each. |
 | `/capture-rule [idea]` | Capture a new code-quality, architecture, or workflow rule. Asks category + scope, drafts the rule, saves after your approval. |
-| `/rule-candidate [idea]` | Append a rule candidate to the pending file. Lightweight — no commitment. Logged regardless of disposition. Promotion happens via `/capture-rule` or `/rule-review`. |
+| `/rule-candidate [idea]` | Write a rule candidate as a standalone file in the project's gitignored `.claude/local/rule-candidates/`. Lightweight — no commitment. Promotion happens via `/capture-rule` or `/rule-review`. |
 | `/rule-review` | Critical single-pass triage of pending candidates AND existing rules. Surfaces dupes, retires stale rules, proposes prefix migrations, promotes candidates. |
 
 ### Global Workflow Skills
@@ -44,7 +44,7 @@ Available in every project via the global config.
 | `/audit-file-sizes [mode]` | Mechanical scan vs. 400-line soft / 800-line hard caps. Respects top-of-file `SIZE-EXEMPT:` markers. |
 | `/teach [mode]` | Interactive programming lesson — contextual deep-dive, codebase exploration, or random topic. |
 | `/explain [focus]` | Read-only, parallel-session walkthrough of the current branch/plan — always-shown core (simple explanation, what's decided, example, architecture + file fit) then numbered drill-downs. Wraps `/teach`; never writes files. |
-| `/commit [hint]` | Stage all changes, craft a bracket-tagged commit message (`[FEAT]`/`[FIX]`/`[REFAC]`/`[DOCS]` or a custom feature tag like `[GridCreation]`), and push. |
+| `/commit [hint]` | Stage all changes, craft a bracket-tagged commit message — a custom PascalCase feature tag by default (`[GridCreation]`), with Title-case fallbacks (`[Fix]`/`[Refac]`/`[Docs]`/`[Feat]`) when no coherent area exists — and push. |
 | `/squash [tag]` | Squash all commits since the branch diverged from main into one, using `/commit`'s tag format and a synthesized message. Force-pushes with lease. |
 
 ### Project-local forks (Tier 2)
@@ -113,7 +113,7 @@ The one legitimate reason to keep a project copy is a **shared repo whose collea
 **Prompts orchestrate, scripts execute.** Commands and skills contain decision logic; PowerShell scripts do mechanical work and return JSON on stdout.
 
 - Discovery files (rules, commands, skills, settings) live where Claude Code expects them — at the root.
-- Scripts and templates are referenced by skills/commands via absolute paths (`~/.claude/scripts/...`).
+- Scripts are referenced by skills/commands via absolute paths (`~/.claude/scripts/...`).
 - Runtime state (`cache/`, `sessions/`, `projects/`, etc.) is managed by Claude Code itself and gitignored.
 
 ### Version Tracking
@@ -174,6 +174,20 @@ Rules in `rules/` are always loaded:
 - **meta-rule-format.md** — Rule file structure: title, imperative directive, optional Why/How/Exceptions
 - **meta-operation-safety-in-skill-not-rule.md** — Operation-specific safety/checklists live in the performing skill, not an always-loaded rule
 - **meta-project-local-skill-copies.md** — Project-local copies of global skills/scripts are deliberate forks, not duplicates — never propose collapsing them
+
+Stack rules — `paths:`-scoped, so they load only when you open a matching file:
+
+- **arch-no-wasm-threads-in-worker.md** — `WasmEnableThreads` in a Web Worker hangs the runtime on startup
+- **cq-blazor-highfreq-eventcallback-render-cost.md** — an `EventCallback` re-renders its owner every tick; never read an unmemoized O(scene) projection from that render path
+- **cq-client-json-converter-options.md** — a server-registered `JsonConverter` never reaches `ReadFromJsonAsync()` without explicit options
+- **cq-js-setup-listener-idempotent.md** — `addEventListener` doesn't dedupe; setup functions must be idempotent or caller-guarded
+- **cq-no-large-managed-alloc-on-wasm.md** — no large managed allocations on a WASM client; stream instead. Client-only
+- **cq-css-isolation-duplicate-to-utility.md** — a rule duplicated across 2+ `.razor.css` files becomes a global utility class
+
+Deliberately always-on despite being stack-flavoured:
+
+- **cq-field-removal-graceful.md** — check the deserializer's unknown-property handling before calling a field removal a migration. Fires at planning time, when persistence files may not be open
+- **wf-build-error-list-is-a-frontier.md** — a shrinking build-error list measures progress through the frontier, not remaining scope
 
 New rules use category prefixes: `cq-` (code-quality), `arch-` (architecture), `wf-` (workflow), `meta-` (config / tooling / file placement). `/rule-review` proposes migrations for older un-prefixed rules.
 
