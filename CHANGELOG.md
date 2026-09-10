@@ -2,6 +2,17 @@
 
 Only lists changes that require project action. Global rules, scripts, and global skills are picked up automatically and not tracked here.
 
+## v1.1.17 — 2026-09-09 — Tier 2 templates retired; every skill is global
+
+`templates/skills/` is **deleted**. All six templated skills are now global skills that discover project specifics at runtime — the project's own `CLAUDE.md` and `.claude/rules/`, plus an optional Tier-3 `.claude/local/skills/<name>/config.md` for values that can't be derived. `/test` in particular is new to global (harvested and generalized, 296 → 102 lines) and is what `/verify` Phase C's classification contract has been depending on. `/claude-sync` keeps its forked-globals path for shared repos and loses the template half; `rules/meta-skill-tiers.md` redefines Tier 2 as project-local *forks* rather than templated skills.
+
+**Project action:**
+
+- **Any project with template-scaffolded skills** (`build`, `test`, `refactor-code`, `refactor-tests`, `refactor-comments`, `refactor-file-sizes`): those capabilities are now global. Either **delete the project copies** — the global skill takes over, plus a `config.md` if it needs project values — or, if the repo is shared with colleagues who lack their own `~/.claude/`, **keep them and register them under `forks`**. Do not leave them registered under `skills`: that map is dead and `/claude-sync` now drops it.
+- **Skill precedence is still unverified.** Nothing documents which `SKILL.md` wins when a project and global both define one. Until that's settled, migrate a project by writing its config and deleting its copies **in the same change**, so no window exists where the answer matters.
+- **GridPreviewPoc:** leave its copies in place — colleagues depend on them, and its `/test` fork is the source the global one was harvested from.
+- **Axioku and Eidetic:** their `.claude/skills/<name>/SKILL.md` files are thin redirector stubs pointing at a capital-`C` `Claude/skills/` directory — the pre-v1.1.0 layout the flatten was meant to retire. Resolve that before migrating, rather than migrating a redirector. Eidetic additionally has no `.claude/local/` and no `.gitignore` entry for it; both are prerequisites for any Tier-3 config.
+
 ## v1.1.16 — 2026-09-09 — /verify, verifier, design-scout, and richer /plan
 
 Harvested from GridPreviewPoc as it winds down. New global skill `/verify` (decides whether work holds, distinct from `/test` which measures) and two new agents: `verifier` (read-only by capability, so it cannot launder a failing assertion) and `design-scout` (triages design decisions so only genuinely-open ones become questions). `/plan` gains the design-agreement pass with a `## UI Contract`, plus `**Verify:**` / `**Test:**` / milestone / cold-executable task contracts; `/plan-optimizer` gains verifiability and design-coverage lenses. Two new rules (`wf-check-the-artifact-not-the-self-report`, `wf-repro-test-first`) and two backports. `cq-option-returning-fn-naming` retired — F# is no longer in the stack.

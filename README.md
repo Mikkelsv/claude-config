@@ -47,11 +47,11 @@ Available in every project via the global config.
 | `/commit [hint]` | Stage all changes, craft a bracket-tagged commit message (`[FEAT]`/`[FIX]`/`[REFAC]`/`[DOCS]` or a custom feature tag like `[GridCreation]`), and push. |
 | `/squash [tag]` | Squash all commits since the branch diverged from main into one, using `/commit`'s tag format and a synthesized message. Force-pushes with lease. |
 
-### Project Skills (Tier 2) — being retired
+### Project-local forks (Tier 2)
 
-All five skills that used to be scaffolded per-project from `templates/skills/` are now **global**, listed in the table above. They discover project specifics at runtime — reading the project's own `CLAUDE.md` and `.claude/rules/`, plus an optional Tier-3 `.claude/local/skills/<name>/config.md` for values that can't be derived (a build command, a tier table, a curated partition list).
+There is **no template tier**. Every skill is global and discovers project specifics at runtime — the project's own `CLAUDE.md` and `.claude/rules/`, plus an optional Tier-3 `.claude/local/skills/<name>/config.md` for values that can't be derived (a build command, a test-tier table, a curated partition list). One skill per capability instead of one fork per project: no placeholder substitution, no re-scaffolding, no drift.
 
-One skill per capability instead of one fork per project: no drift, no re-scaffolding, no placeholder substitution. `templates/skills/` and the sync machinery that maintained those forks are being removed; see `rules/meta-skill-tiers.md` for the tier decision guide.
+The one legitimate reason to keep a project copy is a **shared repo whose colleagues don't have their own `~/.claude/`** — they need the workflow on clone. `/claude-sync` scaffolds those forks and drift-checks them against global; project additions belong in `<ProjectSpecific>` blocks so they survive a resync. See `rules/meta-project-local-skill-copies.md` and `rules/meta-skill-tiers.md`.
 
 ### Utility Commands
 
@@ -101,7 +101,6 @@ One skill per capability instead of one fork per project: no drift, no re-scaffo
   rules/                          # Global rules (always loaded)
   skills/                         # Global skill implementations (one SKILL.md per skill)
   scripts/                        # PowerShell automation
-  templates/skills/               # Project-skill templates (used by /claude-sync)
   local/                          # Gitignored, machine-local — holds rule-candidates/ drafts
 ```
 
@@ -117,7 +116,7 @@ One skill per capability instead of one fork per project: no drift, no re-scaffo
 
 ### Version Tracking
 
-`config-version.json` tracks the global config version. `/claude-push` auto-bumps the patch version when staged changes touch `templates/` (projects need re-sync). Projects track staleness via `.claude/local/config-version.json` (gitignored) — at session start, Claude compares the two and suggests `/claude-sync` if they differ.
+`config-version.json` tracks the global config version. `/claude-push` auto-bumps the patch version when staged changes touch `rules/`, `skills/`, or `commands/` — a signal to any shared repo forking those. Projects track staleness via `.claude/local/config-version.json` (gitignored) — at session start, Claude compares the two and suggests `/claude-sync` if they differ.
 
 ### Global Rules
 

@@ -6,9 +6,11 @@ Skills live in `.claude/skills/<name>/SKILL.md` as a single self-contained file.
 
 Path: `~/.claude/skills/<name>/SKILL.md`. Generic workflows and meta-tooling. Available in every project. Read `CLAUDE.md` + `.claude/rules/` at runtime — no scaffolding.
 
-## Tier 2 — Project skills (shared, committed)
+## Tier 2 — Project-local forks (shared, committed)
 
-Path: `<project>/.claude/skills/<name>/SKILL.md`. Scaffolded by `/claude-sync` from `~/.claude/templates/skills/<name>/SKILL.md`. For skills embedding project-specific knowledge that can't live in `CLAUDE.md` (test scripts, framework wiring, boundary definitions).
+Path: `<project>/.claude/skills/<name>/SKILL.md`. A **copy of a global skill**, committed so colleagues without their own `~/.claude/` get the workflow on clone. Only for shared repos — see `meta-project-local-skill-copies`. `/claude-sync` scaffolds and drift-checks these; project additions go in `<ProjectSpecific>` blocks.
+
+**Not a template tier.** Skills are never authored per-project from a template with `{PLACEHOLDER}` substitution — that tier was retired. A skill needing project values is Tier 1 plus a Tier 3 config.
 
 ## Tier 3 — Local skill config (private, gitignored)
 
@@ -33,5 +35,5 @@ Path: `<project>/.claude/local/skills/<name>/config.md`. `<project>/.claude/loca
 ## Decision guide
 
 1. **Generic workflow or meta-tool?** → Tier 1.
-2. **Embeds multi-line project knowledge?** → Tier 2 from template.
-3. **Needs per-machine runtime values?** → Tier 1 + a Tier 3 config. Prefer this over Tier 2 when the project surface is a handful of commands and paths rather than real prose — one skill beats N forks.
+2. **Needs per-machine runtime values?** → Tier 1 + a Tier 3 config. This is the normal answer when a skill needs project specifics: one skill beats N forks.
+3. **Shared repo whose colleagues lack `~/.claude/`?** → additionally fork to Tier 2 so they get it on clone.

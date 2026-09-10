@@ -16,7 +16,7 @@ Scripts directory: `~/.claude/scripts`
 
    If no changes, report "nothing to commit" and stop.
 
-   The script auto-bumps the version when staged changes touch `templates/`, `rules/`, `skills/`, or `commands/`. **Don't assume a bump happened** — read `versionBump` from the output, or compare `config-version.json` before and after. The bump is a signal to projects that mirror globals, which see the mismatch on their next session.
+   The script auto-bumps the version when staged changes touch `rules/`, `skills/`, or `commands/`. **Don't assume a bump happened** — read `versionBump` from the output, or compare `config-version.json` before and after. The bump is a signal to projects that mirror globals, which see the mismatch on their next session.
 
 2. Run `/commit` to commit and push. The commit skill analyzes the staged diff, picks the tag, and pushes.
 

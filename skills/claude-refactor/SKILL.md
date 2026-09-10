@@ -13,7 +13,7 @@ Scripts: `~/.claude/scripts`
 
 Launch 2 parallel agents (`model: "sonnet"`):
 
-**Agent 1 — Global**: read all `~/.claude/skills/`, `~/.claude/commands/`, `~/.claude/scripts/`, `~/.claude/rules/`, `~/.claude/templates/skills/`, README.md, settings.json, settings.template.json, CLAUDE.md. Record: path, purpose, references.
+**Agent 1 — Global**: read all `~/.claude/skills/`, `~/.claude/commands/`, `~/.claude/scripts/`, `~/.claude/rules/`, `~/.claude/agents/`, README.md, settings.json, settings.template.json, CLAUDE.md. Record: path, purpose, references.
 
 **Agent 2 — Project** (skip if not in a project): read `.claude/skills/`, `.claude/commands/`, `.claude/rules/`, `.claude/docs/`, CLAUDE.md. Record same, plus which global template each was scaffolded from.
 

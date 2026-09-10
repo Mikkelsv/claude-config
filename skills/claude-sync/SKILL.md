@@ -1,45 +1,37 @@
 ---
 name: claude-sync
-description: Pull global config and scaffold or sync project-level skills from templates
+description: Pull global config, scaffold per-project Tier-3 skill configs, and sync project-local forks of global skills for shared repos
 ---
 
 # Claude Sync
 
-Pull global config, then scaffold new project skills or sync existing ones.
+Pull global config, then set up or refresh the two things a project can legitimately carry: **Tier-3 skill configs** and **project-local forks of global skills**.
 
 Input: `$ARGUMENTS` (optional — `fresh` to force re-scaffold, or skill names to scope)
 
-Templates: `~/.claude/templates/skills/`
+**There is no longer a template tier.** Every skill is global and discovers project context at runtime from `CLAUDE.md`, the project's `.claude/rules/`, and an optional `.claude/local/skills/<name>/config.md`. See `rules/meta-skill-tiers.md`.
 
-## Project Skills (from templates)
+## Tier-3 skill configs
 
-Only skills with genuine project-specific content are scaffolded. Generic global skills (`/plan`, `/implement`, `/audit-branch`, `/audit-architecture`, `/refactor-docs`, `/study`) read project context from `CLAUDE.md` and `.claude/rules/` at runtime — no scaffolding needed **unless** the project is shared with colleagues who lack `~/.claude/` (see Forked-Global Skills below).
-
-| Skill | Notes |
-|---|---|
-| **build** | Global skill — scaffolds `.claude/local/skills/build/config.md` only |
-| **test** | Browser-based smoke tests + optional perf tracking |
-| **refactor-code** | Code quality & architecture review |
-| **refactor-tests** | Test coverage review |
+Global skills that need per-machine project values read `.claude/local/skills/<name>/config.md`. Currently `/build` (build command, preview server) and `/test` (build command, tier table, baseline path, drift mapping); `/refactor-comments` optionally takes a curated partition table. The config is always optional — every skill degrades honestly without one — so scaffold on request rather than by default.
 
 ## Forked-Global Skills (project-local copies)
 
-Per `meta-project-local-skill-copies.md`, some projects ship local copies of generic global skills in `.claude/skills/<name>/` so colleagues without `~/.claude/` get the workflow on clone. These are **forks of global skills**, distinct from templated skills above.
+Per `meta-project-local-skill-copies.md`, some projects ship local copies of global skills in `.claude/skills/<name>/` so colleagues without `~/.claude/` get the workflow on clone.
 
 ### Classification
 
 For each `.claude/skills/<name>/SKILL.md`:
 
-- **Templated** — `~/.claude/templates/skills/<name>/SKILL.md` exists. Handled by existing template flow.
-- **Forked-global** — `~/.claude/skills/<name>/SKILL.md` exists AND no template. Handled by fork flow (new logic).
-- **Project-unique** — neither global nor template exists. Leave alone.
+- **Forked-global** — `~/.claude/skills/<name>/SKILL.md` exists. Handled by the fork flow.
+- **Project-unique** — no matching global. Leave alone; never treat as a fork.
 
 ### Transformations (applied when syncing global → project)
 
 - `(~|$HOME)/.claude/` → `.claude/` (project-relative paths).
 - `powershell.exe` → `pwsh` (cross-platform per the rule).
 
-Applied to both SKILL.md content and script content. Use a single transform helper across all sync paths so behavior stays consistent.
+Applied to both SKILL.md and script content. Use one transform helper across all paths so behavior stays consistent.
 
 ### Script sync (wholesale by directory)
 
@@ -51,26 +43,24 @@ Forks depend on scripts at `.claude/scripts/*.ps1` and `.claude/skills/<fork>/sc
 
 Run: `pwsh -NoProfile -File "$HOME/.claude/scripts/pull-config.ps1"`
 
-If pull fails: ask user — continue with local templates or abort?
+If pull fails: ask the user — continue against the local global config, or abort?
 
 ## Step 1 — Detect Mode
 
 `.claude/local/config-version.json` exists? → **Sync** (Step 3). Missing → **Initial Setup** (Step 2).
-`$ARGUMENTS = "fresh"` → force Initial Setup. Skill names → scope to those skills in detected mode.
+`$ARGUMENTS = "fresh"` → force Initial Setup. Skill names → scope to those skills in the detected mode.
 
 ## Step 2 — Initial Setup
 
-### 2.1 Check existing skills in `.claude/skills/`. If overlap, ask: overwrite or skip?
-
-### 2.2 Git workflow
+### 2.1 Git workflow
 
 If `.claude/rules/git-workflow.md` already exists, skip this step.
 
 Ask via `AskUserQuestion`: which workflow does this project use?
 
-- **Feature branches (Recommended)** — `/implement` creates `implement/{plan-name}` branch per plan, `/commit` pushes to that branch. PR-based merge to main.
-- **Direct to main** — Solo project or prototype. `/implement` works on main directly, `/commit` pushes straight to main. No PR step.
-- **Worktree per feature** — Like feature branches, but each plan gets its own worktree for parallel dev.
+- **Feature branches (Recommended)** — `/implement` creates `implement/{plan-name}` per plan, `/commit` pushes to that branch. PR-based merge to main.
+- **Direct to main** — solo project or prototype. `/implement` works on main directly, `/commit` pushes straight to main. No PR step.
+- **Worktree per feature** — like feature branches, but each plan gets its own worktree.
 
 Write the choice to `.claude/rules/git-workflow.md` using one of the templates below. Other skills (especially `/implement`, `/commit`, `/rebase-on-main`) read this rule to behave correctly.
 
@@ -119,102 +109,84 @@ This project uses git worktrees + feature branches for parallel development.
 - `/rebase-on-main` cleans up the worktree after merge.
 ```
 
-### 2.3 Select skills via `AskUserQuestion` (multiSelect):
-build (Recommended), test, refactor-code, refactor-tests.
+### 2.2 Tier-3 configs
 
-### 2.3b Forked-globals (optional, for shared repos)
+Ask via `AskUserQuestion` (multiSelect): which global skills should get a project config? Offer `build` and `test`; mention `refactor-comments` only if the project is large enough that a curated partition table beats a derived one.
 
-Ask via `AskUserQuestion`: **Is this a shared repo where colleagues may not have `~/.claude/` set up?**
+Read `CLAUDE.md` for context first, then gather per skill — build command, dev server name and port, test tiers and their commands, baseline path. Write each to `.claude/local/skills/<name>/config.md` as headed sections per the schema in `meta-skill-tiers.md`: commands, paths, names, small tables. Never architecture prose.
+
+### 2.3 Forked-globals (for shared repos)
+
+Ask via `AskUserQuestion`: **is this a shared repo where colleagues may not have `~/.claude/` set up?**
 
 - **No** (Recommended for solo projects) — skip to 2.4.
 - **Yes** — colleagues will rely on local copies. Continue.
 
-If yes, compute the list of generic globals via the Forked-Global Classification (skills in `~/.claude/skills/` with no template). Present via `AskUserQuestion` (multiSelect, no pre-selection): which to scaffold as project-local forks? Per `meta-project-local-skill-copies.md`, prefer skills integral to colleague workflow (plan, implement, commit, rebase-on-main, etc.).
+If yes, list the global skills via the Classification above and present via `AskUserQuestion` (multiSelect, no pre-selection): which to scaffold as project-local forks? Prefer skills integral to colleague workflow (`plan`, `implement`, `commit`, `rebase-on-main`).
 
-### 2.4 Gather project info
+Then for each selected fork:
 
-Read CLAUDE.md for context. Ask per-skill info via `AskUserQuestion`:
+1. Read `~/.claude/skills/<name>/SKILL.md`, apply the Transformations, write to `.claude/skills/<name>/SKILL.md`.
+2. If `~/.claude/skills/<name>/scripts/` exists, copy each script with transformations applied.
 
-- **build**: build command, dev server (command, port, URL), kill method
-- **test**: preview server name, test script (JS for `preview_eval`), perf tracking (yes/no + baseline path), testing conventions
-- **refactor-code**: architecture principles (derive from CLAUDE.md if possible)
-- **refactor-tests**: test framework files, test mapping
+Afterwards ensure `.claude/scripts/` has the shared utilities forks commonly depend on (`git-diff-scope.ps1`, `git-preflight.ps1`, `kill-port.ps1`), copied with transformations. Skip files the project already has — no overwrite without prompting.
 
-### 2.5 Store values in `.claude/local/skills/{name}/config.md` (markdown with clear headings).
+Compute each fork's hash from its **transformed** content, for the `forks` map in 2.5.
 
-### 2.6 Generate skills
+### 2.4 Create `.claude/launch.json`
 
-For each selected skill:
-1. Read template, compute SHA256 hash (first 8 hex)
-2. Generate customized version (replace `{PLACEHOLDER}` markers)
-3. Write full implementation to `.claude/skills/{name}/SKILL.md`
-4. Write thin shell to `.claude/skills/{name}/SKILL.md` (frontmatter + redirect). Include `$ARGUMENTS` for skills that accept args.
-5. Copy supporting files from template
+If a build or test config was written, a preview server was named, and the file doesn't exist.
 
-**build exception**: scaffolds only `.claude/local/skills/build/config.md` — no project skill files (global skill reads config at runtime).
+### 2.5 Stamp `.claude/local/config-version.json`
 
-**test**: also generate `.claude/skills/test/scripts/smoke-test.js`.
+Global version, date, and fork hashes under `forks`. There is no `skills` map any more — if an old one is present, drop it.
 
-Replace `${CLAUDE_SKILL_DIR}` refs with `.claude/skills/{name}/` in generated files.
+### 2.6 Report
 
-### 2.6b Scaffold forked-globals
-
-For each fork selected in 2.3b:
-
-1. Read `~/.claude/skills/<name>/SKILL.md`, apply Forked-Global Transformations, write to `.claude/skills/<name>/SKILL.md`.
-2. If `~/.claude/skills/<name>/scripts/` exists, copy each script with transformations applied to content, to `.claude/skills/<name>/scripts/`.
-
-After all forks scaffolded, ensure `.claude/scripts/` has the shared utility scripts forks commonly depend on (`git-diff-scope.ps1`, `git-preflight.ps1`, `kill-port.ps1`). Copy from `~/.claude/scripts/` with transformations. Skip files the project already has (no overwrite without prompting).
-
-Compute hash of each fork's **transformed** content — stored in 2.8 under the `forks` map.
-
-### 2.7 Create `.claude/launch.json` if test selected + preview server configured and file doesn't exist.
-
-### 2.8 Stamp `.claude/local/config-version.json` with global version, date, skill template hashes (under `skills`), and fork hashes (under `forks`).
-
-### 2.9 Report: list created files (including `git-workflow.md`). Remind about `.claude/local/` in .gitignore, editing in `.claude/skills/`, and CLAUDE.md for architecture docs.
+List created files (including `git-workflow.md`). Remind about `.claude/local/` in `.gitignore`, and about `CLAUDE.md` being where architecture context belongs.
 
 ---
 
 ## Step 3 — Sync
 
-### 3.1 Compare versions. If match and no specific skills requested → "All current." Done. If differ → read CHANGELOG, summarize project-action entries.
+### 3.1 Compare versions
 
-### 3.2 Per-skill: compute current hash, compare to stored. Categorize: **Changed**, **Current**, or **New** (source exists but not in project). Apply to both **templates** (hash the regenerated template content) and **forks** (hash the transformed `~/.claude/skills/<name>/SKILL.md` per Forked-Global Transformations).
+Match, and no specific skills requested → "All current." Done. Differ → read `CHANGELOG.md` and summarize the **Project action** entries between the two versions.
 
-### 3.3 Ask via `AskUserQuestion` (multiSelect, pre-select Changed+New — templates and forks shown in one list, labeled by category).
+### 3.2 Per-fork drift categorization
+
+For each fork: compute the hash of the transformed `~/.claude/skills/<name>/SKILL.md` and compare to the stored one. Categorize **Changed**, **Current**, or **New** (a global exists that the project doesn't fork yet — only offer these if the project already forks something).
+
+### 3.3 Selection
+
+Ask via `AskUserQuestion` (multiSelect, pre-select Changed + New).
 
 ### 3.4 Drift check (parallel Haiku fanout)
 
-Before applying any update, compute drift per Changed skill — independently. For each Changed skill (template **or** fork), spawn a Haiku agent (`model: "haiku"`):
+Before applying anything, compute drift per Changed fork independently. For each, spawn a Haiku agent (`model: "haiku"` — mechanical per-item comparison, per `wf-agents-on-sonnet`):
 
-> Given the current project SKILL.md and the regenerated content (template + filled placeholders + reinserted `<ProjectSpecific>` blocks **for templates**, or transformed global + reinserted `<ProjectSpecific>` blocks **for forks**), return JSON `{ skill, drift: bool, lines: N, projectOnlyLines: N, sectionsAtRisk: [headings], sample: [first 20 +/- lines outside <ProjectSpecific> blocks] }`. Strip `<ProjectSpecific>` blocks from both before comparing.
+> Given the current project SKILL.md and the regenerated content (transformed global + reinserted `<ProjectSpecific>` blocks), return JSON `{ skill, drift: bool, lines: N, projectOnlyLines: N, sectionsAtRisk: [headings], sample: [first 20 +/- lines outside <ProjectSpecific> blocks] }`. Strip `<ProjectSpecific>` blocks from both before comparing.
 >
 > `projectOnlyLines` counts lines present in the project copy but absent from the regenerated content — the work an overwrite would destroy. `sectionsAtRisk` names the headings those lines sit under.
 
 Wait for all to return.
 
-### 3.5 Apply updates per skill
-
-For each Changed skill, based on its drift result:
+### 3.5 Apply updates per fork
 
 - **No drift** → apply silently (regenerate + reinsert blocks).
-- **Drift** → ask via `AskUserQuestion`: **Apply (overwrite drift)** / **Show full diff** / **Skip this skill**. If full diff requested, emit it as text and re-prompt.
+- **Drift** → ask via `AskUserQuestion`: **Apply (overwrite drift)** / **Show full diff** / **Skip this skill**.
 
-**Name the loss in the prompt.** State `projectOnlyLines` and `sectionsAtRisk` in the Apply option's description — "discards 82 project-only lines under Phase 6.5, Phase 8", not a bare "overwrite drift". Project content that was never wrapped in `<ProjectSpecific>` is indistinguishable from stale drift to the diff, so the user is the only safeguard and needs the magnitude up front.
+**Name the loss in the prompt.** State `projectOnlyLines` and `sectionsAtRisk` in the Apply option's description — "discards 82 project-only lines under Phase 6.5, Phase 8", not a bare "overwrite drift". Project content never wrapped in `<ProjectSpecific>` is indistinguishable from stale drift to the diff, so the user is the only safeguard and needs the magnitude up front.
 
-When `projectOnlyLines` exceeds ~25, default the selection to **Skip** rather than Apply. A fork that far ahead of global is an unmerged feature branch, not drift — reconcile it deliberately instead of resolving it inside a sync.
+When `projectOnlyLines` exceeds ~25, default the selection to **Skip**. A fork that far ahead of global is an unmerged feature branch, not drift — reconcile it deliberately rather than inside a sync.
 
-For **New** skills: check existing configs for reusable values, ask for the rest, scaffold normally (no drift check — file doesn't exist yet).
+Applying a fork also syncs its scripts per Script sync above — unconditional resync, no per-script drift tracking.
 
-**Forks** use the same disposition logic (No drift / Drift / New) with fork-specific mechanics:
-
-- **Apply** → read `~/.claude/skills/<name>/SKILL.md`, apply Forked-Global Transformations, reinsert `<ProjectSpecific>` blocks, write to project. Also sync scripts per Forked-Global Script sync — unconditional resync, no per-script drift tracking.
-- **Missing matching global** → if a project fork has no `~/.claude/skills/<name>/SKILL.md` counterpart (global removed/renamed), warn ("Local fork `<name>` has no matching global — was it removed or renamed?") and skip. User decides whether to delete the orphan.
+**Missing matching global** → a project fork with no `~/.claude/skills/<name>/SKILL.md` counterpart means the global was removed or renamed. Warn and skip; the user decides whether to delete the orphan.
 
 #### `<ProjectSpecific>` block preservation
 
-Project skills can carry custom additions wrapped in:
+Project forks carry custom additions wrapped in:
 
 ```markdown
 <ProjectSpecific>
@@ -222,26 +194,26 @@ Project skills can carry custom additions wrapped in:
 </ProjectSpecific>
 ```
 
-Each block is anchored to the most recent heading above it (e.g. `## Step 3: Architecture`). When regenerating from template:
+Each block is anchored to the most recent heading above it. When regenerating:
 
-1. Scan the current project file for `<ProjectSpecific>` blocks, capturing each block's anchor heading.
-2. For each preserved block, find its anchor heading in the regenerated content and re-insert the block immediately after that heading.
-3. If the anchor heading no longer exists, append the block under a `## Project additions` section at the end and warn the user.
+1. Scan the project file for `<ProjectSpecific>` blocks, capturing each block's anchor heading.
+2. For each, find that anchor in the regenerated content and re-insert the block immediately after it.
+3. If the anchor no longer exists, append the block under a `## Project additions` section at the end and warn.
 
-This lets project-specific rule references (e.g. *"Apply `.claude/rules/arch-core-principles.md`"*) survive template upgrades. Templates stay project-agnostic; projects keep their additions.
+`scripts/mirror-skill.ps1` implements this algorithm; prefer calling it over re-deriving. See `rules/wf-project-specific-blocks.md`.
 
-### 3.6 Update version stamp.
+### 3.6 Update the version stamp
 
-### 3.7 Report: updated, added, skipped, current skills. New version number.
+### 3.7 Report
+
+Updated, added, skipped, current forks. New version number.
 
 ---
 
 ## Edge Cases
 
-- **No skills map in version file**: scan for installed skills, treat all as unknown hash, offer re-sync.
-- **No forks map in version file** (first run after v1.1.3): scan `.claude/skills/` for forked-globals (per Forked-Global Classification), register all as **New**, ask user to accept; subsequent runs handle drift normally.
-- **New placeholder in template**: detect, ask user, update config.
-- **Manual edits**: drift check (Step 3.4) detects them. User can wrap edits in `<ProjectSpecific>...</ProjectSpecific>` blocks to preserve across syncs without prompting.
-- **Fork has no matching global**: warn ("Local fork `<name>` has no matching global — was it removed or renamed?") and skip. User decides whether to delete the orphan.
-- **Project-unique skills**: skills in `.claude/skills/` that have neither a template nor a matching global are left alone — never treated as forks.
-- **Pull fails**: offer to continue with local templates.
+- **No `forks` map in the version file**: scan `.claude/skills/` per Classification, register all as **New**, ask the user to accept; later runs handle drift normally.
+- **A stale `skills` map** from the retired template tier: drop it on the next stamp. Those project skills are now global — the project copies are either forks (register them) or safe to delete.
+- **Manual edits**: the drift check catches them. Wrapping edits in `<ProjectSpecific>` preserves them across syncs without prompting.
+- **Project-unique skills**: no matching global → left alone, never treated as forks.
+- **Pull fails**: offer to continue against the local global config.

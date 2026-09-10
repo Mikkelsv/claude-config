@@ -6,7 +6,7 @@ Skill placement is covered by `meta-skill-tiers.md`. This file covers what's lef
 
 - **Check before duplicating.** Before creating project-level commands, rules, or docs, look for an existing equivalent in `~/.claude/commands/`, `~/.claude/rules/`, `~/.claude/docs/`. Extend rather than duplicate.
 - **Prefer scripts over inline shell.** For mechanical work (git, file I/O, process management), add or update a script in `~/.claude/scripts/` instead of assembling inline commands. Reusable, testable, cheaper in tokens.
-- **Keep the README and templates current.** Adding or changing a command, script, rule, or skill means updating `~/.claude/README.md`. Improving a project-scaffolded skill means propagating the generic part back to `~/.claude/templates/skills/<name>/`; project-specific tweaks stay local.
+- **Keep the README current.** Adding or changing a command, script, rule, or skill means updating `~/.claude/README.md`. Improving a skill that a shared repo forks means the fork drifts — `/claude-sync` reports it; reconcile deliberately rather than inside a sync.
 
 ## Never do
 
