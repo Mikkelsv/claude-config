@@ -32,7 +32,7 @@ Work through a plan task-by-task with build, test, refactor gates. One task = on
    Print one line: `Mode: <inline|agentic>`. In agentic mode, each task runs in a fresh Sonnet sub-agent so context doesn't drift across the loop; the plan file becomes durable cross-task state via the sub-agent's `**Implementation notes:**` mandate (see Loop step 2).
 5. Flag vague tasks — ask targeted questions. **Don't start until user approves.**
 6. **Record squash base** — capture `git rev-parse HEAD` **before any plan-file commit**. The squash folds in both the plan-add and the cleanup-time plan-delete so neither appears in main's history once merged.
-   - If the plan file is **uncommitted** (just authored by `/plan` in this session): record current `HEAD` as squash base, then commit the plan via `git commit -m "[DOCS] Add {plan-name} plan."`.
+   - If the plan file is **uncommitted** (just authored by `/plan` in this session): record current `HEAD` as squash base, then commit the plan via `git commit -m "[Docs] Add {plan-name} plan."`.
    - If the plan file is **already committed** as the last commit (e.g. resuming a session): record `HEAD~1` as squash base. Do not re-commit.
    - Stash the SHA in your working memory.
 7. Find first unchecked `- [ ] Done` task (or phase). Print: "Resuming at Task/Phase N. M/T done."
@@ -147,17 +147,25 @@ Never stop unless all done. 3 fix failures → stash + skip + note. Unclear requ
 - Stash on failure after 3 attempts. Max 3 refactor iterations.
 - Small drive-bys OK. Test behavior, not internals. Fix code, not tests.
 
+## Verify
+
+After all tasks are committed: run `/verify {plan-path}`. Confirms the work holds **before** auditing its quality — a criterion `/verify` reports `fail` or `can't-tell` on is unfinished work, not a Final Audit style nit. `/verify` owns its own routing, including pausing on a regression; this step is only the call site.
+
+In Phase Chain mode this runs once after the whole chain completes, alongside Final Audit — not per phase.
+
+**`/verify` runs twice by design, and that is correct — the two runs answer different questions.** This step runs it *before* Final Audit, so a `fail` or `can't-tell` is caught as unfinished work rather than after spending six audit sub-agents on it. `/audit-branch` then ends with its own trailing `/verify` (its Phase 8), once the fleet has edited more code: that run answers "did the audit break it," not "did we build it." Neither is redundant with the other — don't collapse them.
+
 ## Final Audit
 
 After all tasks committed (but before Cleanup + Squash):
 
 1. Run `/audit-branch` on the full branch diff. Since this runs at the tail of an implementation, prefer **Defer to plan** for any major architectural rework — it belongs in its own focused plan, not folded into this one. `/audit-branch` handles rule candidates internally.
-2. If `/audit-branch` applied fixes inline: run `/test`. If passing, `/commit "[REFAC] Apply Final Audit fixes"`. If failing, stash, note in report, leave to user.
+2. If `/audit-branch` applied fixes inline: run `/test`. If passing, `/commit "[Refac] Apply Final Audit fixes"`. If failing, stash, note in report, leave to user.
 3. If `/audit-branch` deferred to a plan, mention its path in the Report so the user can pick it up via `/implement` next.
 
 ## Cleanup
 
-Delete the implemented plan file (and managing plan if applicable). Commit as `[DOCS] Remove implemented {plan-name} plan.`. The deferred-plan from Final Audit, if any, is preserved — it's the next implementation's input. Plans are working documents, not permanent artifacts; the commit history tells the story.
+Delete the implemented plan file (and managing plan if applicable). Commit as `[Docs] Remove implemented {plan-name} plan.`. The deferred-plan from Final Audit, if any, is preserved — it's the next implementation's input. Plans are working documents, not permanent artifacts; the commit history tells the story.
 
 This runs **before Squash** so the plan-delete (and the plan-add committed at Phase 0) both fold into the implementation squash. Net effect on main's history: no plan-file noise.
 
