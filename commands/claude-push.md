@@ -20,7 +20,7 @@ Scripts directory: `~/.claude/scripts`
 
 2. Run `/commit` to commit and push. The commit skill analyzes the staged diff, picks the tag, and pushes.
 
-3. **Update the changelog** only if `sync-config.ps1` reported `versionBump: true` **and** the changes require project action — re-scaffolding templates, manually re-copying duplicated skills or rules, new gitignore entries, new local config files. Skip it for anything that propagates automatically (rules, scripts, global skills, since those auto-load), for internal tooling changes to `/claude-push`, `/claude-sync` or `/claude-refactor`, and for anything already obvious from the commit message. The bump alone is enough signal in those cases. When an entry is warranted, append a bullet list to `~/.claude/CHANGELOG.md` with the new version, date, and the actionable items only. Then stage and amend:
+3. **Update the changelog** only if `sync-config.ps1` reported `versionBump: true` **and** the changes require project action — refreshing a fork, manually re-copying duplicated skills or rules, new gitignore entries, a new committed skill config. Skip it for anything that propagates automatically (rules, scripts, global skills, since those auto-load), for internal tooling changes to `/claude-push`, `/claude-sync` or `/claude-refactor`, and for anything already obvious from the commit message. The bump alone is enough signal in those cases. When an entry is warranted, append a bullet list to `~/.claude/CHANGELOG.md` with the new version, date, and the actionable items only. Then stage and amend:
 
    ```bash
    git -C ~/.claude add CHANGELOG.md

@@ -1,6 +1,6 @@
 param()
 
-# Version-bump prep: stages all changes and bumps config version if templates changed.
+# Version-bump prep: stages all changes and bumps config version if rules/, skills/ or commands/ changed.
 # Does NOT commit or push — caller handles that (e.g. via /commit).
 
 $repoRoot = "$env:USERPROFILE\.claude"
@@ -17,6 +17,7 @@ try {
 
     # Auto-bump config version when changes might affect projects:
     # rules/, skills/, commands/ → a shared repo forking any of these needs to know to re-pull.
+    # Deliberately NOT every directory — agents/ and scripts/ ride along in a fork refresh.
     # The bump is a SIGNAL. Whether project action is required is decided by the changelog
     # entry (only added when manual re-copy is actually needed; see rules/meta-user-config.md).
     $trackedDirs = @("rules", "skills", "commands")

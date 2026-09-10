@@ -8,7 +8,7 @@ Rules auto-load into every (or every-matching-file) context. A rule relevant onl
 
 ## How
 
-- Operation is a recognizable, deliberate action with a skill? → embed the checklist in that skill (`<ProjectSpecific>` block if the skill is templated, so it survives `/claude-sync`).
+- Operation is a recognizable, deliberate action with a skill? → embed the checklist in that skill (a `<ProjectSpecific>` block if a shared repo forks that skill, so it survives `/claude-sync`).
 - Directive that changes DEFAULT generation across ordinary editing? → that's a genuine always-loaded or path-scoped rule.
 - Test: *"would this fire in a session that isn't doing the operation?"* If no, it's skill content, not a rule.
 

@@ -1,6 +1,8 @@
 # ProjectSpecific Blocks
 
-When authoring skills, templates, or any markdown that projects may duplicate or scaffold (workflow skills, project skill templates), design with `<ProjectSpecific>` blocks in mind. Projects layer their own additions inside these blocks so customizations survive `/claude-sync` and `mirror-skill.ps1` updates.
+When authoring a global skill that a shared repo may fork (per `meta-project-local-skill-copies`), design with `<ProjectSpecific>` blocks in mind. A fork layers its additions inside these blocks so they survive `/claude-sync` and `mirror-skill.ps1` refreshes.
+
+**Prefer a project rule over a block where you can.** Global wins on same-named skills, so a block added to a fork never reaches the fork's own author — only colleagues see it. See `meta-skill-tiers`.
 
 ## How to apply
 
@@ -22,6 +24,6 @@ The block opens with `<ProjectSpecific>` and closes with `</ProjectSpecific>`, e
 
 ## Why
 
-Without anchored blocks, project additions get overwritten on every template re-sync — forcing the user to re-apply manual edits or skip the skill entirely. With the convention, additions layer cleanly. `/claude-sync` re-inserts blocks after the same heading; orphans (anchor heading deleted) land under a `## Project additions` section so nothing is silently lost.
+Without anchored blocks, a fork's additions get overwritten every time it is refreshed from global — forcing the user to re-apply manual edits or skip the refresh entirely. With the convention, additions layer cleanly. `/claude-sync` re-inserts blocks after the same heading; orphans (anchor heading deleted) land under a `## Project additions` section so nothing is silently lost.
 
-See `skills/claude-sync/SKILL.md` Step 3.4 for the full re-insertion algorithm; `scripts/mirror-skill.ps1` for non-template duplicates.
+See `skills/claude-sync/SKILL.md` for the re-insertion algorithm and `scripts/mirror-skill.ps1` for the implementation.

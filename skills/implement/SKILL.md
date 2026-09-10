@@ -115,7 +115,14 @@ Read the agent's returned summary. Don't re-read the touched files — trust the
 
 ### 3. Build & Test
 
-Run `/test`. **ALL GOOD/NEW BEST** → continue. **TEST FAILURE** → fix loop (max 3: diagnose, fix, re-test; after 3: stash, skip, note). **PERF REGRESSION** → assess if expected, fix if not. **THROTTLED** → re-run.
+Run `/test` and route on its verdict:
+
+- **ALL GOOD** → continue.
+- **TEST DRIFT** → continue, and log the touched test plus its diff hunk in `Decisions & Review Items`.
+- **TEST FAILURE** → short fix loop, max 3 (diagnose, fix, re-test). If it survives all three, record it in `Decisions & Review Items` and **carry forward** — no stash, no mid-loop pause.
+- **TEST REGRESSION** or **NEEDS REVIEW** → don't attempt a fix and don't pause. Record the verdict, the failing test names and `/test`'s reported baseline state, then carry forward. `/verify` pauses on both at end-of-plan with the whole branch in view; stopping here would block the loop on a judgment this gate can't make.
+
+If `/test` reports `baseline: none`, its classification is degraded — every failure arrives as TEST FAILURE regardless of history. Note that next to the verdict rather than treating the class as established.
 
 Check off `- [x] Implement`.
 

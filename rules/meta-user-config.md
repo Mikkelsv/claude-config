@@ -15,6 +15,6 @@ Skill placement is covered by `meta-skill-tiers.md`. This file covers what's lef
 
 ## Config version check (session start)
 
-Compare `~/.claude/config-version.json`'s `version` against the project's `.claude/local/config-version.json` `globalConfigVersion`. If they differ, mention it **once** — naming the two versions, how many skills drifted (compare each `templateHash` against the current template), and the **Project action** lines from the intervening `CHANGELOG.md` entries — then suggest `/claude-sync`. Informational only; never block work. No project version file means skip silently.
+Compare `~/.claude/config-version.json`'s `version` against the project's `.claude/local/config-version.json` `globalConfigVersion`. If they differ, mention it **once** — naming the two versions and the **Project action** lines from the intervening `CHANGELOG.md` entries — then suggest `/claude-sync`. Informational only; never block work. No project version file means skip silently. Don't compute a drift count here; `/claude-sync` owns fork-hash comparison.
 
 Writing the changelog and interpreting a version bump belong to `/claude-push`, not here.

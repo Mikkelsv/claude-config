@@ -5,7 +5,7 @@ description: Audit and improve Claude skills, commands, scripts, and configurati
 
 # Claude Config Audit
 
-Audit skills, commands, scripts, rules, and templates. Fix bugs, stale refs, permission gaps, and misplacements.
+Audit skills, commands, scripts, rules, and agents. Fix bugs, stale refs, permission gaps, and misplacements.
 
 Scripts: `~/.claude/scripts`
 
@@ -15,7 +15,7 @@ Launch 2 parallel agents (`model: "sonnet"`):
 
 **Agent 1 — Global**: read all `~/.claude/skills/`, `~/.claude/commands/`, `~/.claude/scripts/`, `~/.claude/rules/`, `~/.claude/agents/`, README.md, settings.json, settings.template.json, CLAUDE.md. Record: path, purpose, references.
 
-**Agent 2 — Project** (skip if not in a project): read `.claude/skills/`, `.claude/commands/`, `.claude/rules/`, `.claude/docs/`, CLAUDE.md. Record same, plus which global template each was scaffolded from.
+**Agent 2 — Project** (skip if not in a project): read `.claude/skills/`, `.claude/commands/`, `.claude/rules/`, `.claude/skill-config/`, `.claude/docs/`, CLAUDE.md. Record same, plus which global skill each project skill forks, if any.
 
 ## Phase 2 — Review
 
@@ -32,14 +32,15 @@ Launch 3 background agents (`model: "sonnet"`) with the inventory:
 - **Parallelization**: independent read-only phases that could be parallel agents? Write-independent phases safe for worktrees?
 
 **Agent C — Sync & Docs**:
-- **Template sync**: compare project skills to templates. Generic improvements → propagate back. Template updates → pull in. Project-specific divergence → expected.
+- **Fork drift**: compare each project fork to the global skill it copies. Generic improvements in the fork → propagate **up** to global. Global ahead → the fork is stale. Project-specific divergence inside `<ProjectSpecific>` → expected.
+- **Invisible drift is the one to hunt.** Global wins on same-named skills, so a fork that has drifted ahead runs only for colleagues, never for its author — nothing surfaces it. Flag any fork whose non-block content exceeds its global counterpart.
 - **README accuracy**: `~/.claude/README.md`. All items listed? Descriptions accurate? Directory layout correct? Script catalog complete?
 
 ## Phase 3 — Fix
 
 **Auto-fix** (apply directly): stale references, script param mismatches, JSON format mismatches, safe permission patterns, README corrections.
 
-**Ask user** (via `AskUserQuestion`): placement changes, script extraction, template sync propagation, parallelization restructuring. Apply confirmed changes immediately.
+**Ask user** (via `AskUserQuestion`): placement changes, script extraction, fork-drift propagation, parallelization restructuring. Apply confirmed changes immediately.
 
 ## Phase 4 — Documentation
 
@@ -54,7 +55,7 @@ Update `~/.claude/README.md` to reflect all Phase 3 changes. Update Global Rules
 | Permission gaps | N | N | N |
 | Placement | N | N | N |
 | Parallelization | N | N | N |
-| Template drift | N | N | N |
+| Fork drift | N | N | N |
 | README accuracy | N | N | N |
 
 List changes made, deferred items, and settings template updates. Ask: **Push now** / **Review first** / **Done**.
