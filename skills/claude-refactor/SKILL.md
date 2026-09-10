@@ -24,7 +24,11 @@ Launch 3 background agents (`model: "sonnet"`) with the inventory:
 **Agent A — Content Quality**:
 - **Correctness**: logic flow, script param mismatches, stale references, JSON output mismatches.
 - **Script extraction**: multi-line bash blocks that should be scripts (especially if repeated). Not single-liners.
-- **Token efficiency** (per `wf-tight-claude-config.md`): rules and CLAUDE.md load every session; skills/commands load on invocation. Flag verbose prose, redundant tables, repeated explanations, cross-file duplication, examples that restate the directive. Rules ≤ ~25 lines, skills ≤ ~80 lines unless genuinely needed.
+- **Token efficiency** (per `wf-tight-claude-config.md`): rules and CLAUDE.md load every session; skills and commands load on invocation. Flag verbose prose, redundant tables, repeated explanations, cross-file duplication, and examples that restate the directive.
+
+  **Aim below the cap, don't just check it.** A rule over **50 lines** is a finding that needs a reason or a trim. Between 25 and 50, don't report mere length — report it only when the extra lines are *justification* (a measurement, a war story, a "why this matters" paragraph) rather than directive, since that content belongs in `README.md` and is being paid for every session. Skills: ≤ ~80 lines unless genuinely needed.
+
+  Rank by **always-on bytes**, not line count. A 40-line always-loaded rule costs more than a 200-line skill nobody invokes this week, and a `paths:`-scoped rule costs nothing until a matching file is opened.
 
 **Agent B — Structure & Permissions**:
 - **Permissions**: walk skills/commands, find Bash/Write/Edit calls not covered by settings.json globs. Draft safe patterns. Update template if portable.

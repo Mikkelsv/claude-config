@@ -13,6 +13,8 @@ Global rules auto-load every session; skills load on invocation. Bloat multiplie
 - Examples only where they change AI output. Cut examples that restate the directive.
 - Exceptions only if non-obvious.
 - Cross-reference other rules/skills instead of restating them.
-- Target: rules ≤ ~25 lines, skills ≤ ~80 lines unless the skill genuinely needs more.
+- **Rules: aim ≤ 25 lines, hard cap 50.** Between the two is fine when the extra length is directive rather than justification — same soft/hard shape as the 400/800 file-size caps. Over 50 needs a stated reason, or a trim.
+- **Skills: ≤ ~80 lines** unless the skill genuinely needs more. They load on invocation rather than every session, so the pressure is lower than on a rule.
+- **Justification belongs in `README.md`, not in an always-loaded rule.** A measurement, a war story, or a "here's why this matters" paragraph is read once; the directive is read every session. Cross-reference instead of restating.
 
 Applies when writing or editing anything under `~/.claude/rules/`, `~/.claude/skills/`, `~/.claude/commands/`, `.claude/docs/`, `CLAUDE.md`, or project equivalents.
