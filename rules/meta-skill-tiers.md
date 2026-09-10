@@ -26,6 +26,10 @@ Carries the values a *generic* skill can't guess about a *specific* project — 
 
 **Shape:** one `##` section per project fact. Values are **commands, paths, names, or small tables** — never architecture prose. `/test`'s config is the reference: build command, a tier table (name → command → result shape), baseline path, and a per-tier drift mapping.
 
+**Project facts only — a colleague reads this file.** No provenance or dates, no reference to anyone's personal `~/.claude`, no notes about which skill shadows which. That context is meaningless to a teammate and reads as authoritative long after it stops being true. Owner-side notes belong in a gitignored file such as `.claude/local/skill-config-notes.md`.
+
+**A stated result shape must be what the command actually returns**, verified by running it — not what a wrapper script does with the output afterwards. A shape copied from the harness rather than the underlying call is the kind of error that reports a green tally over zero tests.
+
 ```markdown
 ## Build
 `dotnet build`

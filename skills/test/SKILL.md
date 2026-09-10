@@ -12,6 +12,8 @@ Build, run every configured test tier, classify each result against the baseline
 ## Config
 
 Reads `.claude/skill-config/test.md` — **committed**, so colleagues cloning the repo get it too — for project specifics: the **build command**, a **tier table** (name → command → result shape), the **baseline path**, and optionally a **per-tier drift mapping** (how a touched test file maps to test names — necessarily per-project, since it tracks each framework's declaration syntax: xUnit attributes, `def test_*`, a registering constructor).
+**Trust the tier table's commands, but verify its result shapes on first use.** A shape describing what a harness script *assembles* rather than what the underlying call *returns* will parse to zero tests and report a green tally over nothing. If a tier's tally comes back zero while the command clearly ran, suspect the declared shape before suspecting the suite, and correct the config.
+
 **No config → degrade honestly, never guess.** Infer what you can from `.claude/launch.json` and obvious conventions, state plainly in the report which tiers you ran and which you could not find, and treat the baseline as absent (below). Never report ALL GOOD for a tier you never ran.
 
 ## Invocation modes

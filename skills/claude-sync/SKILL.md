@@ -117,6 +117,8 @@ Ask via `AskUserQuestion` (multiSelect): which global skills should get a projec
 
 Read `CLAUDE.md` for context first, then gather per skill — build command, dev server name and port, test tiers and their commands, baseline path. Write each to `.claude/skill-config/<name>.md` as headed sections per the schema in `meta-skill-tiers.md`: commands, paths, names, small tables. Never architecture prose. These are **committed** — they are repo-wide truth, not per-machine state.
 
+**Write project facts and nothing else.** No "generated on <date>", no "derived from <the owner's fork>", no note about global-vs-project precedence. A colleague reads this file and none of that helps them; worse, it reads as authoritative after it goes stale. If the migration produced owner-side context worth keeping, put it in a gitignored `.claude/local/skill-config-notes.md` instead.
+
 ### 2.3 Forked-globals (for shared repos)
 
 Ask via `AskUserQuestion`: **is this a shared repo where colleagues may not have `~/.claude/` set up?**
