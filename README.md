@@ -35,6 +35,10 @@ Available in every project via the global config.
 | `/resolve-audit-findings` | Per-finding triage. Spawns one Sonnet agent per finding (parallel) for full research; applies inline when confidence is high, defers substantial findings to `plans/post-audit-{slug}.md`. Typically invoked by `/audit-branch` Phase 5. |
 | `/test [inline\|background]` | Build, run every configured test tier, classify each result against a committed pass-set baseline, report one verdict (ALL GOOD / TEST DRIFT / TEST FAILURE / TEST REGRESSION / NEEDS REVIEW). Reads `.claude/local/skills/test/config.md` for build command, tier table, baseline path and per-tier drift mapping; degrades honestly with no config. **Never writes its own baseline** — refreshing it is a deliberate manual runbook, because a self-refreshing baseline would let a fix loop launder a regression into "expected". Delegates to a sub-agent by default to keep per-test arrays out of the caller. |
 | `/verify [plan\|none]` | Decides whether implemented work actually holds: executes each task's `**Verify:**` entries against the running app, reports pass / fail / can't-tell / human / no-instrument per criterion, triages every test result by class, and records provenance for any assertion edited in response to observed red. Delegates execution to the `verifier` agent above ~5 criteria but never delegates adjudication. `/test` measures; `/verify` decides. |
+| `/refactor-code [focus]` | Breadth code-quality sweep — naming, dead code, duplication, simplicity. Applies mechanical fixes inline, defers judgment calls. Reads the project's own `CLAUDE.md` + `.claude/rules/` for criteria. For deep design analysis use `/audit-architecture`. |
+| `/refactor-tests [focus]` | Test-coverage review after a change. Applies trivial additions inline, defers heavier gaps to a plan. Flags "verified live" notes standing in for coverage, and "can't unit test this" notes inherited by proximity. |
+| `/refactor-comments [scope]` | Sweep comments against the `arch-docs-over-inline` rubric via parallel Sonnet agents in non-overlapping partitions, build-verified after. `--dry-run` for review-only. Includes the merge-deletion vs completion-deletion diagnosis for a stale doc citation. |
+| `/refactor-file-sizes [scope]` | Audit + execute file-size refactors. Companion to `/audit-file-sizes` — splits violators by batch, one Sonnet agent each. Phase 3.5 checks that extracted files also clear the cap rather than the split just relocating it. |
 | `/refactor-docs [focus]` | Documentation sync — checks docs match code changes. Usually invoked via `/audit-branch`. |
 | `/audit-architecture [focus]` | Strict, skeptical architecture review (single-pass): boundaries, overengineering, alternatives. Usually invoked via `/audit-branch`. |
 | `/audit-file-sizes [mode]` | Mechanical scan vs. 400-line soft / 800-line hard caps. Respects top-of-file `SIZE-EXEMPT:` markers. |
@@ -43,17 +47,11 @@ Available in every project via the global config.
 | `/commit [hint]` | Stage all changes, craft a bracket-tagged commit message (`[FEAT]`/`[FIX]`/`[REFAC]`/`[DOCS]` or a custom feature tag like `[GridCreation]`), and push. |
 | `/squash [tag]` | Squash all commits since the branch diverged from main into one, using `/commit`'s tag format and a synthesized message. Force-pushes with lease. |
 
-### Project Skills (via /claude-sync)
+### Project Skills (Tier 2) — being retired
 
-Scaffolded per-project from templates. Embed project-specific knowledge (architecture rules, test patterns).
+All five skills that used to be scaffolded per-project from `templates/skills/` are now **global**, listed in the table above. They discover project specifics at runtime — reading the project's own `CLAUDE.md` and `.claude/rules/`, plus an optional Tier-3 `.claude/local/skills/<name>/config.md` for values that can't be derived (a build command, a tier table, a curated partition list).
 
-| Skill | What it does |
-|---|---|
-| `/test` | Browser-based smoke tests with optional perf tracking. |
-| `/refactor-code [focus]` | Code quality & architecture review with project-specific criteria. |
-| `/refactor-tests [focus]` | Test coverage review with project-specific framework knowledge. |
-| `/refactor-comments [scope]` | Sweep code comments against `arch-docs-over-inline` rubric; parallel Sonnet agents in non-overlapping partitions, build-verifies after. `--dry-run` for review-only mode. |
-| `/refactor-file-sizes [scope]` | Audit + execute file-size refactors. Companion to `/audit-file-sizes` — splits violators by batch with language-playbook rules in each sub-agent's prompt. |
+One skill per capability instead of one fork per project: no drift, no re-scaffolding, no placeholder substitution. `templates/skills/` and the sync machinery that maintained those forks are being removed; see `rules/meta-skill-tiers.md` for the tier decision guide.
 
 ### Utility Commands
 
