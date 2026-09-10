@@ -8,10 +8,8 @@ Only lists changes that require project action. Global rules, scripts, and globa
 
 **Project action:**
 
-- **Any project with template-scaffolded skills** (`build`, `test`, `refactor-code`, `refactor-tests`, `refactor-comments`, `refactor-file-sizes`): those capabilities are now global. Either **delete the project copies** — the global skill takes over, plus a `config.md` if it needs project values — or, if the repo is shared with colleagues who lack their own `~/.claude/`, **keep them and register them under `forks`**. Do not leave them registered under `skills`: that map is dead and `/claude-sync` now drops it.
-- **Skill precedence is still unverified.** Nothing documents which `SKILL.md` wins when a project and global both define one. Until that's settled, migrate a project by writing its config and deleting its copies **in the same change**, so no window exists where the answer matters.
-- **GridPreviewPoc:** leave its copies in place — colleagues depend on them, and its `/test` fork is the source the global one was harvested from.
-- **Axioku and Eidetic:** their `.claude/skills/<name>/SKILL.md` files are thin redirector stubs pointing at a capital-`C` `Claude/skills/` directory — the pre-v1.1.0 layout the flatten was meant to retire. Resolve that before migrating, rather than migrating a redirector. Eidetic additionally has no `.claude/local/` and no `.gitignore` entry for it; both are prerequisites for any Tier-3 config.
+- **Any project with template-scaffolded skills** (`build`, `test`, `refactor-code`, `refactor-tests`, `refactor-comments`, `refactor-file-sizes`): **run `/claude-sync`.** Its new Step 3.1b does the migration — it triggers on the now-dead `skills` map, resolves redirector stubs, classifies each project copy as safe-to-delete / needs-review / keep-as-fork, writes the Tier-3 config and removes the copy in one change, and checks `.gitignore` covers `.claude/local/` first. It stops and shows you the diff rather than deleting any copy carrying hand-written content outside `<ProjectSpecific>`.
+- **GridPreviewPoc:** answer "keep as fork" — colleagues depend on those copies, and its `/test` fork is the source global's was harvested from. Its only real cleanup is two mislabelled `config.md` files (`refactor-code`, `refactor-tests`) that recorded template placeholder fills for a flow that no longer exists.
 
 ## v1.1.16 — 2026-09-09 — /verify, verifier, design-scout, and richer /plan
 

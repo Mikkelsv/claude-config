@@ -1,6 +1,6 @@
 ---
 name: claude-sync
-description: Pull global config, scaffold per-project Tier-3 skill configs, and sync project-local forks of global skills for shared repos
+description: Pull global config, scaffold per-project Tier-3 skill configs, sync project-local forks of global skills for shared repos, and migrate a project off the retired template tier
 ---
 
 # Claude Sync
@@ -153,6 +153,24 @@ List created files (including `git-workflow.md`). Remind about `.claude/local/` 
 
 Match, and no specific skills requested → "All current." Done. Differ → read `CHANGELOG.md` and summarize the **Project action** entries between the two versions.
 
+### 3.1b One-time migration off the retired template tier
+
+**Trigger:** the version file has a `skills` map. That map only ever recorded template-scaffolded skills, so its presence means this project predates v1.1.17 and still carries copies of skills that are now global. Skip this step entirely when it's absent.
+
+**Resolve redirector stubs first.** If a project `SKILL.md` is a thin stub whose body just points at another path (e.g. a capital-`C` `Claude/skills/<name>/SKILL.md`, the pre-v1.1.0 layout), the real content is there. Classify and migrate *that* file — migrating a redirector accomplishes nothing and leaves the real copy orphaned. Offer to collapse the stale layout while you're here.
+
+For each entry in the `skills` map, the named skill now exists globally. Classify its project copy and route:
+
+- **Mechanical scaffold** — nothing beyond placeholder fills and `<ProjectSpecific>` blocks → **safe to delete.** The global skill takes over.
+- **Carries hand-written content outside `<ProjectSpecific>`** → **stop and show it.** Report `projectOnlyLines` and the headings it sits under, exactly as 3.5 does for fork drift, and let the user decide: harvest it up to global first, keep the copy as a fork, or delete anyway. Never delete silently — that content is indistinguishable from stale drift to a diff, so the user is the only safeguard.
+- **Shared repo whose colleagues lack `~/.claude/`** → **keep it, re-register under `forks`.** It stops being a templated skill and becomes an ordinary fork; drift handling from 3.2 onward then applies.
+
+**Write the Tier-3 config and delete the copy in the same change.** Skill precedence is undocumented — nothing states whether a project copy shadows a global one — so a window where the copy is gone but the config is missing (or vice versa) has undefined behaviour. Gather what the global skill needs first (`/build`: build command, preview server; `/test`: build command, tier table, baseline path, optional drift mapping), write it per the schema in `meta-skill-tiers.md`, then remove the copy.
+
+**Check `.gitignore` covers `.claude/local/`** before writing any config — Tier 3 requires it, and a project that never had a local config may not have the entry. Offer to add it.
+
+Finally, drop the `skills` map from the version file on the 3.6 stamp. Keep `forks`.
+
 ### 3.2 Per-fork drift categorization
 
 For each fork: compute the hash of the transformed `~/.claude/skills/<name>/SKILL.md` and compare to the stored one. Categorize **Changed**, **Current**, or **New** (a global exists that the project doesn't fork yet — only offer these if the project already forks something).
@@ -213,7 +231,7 @@ Updated, added, skipped, current forks. New version number.
 ## Edge Cases
 
 - **No `forks` map in the version file**: scan `.claude/skills/` per Classification, register all as **New**, ask the user to accept; later runs handle drift normally.
-- **A stale `skills` map** from the retired template tier: drop it on the next stamp. Those project skills are now global — the project copies are either forks (register them) or safe to delete.
+- **A stale `skills` map** from the retired template tier: handled by Step 3.1b, not here. Don't drop the map without running that migration — it is the only signal that a project still carries copies of now-global skills.
 - **Manual edits**: the drift check catches them. Wrapping edits in `<ProjectSpecific>` preserves them across syncs without prompting.
 - **Project-unique skills**: no matching global → left alone, never treated as forks.
 - **Pull fails**: offer to continue against the local global config.
