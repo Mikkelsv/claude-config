@@ -18,6 +18,7 @@
 **Context:** {what and why}
 **Files:** {likely files to touch}
 **Acceptance:** {what "done" looks like}
+**Verify:** {one instrument per acceptance criterion; `human: <what to look at>` is first-class}
 **Test:** {new test? existing tests sufficient? visual check?}
 **Dependencies:** None
 **Parallel group:** —
@@ -32,6 +33,7 @@
 **Context:**
 **Files:**
 **Acceptance:**
+**Verify:**
 **Test:**
 **Dependencies:**
 **Parallel group:** —

@@ -73,6 +73,7 @@ Task block:
 **Context:** what and why
 **Files:** files to touch
 **Acceptance:** what done looks like
+**Verify:** one instrument per acceptance criterion — the ladder is in `/plan`'s "The `**Verify:**` field"; `human:` is first-class
 **Test:** how to verify
 **Dependencies:** Task N (if any)
 **Parallel group:** A (or — for sequential)
@@ -86,7 +87,7 @@ Runs until all tasks completed or skipped. After each checkpoint, pick next unch
 
 ### Parallel Groups
 
-If task has a group letter, collect all unchecked tasks in that group. Main thread takes one (prefer most downstream dependents). Others launch as background agents with `isolation: "worktree"`, `model: "sonnet"` — implement, build, must run `/refactor-code` (skip only if < 20 lines changed), no `/test`, no commit. After all return, merge one at a time (`git merge --no-ff`). Resolve conflicts or re-queue failed tasks. Run `/test` once on combined result. Commit each via `/commit`.
+If task has a group letter, collect all unchecked tasks in that group. Main thread takes one (prefer most downstream dependents). Others launch as background agents with `isolation: "worktree"`, `model: "sonnet"` — implement, build, must run `/refactor-code` (skip only if < 20 lines changed), no `/test`, no commit. After all return, merge one at a time (`git merge --no-ff`). Resolve conflicts or re-queue failed tasks. Run the Step 3 gate once on the combined result; full `/test` if any task in the group is a milestone. Commit each via `/commit`.
 
 ### 1. Read & Understand
 
@@ -97,25 +98,32 @@ Scan remaining tasks in the plan (don't paint into a corner). Take `preview_scre
 
 ### 2. Implement
 
-**Inline mode**: make changes following CLAUDE.md conventions. Add tests for new user-facing functionality.
+**Inline mode**: make changes following CLAUDE.md conventions. Add tests for new user-facing functionality. Before returning, run each `**Verify:**` instrument for the task's acceptance criteria — the plan already committed to each one being checkable, so if the instrument doesn't exist yet, build it first.
 
 **Agentic mode**: spawn a Sonnet sub-agent via the `Agent` tool (`model: "sonnet"`) with a brief containing:
 
 - Full plan file contents (carries prior tasks' `**Implementation notes:**`)
-- Target task ID + its `Context:` / `Files:` / `Acceptance:` / `Test:` block
+- Target task ID + its `Context:` / `Files:` / `Acceptance:` / `Verify:` / `Test:` block
 - Project root path
 - Mandate:
   1. Implement the task following `CLAUDE.md` + project rules. Add tests for new user-facing functionality.
-  2. **Before returning, append a `**Implementation notes:**` bullet list under this task in the plan file** — gotchas, deviations from plan, helpers/types introduced, anything future tasks need to know.
-  3. DO NOT run `/test` (orchestrator handles).
-  4. DO NOT commit.
-  5. Return a brief structured summary: files touched, work summary, any cross-cutting flags affecting future tasks.
+  2. **Before returning, run each `**Verify:**` instrument for the task's acceptance criteria.** If the instrument doesn't exist yet, build it — the plan already committed to it being checkable.
+  3. **Before returning, append a `**Implementation notes:**` bullet list under this task in the plan file** — gotchas, deviations from plan, helpers/types introduced, anything future tasks need to know.
+  4. DO NOT run `/test` (orchestrator handles).
+  5. DO NOT commit.
+  6. Return a brief structured summary: files touched, work summary, any cross-cutting flags affecting future tasks.
 
 Read the agent's returned summary. Don't re-read the touched files — trust the summary + the Implementation notes in the plan.
 
 ### 3. Build & Test
 
-Run `/test` and route on its verdict:
+Pick this task's gate, most specific rule first:
+
+1. **Task heading carries the literal ` — **milestone**` marker, or this is the plan's last task** → re-ground first (re-read the plan file and its `## UI Contract`), then run the `Test:` instrument if one is named, then full `/test`. A milestone **adds** the suite, never replaces a named check — a task-written scenario may not be in `/test`'s tier table at all.
+2. **Task's `Test:` field names a browser or UI instrument** (a standing scenario, a task-written scenario, the integration suite, or `human: <what to look at>`) → run that instrument alone. Never broaden it to a full `/test`.
+3. **Otherwise (default)** → `/test gate` — build plus every tier needing no preview server; `/test` alone owns which tiers that resolves to.
+
+Route on the verdict:
 
 - **ALL GOOD** → continue.
 - **TEST DRIFT** → continue, and log the touched test plus its diff hunk in `Decisions & Review Items`.
