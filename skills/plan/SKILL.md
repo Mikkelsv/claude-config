@@ -175,7 +175,7 @@ Milestone tasks and the plan's last task always add the full suite regardless of
 
 ### Milestone marking
 
-Append ` — **milestone**` to a task's heading — e.g. `### Task 7: {short description} — **milestone**`. `/implement` detects this literal marker and runs the full suite plus `/verify`, instead of the per-task default.
+Append ` — **milestone**` to a task's heading — e.g. `### Task 7: {short description} — **milestone**`. `/implement` detects this literal marker and runs the full suite **in addition to** whatever this task's `Test:` field names, never instead of it. `/verify` is not part of a milestone gate — it runs once, after every task is committed.
 
 Place tighter around rendering-heavy or state-shape work, where the browser suite is often the only rung that reaches the rendered layer at all — a regression there stays invisible until the next milestone. Place looser around docs, prose, and refactor tasks; those can wait for the next real milestone or the plan's last task.
 

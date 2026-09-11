@@ -64,7 +64,7 @@ mode: agentic  # or inline; omit for auto-detect
 Task block:
 
 ```markdown
-## Task 1: Short description
+## Task 1: Short description — **milestone** (marker optional; Step 3 reads it)
 - [ ] Implement
 - [ ] Refactor
 - [ ] Docs & tests
