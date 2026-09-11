@@ -31,10 +31,10 @@ Work through a plan task-by-task with build, test, refactor gates. One task = on
 
    Print one line: `Mode: <inline|agentic>`. In agentic mode, each task runs in a fresh Sonnet sub-agent so context doesn't drift across the loop; the plan file becomes durable cross-task state via the sub-agent's `**Implementation notes:**` mandate (see Loop step 2).
 5. Flag vague tasks — ask targeted questions. **Don't start until user approves.**
-6. **Record squash base** — capture `git rev-parse HEAD` **before any plan-file commit**. The squash folds in both the plan-add and the cleanup-time plan-delete so neither appears in main's history once merged.
-   - If the plan file is **uncommitted** (just authored by `/plan` in this session): record current `HEAD` as squash base, then commit the plan via `git commit -m "[Docs] Add {plan-name} plan."`.
-   - If the plan file is **already committed** as the last commit (e.g. resuming a session): record `HEAD~1` as squash base. Do not re-commit.
-   - Stash the SHA in your working memory.
+6. **Record squash base** — `git rev-parse HEAD` **before any plan-file commit**, so the plan-add and the later plan-delete both fold into the squash. Keep the SHA in working memory.
+   - Plan file **uncommitted**: record current `HEAD`, then commit it as `[Docs] Add {plan-name} plan.`.
+   - Plan file **already the last commit** (resumed session): record `HEAD~1`, don't re-commit.
+   - **`plans/` gitignored**: record current `HEAD`; there is no plan commit to make.
 7. Find first unchecked `- [ ] Done` task (or phase). Print: "Resuming at Task/Phase N. M/T done."
 
 ## Phase Chain (Managing Plans)
@@ -87,7 +87,13 @@ Runs until all tasks completed or skipped. After each checkpoint, pick next unch
 
 ### Parallel Groups
 
-If task has a group letter, collect all unchecked tasks in that group. Main thread takes one (prefer most downstream dependents). Others launch as background agents with `isolation: "worktree"`, `model: "sonnet"` — implement, build, must run `/refactor-code` (skip only if < 20 lines changed), no `/test`, no commit. Tell each worktree agent its expected base SHA and have it confirm the worktree's actual base matches before editing — a diff computed from an unexpected parent is internally correct but applies to the wrong tree, so the merge either conflicts confusingly or silently drops the change. Any write-capable agent re-reads live state (the file, the diff range) rather than trusting what it was handed at spawn time — siblings are editing concurrently, so a frozen snapshot goes stale and trusting it clobbers a sibling's edit. After all return, merge one at a time (`git merge --no-ff`). Resolve conflicts or re-queue failed tasks. Run the Step 3 gate once on the combined result; full `/test` if any task in the group is a milestone. Commit each via `/commit`.
+If a task has a group letter, collect every unchecked task in that group. Main thread takes one (prefer most downstream dependents); the rest run as background agents, `isolation: "worktree"`, `model: "sonnet"`.
+
+- Each agent: implement, build, must run `/refactor-code` (skip only if < 20 lines changed), no `/test`, no commit.
+- **Give each agent its expected base SHA and require it to confirm the worktree matches before editing.** A diff from an unexpected parent is internally correct and applies to the wrong tree — the merge then conflicts confusingly or silently drops the change.
+- **A write-capable agent re-reads live state** (the file, the diff range) rather than trusting what it got at spawn time. Siblings edit concurrently, so a frozen snapshot goes stale and acting on it clobbers their work.
+- Where the partition is genuinely disjoint, a shared tree is acceptable if no agent runs a git write — but verify the touched-file set afterwards either way, per `wf-check-the-artifact-not-the-self-report`.
+- After all return: merge one at a time (`git merge --no-ff`), resolving conflicts or re-queuing failures. Run the Step 3 gate once on the combined result — full `/test` if any task in the group was a milestone. Commit each via `/commit`.
 
 ### 1. Read & Understand
 
@@ -168,7 +174,7 @@ After all tasks are committed: run `/verify {plan-path}`. Confirms the work hold
 
 In Phase Chain mode this runs once after the whole chain completes, alongside Final Audit — not per phase.
 
-**`/verify` runs twice by design, and that is correct — the two runs answer different questions.** This step runs it *before* Final Audit, so a `fail` or `can't-tell` is caught as unfinished work rather than after spending six audit sub-agents on it. `/audit-branch` then ends with its own trailing `/verify` (its Phase 8), once the fleet has edited more code: that run answers "did the audit break it," not "did we build it." Neither is redundant with the other — don't collapse them.
+**`/verify` runs twice by design — don't collapse them.** This call asks "did we build it," before six audit sub-agents run against unfinished work. `/audit-branch`'s trailing call (its Phase 8) asks "did the audit break it," after the fleet has edited more code.
 
 ## Final Audit
 
@@ -180,32 +186,21 @@ After all tasks committed (but before Cleanup + Squash):
 
 ## Cleanup
 
-Delete the implemented plan file (and managing plan if applicable). Commit as `[Docs] Remove implemented {plan-name} plan.`. The deferred-plan from Final Audit, if any, is preserved — it's the next implementation's input. Plans are working documents, not permanent artifacts; the commit history tells the story.
+Delete the implemented plan file (and managing plan if applicable). Commit as `[Docs] Remove implemented {plan-name} plan.`. Preserve any plan deferred by Final Audit — it's the next implementation's input.
 
-This runs **before Squash** so the plan-delete (and the plan-add committed at Phase 0) both fold into the implementation squash. Net effect on main's history: no plan-file noise.
+Runs **before Squash**, so plan-add and plan-delete both fold in and main carries no plan-file noise. **Where `plans/` is gitignored, delete without committing** — there is nothing to fold.
 
 ## Squash
 
-After all tasks + Final Audit + Cleanup committed. **Always run** — collapses the per-task commits, audit-fix commits, plan-add, and plan-delete into one clean implementation commit.
+After all tasks + Final Audit + Cleanup committed. Collapses per-task commits, audit-fix commits, plan-add and plan-delete into one implementation commit. In Phase Chain mode it runs per phase; Final Audit + Cleanup still run once for the whole chain.
 
-In Phase Chain mode, this runs at the end of each phase's Loop (per-phase squash → one commit per phase). Final Audit + Cleanup still run once at the end of the whole chain.
-
-1. **Compose subject + body.** Subject = imperative summary of the plan (or phase) title. Body = `Squashed from N tasks:` + bullet list of completed task subjects.
-2. **Invoke `/squash` automated mode** via the Skill tool with args:
-
-   ```text
-   base=<sha-recorded-at-Phase-0>
-   message=<subject>\n\n<body>
-   push=true
-   ```
-
-   `/squash` skips its interactive confirmation when `base=` and `message=` are present, executes via `git-squash-execute.ps1 -Base <sha> -Message "..." -Push`.
-3. **Skip** if `git rev-list --count <base>..HEAD` returns 0 or 1 (nothing to squash, or already a single commit).
-4. **On error**: report and continue anyway. Don't block on squash failure — the per-task commits remain valid history.
-
-After squash, the branch is one commit ahead of where it was at Phase 0 (or where the previous phase ended in Phase Chain mode).
+1. **Compose subject + body.** Subject = imperative summary of the plan (or phase) title. Body = `Squashed from N tasks:` + the completed task subjects.
+2. **Invoke `/squash`** with `base=<sha-recorded-at-Phase-0>`, `message=<subject>\n\n<body>`, `push=true`. Those arguments skip its interactive confirmation.
+3. **Skip when the commits are already pushed to a shared branch** — on `main`, or any branch someone else may have pulled. Rewriting there needs a force-push, which is never worth a tidier history; per-task commits stand.
+4. **Skip** if `git rev-list --count <base>..HEAD` is 0 or 1 — nothing to squash.
+5. **On error**: report and continue. The per-task commits remain valid history.
 
 ## Report
 
-Branch name + N commits, tasks completed/skipped, tests added, refactor iterations, perf trend, parallel stats, decisions count, architecture audit findings.
+Branch name + N commits, tasks completed/skipped, tests added, refactor iterations, parallel stats, decisions count, architecture audit findings.
 
