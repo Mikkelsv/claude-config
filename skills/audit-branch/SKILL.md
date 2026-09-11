@@ -107,6 +107,12 @@ After inline fixes have landed (whether from agents in Phase 3 or orchestrator i
 
 Pool the `## Rule candidates` blocks from all sub-agents. Per `wf-surface-rule-candidates.md`, surface up to 3 candidates in one batched prompt at the end. Skip this phase if nothing qualifies — don't fabricate.
 
+## Phase 7.5 — Was this branch already merged?
+
+Establish merged-ness by content, not by git's ancestry helpers. `git branch --no-merged` and `git cherry` both reason about commit identity, so a branch that landed via squash or rebase reads as unmerged forever — its commits genuinely don't exist on `main`. Acting on that reading means re-auditing already-shipped work, or worse, "restoring" it.
+
+Grep `main` for a signature symbol the branch introduced (a new function, type, or rule filename). Present on `main` → the content shipped, whatever the commit graph says. Absent → genuinely unmerged. Check for a stale local `main` first (`git fetch`) — a stale local `main` produces the same false "unmerged" reading.
+
 ## Phase 8 — Verify
 
 Runs **once, after the final pass** — not per pass.
