@@ -54,8 +54,10 @@ The baseline describes what passes on `main` — not the last run, not per-branc
 - **Absent** — file missing.
 - **Unseeded** — exists with `"seeded": false`, the shape it ships in until someone runs the refresh.
 - **Rewritten away** — `git cat-file -e <gitRef>^{commit}` fails; the capture commit no longer exists (a squash rewrote history). Report distinctly from staleness: it needs a fresh capture, not a newer one.
-- **Stale** — object exists but `git rev-parse main` ≠ `gitRef`. Split for the report: `git merge-base --is-ancestor <gitRef> main` succeeding means `main` merely advanced; failing means `main` itself was rewritten.
-- **Fresh** — `git rev-parse main` equals `gitRef`. Use its `passing` array.
+- **Stale** — `git diff --name-only <gitRef>..main` names any file other than the baseline itself. Split for the report: `git merge-base --is-ancestor <gitRef> main` succeeding means `main` merely advanced; failing means `main` itself was rewritten.
+- **Fresh** — that diff is empty, or names only the baseline file. Use its `passing` array.
+
+**Why freshness is a diff, not `gitRef == main`.** Committing a seeded baseline necessarily advances `main` past the commit the baseline describes, so an equality test reports every newly-seeded baseline as stale — and since the refresh trigger is that same condition, seeding could never produce a fresh baseline. The file cannot affect a test outcome, so a diff naming only it leaves the baseline valid.
 
 ### Failure classification
 
@@ -93,7 +95,7 @@ Committed, not gitignored — so its `gitRef` is a shared verifiable fact every 
 
 **`/test` never writes this file** — not by a fix loop, not by a milestone, not by `/implement` finishing a plan. Freshness is *reported* by an ordinary run, never *repaired* by one; rewriting it after a task is exactly the rolling per-run baseline this design replaces. Refreshing is deliberate and manual:
 
-1. **Trigger:** `main` moved — `git rev-parse main` ≠ the file's `gitRef`. Nothing else.
+1. **Trigger:** `main` moved in a way that touches code — `git diff --name-only <gitRef>..main` names something other than the baseline file. Nothing else.
 2. Check out `main`'s current tip in a clean worktree, not the branch under test.
 3. Run the full cycle there.
 4. Collect `name` from every result with `outcome === "passed"` across all tiers. A `skipped` test must **never** enter the set — a vacuous pass here turns a later genuine failure into a false REGRESSION.

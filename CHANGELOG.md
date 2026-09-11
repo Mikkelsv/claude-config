@@ -38,7 +38,7 @@ New rule **`arch-claude-md-is-an-index`**. A project's `CLAUDE.md` says **where*
 
 - **Adopt the index convention when you next touch a project's `CLAUDE.md`.** The rule auto-loads, but it cannot restructure an existing file for you. The test is qualitative and deliberately has no byte budget: if a section needs a second paragraph to make sense, it belongs in `docs/`.
 - **Refresh any fork of `refactor-docs`.** A stale fork keeps the prohibition and will decline to create the doc file the rule now expects.
-- **Two repos are still on the pre-v1.1.0 `Claude/` layout** — Axioku and Eidetic, whose architecture docs sit in `Claude/docs/` with their `CLAUDE.md` files citing that path. Migrating them to root `docs/` is pending. Axioku additionally never migrated its `/build` Tier-3 config off the retired gitignored path, so `/build` degrades silently there.
+- **One repo is still on the pre-v1.1.0 `Claude/` layout** — Eidetic, whose architecture docs sit in `Claude/docs/` with `CLAUDE.md` citing that path. Migrating it to root `docs/` is pending. Axioku was migrated 2026-09-11: docs moved to root `docs/`, all citations repointed, and the `Claude/` directory removed. Its retired gitignored `/build` config went with it — Axioku deliberately carries no `build.md`, since `launch.json` names the server and `dotnet build` is what `/build` infers anyway, so nothing degrades.
 
 ## v1.1.21 — 2026-09-11 — Plan references are always a finding; a rebase fetch no longer fails silently
 
