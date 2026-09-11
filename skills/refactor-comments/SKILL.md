@@ -25,11 +25,13 @@ Excluded everywhere: `bin/`, `obj/`, `node_modules/`, generated CSS and build ou
 ## Steps
 
 1. **Size the problem first.** Run `pwsh -NoProfile -File ~/.claude/scripts/audit-comment-blocks.ps1 -Path <scope>` (project-local copy if present). It returns `{findings:[{path,startLine,lineCount}], totalScanned}` — runs of consecutive comment-only lines, sorted longest first. This is **quantify-only**: a long run isn't automatically wrong, since `arch-docs-over-inline` is a qualitative rubric. Use it to aim the sweep at the worst files and to have a before/after number. A `totalScanned` of 0 means the scope resolved to nothing — treat that as a bug, not a clean result.
+
+   Also run a plan-reference count if the project has a checker (e.g. `.claude/scripts/check-plan-citations.ps1`, emitting `{paths:{dead,live},labels,deadCount,liveCount,labelCount}`). Feed its file list to the partition agents as concrete targets — this class is mechanical to find and easy to miss by eye.
 2. **Determine scope + partition.** Path mode narrows to that path; no-args uses the partitions above. For `--dry-run`, partition strategy is identical.
 3. **Spawn Sonnet agents in parallel** (one per partition), `model: "sonnet"` per `wf-agents-on-sonnet`. Each agent's prompt must include:
    - **Rubric** — read `arch-docs-over-inline` for the 5 practices (link don't inline, why-only, name identifiers as greppable anchors, invariants as checkable claims, no history prose).
    - **Protection list** — read `cq-comments-track-code`, plus any project overlay in the project's own `.claude/rules/`. Load-bearing comments must NOT be cut. Sub-agents don't auto-load project rules, so name the rule paths explicitly in the prompt.
-   - **Action only when unambiguous.** **CUT**: WHAT-narration, signature paraphrase, migration history ("Phase 3 introduced…", "Stage N retires…"), typos in comments, PR/task/issue references. **SLIM**: load-bearing line buried in restatement (keep the why, cut the rest). **KEEP**: protection list + invariants + cross-file links + workarounds-with-condition.
+   - **Action only when unambiguous.** **CUT**: WHAT-narration, signature paraphrase, migration history ("Phase 3 introduced…", "Stage N retires…"), typos in comments, PR/issue references, and every plan reference — a `plans/*.md` path or a plan label like `Task 3` / `Defect B` (see "Plan references are always a finding" below; keep the fact, cut the pointer). **SLIM**: load-bearing line buried in restatement (keep the why, cut the rest). **KEEP**: protection list + invariants + cross-file links + workarounds-with-condition.
    - **Stay strictly in your partition** — don't read or edit files outside it.
    - **Comments only** — never edit code. If a "comment" looks like commented-out logic, leave it.
    - **Return a one-paragraph summary**: "Cut N comments, slimmed M, kept K; flagged X borderline (with brief `file:line` list)."
@@ -38,14 +40,15 @@ Excluded everywhere: `bin/`, `obj/`, `node_modules/`, generated CSS and build ou
 5. **Build verify** — invoke `/build`. A break signals an agent slipped from comments into code; report it and stop before commit. `/build` no-ops gracefully in no-build repos.
 6. **Report** — collate agent summaries + totals across rounds. Per `wf-check-the-artifact-not-the-self-report`, read the diff before trusting those summaries: confirm the touched-file set stayed inside each partition and that no code changed.
 
-## A stale doc citation needs diagnosis before you "fix" it
+## Plan references are always a finding
 
-A comment citing a `plans/*.md` or `docs/*.md` path that no longer exists has two possible causes that a grep cannot distinguish, and they need **opposite** treatment. Run `git log --oneline -- <deleted-path>` and read the deletion commit's diff:
+A comment must not cite a `plans/*.md` path, nor a plan's internal labels — `Task 3`, `Phase 2c`, `Defect B`, `P2 Task 6`, "the plan's Decisions", a post-audit finding number. Plans are deleted when their feature ships, so every such reference has a scheduled expiry. Cut it and keep the fact, or repoint to `docs/<file>.md "<section>"` after verifying that section exists.
 
-- Content moved **into another named document** in the same commit → **merge-deletion**. Citations elsewhere are genuinely stale; repoint each to the new home.
-- The deletion **stands alone**, often paired with a note like "implemented — phase plan removed, see git history" → **completion-deletion**. Leave every citation alone. It is a deliberate, git-recoverable pointer, and "fixing" it severs that.
+**Reversed 2026-09-11.** This section previously told you to *leave* a citation to a completion-deleted plan alone, as "a deliberate, git-recoverable pointer". That was wrong in practice: a reader cannot tell a git-only pointer from a live one, and on one measured repo 61% were already dead (278 citations, 171 broken) — so the signal was noise. Provenance belongs in the commit message, which is permanent and is where `git log` already looks.
 
-Both occur on the same branch, so this is not a rare edge: one audited branch had 6 citations needing repointing from a merge-deletion alongside 25+ correctly left untouched from a completion-deletion.
+Still true, and the useful half of the old guidance: when a **`docs/*.md`** citation breaks, run `git log --oneline -- <deleted-path>`. If that content moved into another named document, **repoint** rather than cut — dropping it loses a live cross-reference.
+
+**Never regex-sweep plan labels.** `Task` is a BCL type (`async Task`, `Task.Run`) and `phase` is a domain word in some codebases (`zero-phase`, `minimum-phase`); a mechanical substitution corrupts both, per `wf-blanket-rename-safety`. Judge per site. Expect false positives from any detector: `docs/x.md "Phase 4b — provenance" (Task 4)` has a legitimate section name and one real violation on the same line.
 
 ## Notes
 

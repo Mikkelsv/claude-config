@@ -61,9 +61,25 @@ if ($dirtyFiles.Count -gt 0) {
 # Fetch and update local base branch
 $fetchOutput = git fetch origin "${BaseBranch}:${BaseBranch}" 2>&1
 if ($LASTEXITCODE -ne 0) {
-    # Maybe local main is checked out elsewhere (worktree) — fetch only
-    git fetch origin $BaseBranch 2>$null
-    git branch -f $BaseBranch "origin/$BaseBranch" 2>$null
+    # Maybe local base is checked out elsewhere (worktree) — fetch without updating the ref
+    $fetchRetry = git fetch origin $BaseBranch 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        # Report it. A swallowed fetch failure used to fall through to the force-move below
+        # and get reported as "up-to-date" against a stale base.
+        @{
+            status      = "fetch-failed"
+            branch      = $currentBranch
+            baseBranch  = $BaseBranch
+            fetchOutput = "$fetchOutput`n$fetchRetry"
+        } | ConvertTo-Json -Depth 4 -Compress
+        exit 1
+    }
+    # Only ever move the local base FORWARD. Without this guard, a local base holding
+    # unpushed commits (e.g. an earlier local fast-forward merge) is silently discarded.
+    git merge-base --is-ancestor $BaseBranch "origin/$BaseBranch" 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        git branch -f $BaseBranch "origin/$BaseBranch" 2>$null
+    }
 }
 
 # Count commits before rebase for reporting

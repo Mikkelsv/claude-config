@@ -2,6 +2,18 @@
 
 Only lists changes that require project action. Global rules, scripts, and global skills are picked up automatically and not tracked here.
 
+## v1.1.21 — 2026-09-11 — Plan references are always a finding; a rebase fetch no longer fails silently
+
+`/refactor-comments` **reverses** its guidance on plan citations. It previously told you to leave a citation to a completion-deleted plan alone, as a deliberate git-recoverable pointer. A reader cannot tell a git-only pointer from a live one, and 61% were already dead on the one repo measured (278 citations, 171 broken), so the signal was noise. Plan paths **and** plan labels (`Task 3`, `Phase 2c`, `Defect B`) are now always a finding: keep the fact, cut the pointer. The useful half survives — a broken `docs/*.md` citation still gets diagnosed with `git log` and repointed rather than cut. Never regex-sweep the labels: `Task` is a BCL type and `phase` is a domain word in signal code.
+
+`rebase-on-main`'s `git-rebase-onto.ps1` had a swallowed fetch failure. When updating the local base branch failed, both fetch attempts were silenced and execution fell through to a force-move of the base ref — reporting **"up-to-date" against a stale base**. It now reports `fetch-failed` and exits 1. The force-move is also guarded by an ancestry check, so a local base holding unpushed commits (an earlier local fast-forward merge) is no longer discarded.
+
+**Project action:**
+
+- **Refresh any fork of `rebase-on-main`.** This is a correctness fix in a script, not a doc change — a stale fork keeps rebasing colleagues onto a base it only *reported* as current. Applying the fork in `/claude-sync` resyncs its scripts unconditionally.
+- **Refresh any fork of `refactor-comments`.** The plan-reference policy is reversed, so a stale fork applies the opposite rule and preserves exactly the citations that should now be cut.
+- **Re-examine comments a previous `/refactor-comments` run deliberately left alone.** Anything spared under the old "completion-deletion → leave it" arm is now a finding. There is no automatic re-sweep.
+
 ## v1.1.20 — 2026-09-10 — Two scripts promoted, and a reference gate on `/claude-push`
 
 `audit-comment-blocks.ps1` is now global and wired into `/refactor-comments` as Step 1 (it previously had zero callers anywhere). `check-file-sizes.ps1`'s two-way merge is finished. New `check-config-references.ps1` runs as `/claude-push` step 1: config cross-references are prose, so nothing type-checks them, and a citation to a rule that was never promoted or has since been renamed reads as authoritative while doing nothing. Report-only — it never blocks a push.
