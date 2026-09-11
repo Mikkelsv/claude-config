@@ -55,7 +55,7 @@ Note whether any of these occur during Phase 1 — they drive Phase 2's presenta
 - Generated files resolved with `--theirs` (build must regenerate correctly).
 - A commit was skipped (`git rebase --skip` used — work dropped).
 
-## Phase 2: Build → Merge Prompt
+## Phase 2: Build → Test → Merge Prompt
 
 After Phase 1 succeeds (or branch was already up-to-date), always run `/build` before any prompt. Catches breakage from new main; gives the user a running server to test against. `/build` returns success for no-build repos (claude-config, docs-only, etc.) via its graceful-skip path.
 
@@ -80,6 +80,7 @@ After the build gate passes, invoke `/test` — **before** rendering the merge p
 - **After the build**, so a compile break is never reported as a test failure.
 - **Before the prompt renders**, so the verdict is on screen when the merge choice is made. Merging first and testing after inverts the point.
 - **Compute it once per invocation and reuse it** across the whole prompt loop. The loop can re-render up to four times (audit → back to prompt, squash cancelled → back to prompt); re-running `/test` each pass runs the suite four times for one merge.
+- **Looks redundant next to `/build`, and is kept anyway.** `/test` Phase 1 also builds and serves, costing one incremental build (not a cold one) plus a server restart. `/build` carries the no-build-repo skip and its own failure-recovery prompt (Fix again / Abort / Drop into manual) that this phase depends on — folding `/build` away as "covered by `/test`" would silently drop both.
 
 A non-green verdict is a **critical event: it warns, it never blocks.** Render it in the prompt's critical-events area carrying `/test`'s classification and the failing test names, then let the user choose. Per `git-workflow.md` this prompt is the last backstop before main in a repo without CI, so the warning has to be visible — but the user decides, not the skill.
 

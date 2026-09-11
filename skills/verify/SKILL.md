@@ -19,7 +19,7 @@ Runs once at the end of an implementation loop. Per-task gating stays `/test`.
 ## Phase A — Readiness
 
 1. Bring the app up via `/build` or `preview_start` with the project's launch-config name.
-2. Establish that the app booted and is reachable, and capture whatever readiness signal the project exposes.
+2. Establish that the app booted and is reachable, and capture whatever readiness signal the project exposes. **Fire the readiness check, then poll for its result — never await it inline.** A tool call caps out around 30s and a cold app can take ~20s to boot, so an inline await risks a timeout that reads identically to a wedged app. Detaching the call and polling separately makes the timeout itself informative: "still booting" and "never responded" stop being indistinguishable.
 3. **Enumerate the live instrument surface rather than trusting a doc.** Every criterion below should be written against an instrument confirmed to exist right now. A hand-maintained list in a skill or doc drifts; the running app does not.
 4. **`visibility !== 'visible'` → record PANE HIDDEN for the run.** Every `human:` entry escalates and no claim about pixels may be made. This is not a degraded mode to work around — with the pane hidden nothing composites, so there is no frame to inspect.
 5. **Never wait on a frame.** `requestAnimationFrame` never fires while hidden, so a frame-gated wait burns its full timeout in exactly the unattended sessions this exists for. Use `setTimeout`-based polling.
