@@ -1,6 +1,6 @@
 ---
 name: test
-description: "Build, then run the project's test tiers and report one verdict (ALL GOOD, TEST FAILURE / REGRESSION / DRIFT / NEEDS REVIEW). Use whenever the user wants to run tests, verify the build, or check everything works before merging — 'run the tests', 'is it green', 'check before I merge'. Measures and classifies; it never decides whether a verdict halts anything, and it never edits a test. Runs in a sub-agent by default so bulk output stays out of the caller's context; pass \"inline\" to see raw output, \"background\" to detach."
+description: "Build, then run the project's test tiers and report one verdict (ALL GOOD, TEST FAILURE / REGRESSION / DRIFT / NEEDS REVIEW). Use whenever the user wants to run tests, verify the build, or check everything works before merging — 'run the tests', 'is it green', 'check before I merge'. Measures and classifies; it never decides whether a verdict halts anything, and it never edits a test. Runs in a sub-agent by default so bulk output stays out of the caller's context; pass \"inline\" to see raw output, \"background\" to detach, \"gate\" to run only the offline tiers (a fast per-task check, e.g. from /implement)."
 ---
 
 # Test
@@ -18,18 +18,30 @@ Reads `.claude/skill-config/test.md` — **committed**, so colleagues cloning th
 
 ## Invocation modes
 
+`$ARGUMENTS` carries two independent axes — **delegation** (how the result surfaces) and **scope** (which tiers run). Either may be combined with either, e.g. `gate background`.
+
+### Delegation
+
 **Delegated** (default): run the cycle in a synchronous Sonnet sub-agent (`run_in_background: false`) and surface only the verdict plus every not-passed row. This gates exactly like inline — you have the result before continuing — while keeping the payload out of the caller. That payload is the full per-test arrays, several thousand tokens the caller needs for nothing; the agent's context is discarded, the caller's is carried for the rest of the session.
 
-**Inline** (`$ARGUMENTS` contains `inline`): every phase in the caller's context. For debugging the harness itself, where a summary is the thing you're trying to inspect.
+**Inline** (`inline`): every phase in the caller's context. For debugging the harness itself, where a summary is the thing you're trying to inspect.
 
 **Background** (`background`): same delegation, `run_in_background: true`. Returns immediately; check the completion notification before any step depending on the result.
+
+### Scope
+
+**Full** (default): every tier in the config's table.
+
+**Gate** (`gate`): build plus every tier that needs no preview server — inferred from the tier table, never declared (no config field for this; see Phase 1). Tiers needing a server are **skipped, not omitted** — Phase 3's "state which tiers ran" already covers naming them. No tier table to infer from → gate degrades to a full run and says so, per the no-config rule above. Classification is unaffected by scope: a gate run still carries `baseline: <state>` per row exactly as a full run does. Orthogonal to delegation — `/implement`'s per-task check is typically `/test gate` (delegated default).
 
 ## Phase 1 — Build and run tiers
 
 1. **In parallel:** stop any running preview server, run the build command, and read the baseline. All three are independent.
 2. Build **fails** → fix and rebuild. Still failing after 2 attempts → stop and report.
-3. Run each tier from the config's table. Prefer offline tiers (unit suites needing only compiled assemblies) before starting a server.
+3. Run each tier from the config's table, **offline tiers first** — those needing no running server or browser, whatever the language: a unit suite, a pytest run, anything driven straight off build output. **In `gate` scope, run only those** — a tier needing a server (one driving `preview_*`, or folded into such a tier's round-trip) is skipped, not run, and named as skipped per Phase 3. Which tier is which is a **judgement call per project**, not a mechanical parse: read the table's command, and where it is opaque, treat the tier as server-dependent and say you did. Guessing a tier is offline gets it run for real; guessing the reverse only costs coverage a full run recovers.
 4. A tier exiting non-zero **while reporting zero tests** means a test project contributed nothing — a missing or failed assembly. Treat it as a **build-side failure**, never as a smaller green tally.
+
+`preview_eval` has no top-level `await` — wrap any expression that uses `await` in an IIFE.
 
 ## Phase 2 — Classify
 
