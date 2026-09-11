@@ -17,4 +17,4 @@ Global rules auto-load every session; skills load on invocation. Bloat multiplie
 - **Skills: ≤ ~80 lines** unless the skill genuinely needs more. They load on invocation rather than every session, so the pressure is lower than on a rule.
 - **Justification belongs in `README.md`, not in an always-loaded rule.** A measurement, a war story, or a "here's why this matters" paragraph is read once; the directive is read every session. Cross-reference instead of restating.
 
-Applies when writing or editing anything under `~/.claude/rules/`, `~/.claude/skills/`, `~/.claude/commands/`, `.claude/docs/`, `CLAUDE.md`, or project equivalents.
+Applies when writing or editing anything under `~/.claude/rules/`, `~/.claude/skills/`, `~/.claude/commands/`, a project's root `docs/`, `CLAUDE.md`, or project equivalents.

@@ -28,7 +28,11 @@ For each changed file, check if changes affect documented info: solution structu
 
 ## Step 4: Apply
 
-Update only what's stale. Match existing style. Keep concise. Note significant gaps in report but don't create new doc files unless the gap is major.
+Update only what's stale. Match existing style. Keep concise.
+
+Create a `docs/<area>.md` when content in `CLAUDE.md` fails the where-vs-how test in `arch-claude-md-is-an-index` — move the how-it-works prose across, leave a one-line index entry behind. One area per file.
+
+**Not a restructure pass.** First-time `docs/` splits and whole-tree reorganization are a deliberate manual operation. `/audit-branch` spawns this skill diff-scoped on every branch audit, so a whole-tree restructure must never be reachable from here — note the need in the report and stop.
 
 ## Step 5: Report
 

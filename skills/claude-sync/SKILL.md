@@ -147,7 +147,7 @@ Global version, date, and fork hashes under `forks`. There is no `skills` map an
 
 ### 2.6 Report
 
-List created files (including `git-workflow.md`). Remind about `.claude/local/` in `.gitignore`, and about `CLAUDE.md` being where architecture context belongs.
+List created files (including `git-workflow.md`). Remind about `.claude/local/` in `.gitignore`, and about `arch-claude-md-is-an-index` — `CLAUDE.md` is an orientation index, architecture substance belongs in the project's root `docs/`.
 
 ---
 

@@ -2,6 +2,22 @@
 
 Only lists changes that require project action. Global rules, scripts, and global skills are picked up automatically and not tracked here.
 
+## v1.2.0 — 2026-09-11 — `CLAUDE.md` is an index; root `docs/` holds the substance
+
+Minor bump, marking the run from v1.1.17 through here: the template tier retired, skill configs moved to a committed path, eight stack rules promoted, plan references reclassified as findings, and now the documentation architecture stated as a rule.
+
+New rule **`arch-claude-md-is-an-index`**. A project's `CLAUDE.md` says **where** a thing lives and **what** it is called; root `docs/<area>.md` says **how** it works. It is the sibling of `arch-docs-over-inline`, which was confirmed code-comments-only — nothing previously shaped `CLAUDE.md`'s own structure. One area per `docs/` file, `##` headings kept stable because code comments cite `docs/<file>.md "<section>"`, and a `## Retirement` clause: a doc describing code that no longer exists gets retired in the same change that removes the code.
+
+`/refactor-docs` Step 4 previously read "don't create new doc files unless the gap is major", which made the convention unactionable — a diff-scoped run finding how-it-works prose in `CLAUDE.md` had nowhere to put it. It may now create a single `docs/<area>.md`. It still refuses whole-tree restructuring, since `/audit-branch` spawns it diff-scoped on every branch audit.
+
+**No skill was written for this.** The original plan proposed a `claude-init` with bootstrap and retrofit modes. A survey of five repos killed both: root `docs/` is already the majority practice three repos to two, the three that have it grew it without a skill, and the two that don't have index-shaped `CLAUDE.md` files with nothing mixed in to extract. What remained was a two-instance migration with no work left after its second run.
+
+**Project action:**
+
+- **Adopt the index convention when you next touch a project's `CLAUDE.md`.** The rule auto-loads, but it cannot restructure an existing file for you. The test is qualitative and deliberately has no byte budget: if a section needs a second paragraph to make sense, it belongs in `docs/`.
+- **Refresh any fork of `refactor-docs`.** A stale fork keeps the prohibition and will decline to create the doc file the rule now expects.
+- **Two repos are still on the pre-v1.1.0 `Claude/` layout** — Axioku and Eidetic, whose architecture docs sit in `Claude/docs/` with their `CLAUDE.md` files citing that path. Migrating them to root `docs/` is pending. Axioku additionally never migrated its `/build` Tier-3 config off the retired gitignored path, so `/build` degrades silently there.
+
 ## v1.1.21 — 2026-09-11 — Plan references are always a finding; a rebase fetch no longer fails silently
 
 `/refactor-comments` **reverses** its guidance on plan citations. It previously told you to leave a citation to a completion-deleted plan alone, as a deliberate git-recoverable pointer. A reader cannot tell a git-only pointer from a live one, and 61% were already dead on the one repo measured (278 citations, 171 broken), so the signal was noise. Plan paths **and** plan labels (`Task 3`, `Phase 2c`, `Defect B`) are now always a finding: keep the fact, cut the pointer. The useful half survives — a broken `docs/*.md` citation still gets diagnosed with `git log` and repointed rather than cut. Never regex-sweep the labels: `Task` is a BCL type and `phase` is a domain word in signal code.

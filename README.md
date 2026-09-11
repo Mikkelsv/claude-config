@@ -165,6 +165,7 @@ Rules in `rules/` are always loaded:
 - **wf-blanket-rename-safety.md** — Multi-file rename checklist (exclude vendor paths, stdlib clobber, build-green-isn't-enough)
 - **git-workflow.md** — Default to feature branches over direct-to-main; use `/commit` and `/rebase-on-main`
 - **arch-docs-over-inline.md** — Heavy context lives in `docs/`; code carries thin pointers, not narration
+- **arch-claude-md-is-an-index.md** — `CLAUDE.md` says where a thing lives and what it's called; root `docs/` says how it works
 - **arch-transient-ui-state-not-in-domain.md** — Per-session UI toggles don't belong on persisted domain records
 - **cq-comments-track-code.md** — Update or delete every stale comment in the same commit as the code change
 - **cq-fallthrough-guard-all-branches.md** — Every routing branch asserts its expected sub-range; no open-ended `else`
