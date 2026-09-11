@@ -1,6 +1,6 @@
 ---
 name: implement
-description: Autonomous development loop — implements a plan task-by-task with build/refactor/test gates
+description: "Autonomous development loop — implements a plan task-by-task with build/refactor/test gates, branching, squashing, and Final Audit. Use when a plan file exists and the user wants it executed — \"implement this\", \"go build it\", \"start the work\", \"run the plan\". No plan yet? Run /plan first."
 ---
 
 # Implementation Loop
@@ -87,7 +87,7 @@ Runs until all tasks completed or skipped. After each checkpoint, pick next unch
 
 ### Parallel Groups
 
-If task has a group letter, collect all unchecked tasks in that group. Main thread takes one (prefer most downstream dependents). Others launch as background agents with `isolation: "worktree"`, `model: "sonnet"` — implement, build, must run `/refactor-code` (skip only if < 20 lines changed), no `/test`, no commit. After all return, merge one at a time (`git merge --no-ff`). Resolve conflicts or re-queue failed tasks. Run the Step 3 gate once on the combined result; full `/test` if any task in the group is a milestone. Commit each via `/commit`.
+If task has a group letter, collect all unchecked tasks in that group. Main thread takes one (prefer most downstream dependents). Others launch as background agents with `isolation: "worktree"`, `model: "sonnet"` — implement, build, must run `/refactor-code` (skip only if < 20 lines changed), no `/test`, no commit. Tell each worktree agent its expected base SHA and have it confirm the worktree's actual base matches before editing — a diff computed from an unexpected parent is internally correct but applies to the wrong tree, so the merge either conflicts confusingly or silently drops the change. Any write-capable agent re-reads live state (the file, the diff range) rather than trusting what it was handed at spawn time — siblings are editing concurrently, so a frozen snapshot goes stale and trusting it clobbers a sibling's edit. After all return, merge one at a time (`git merge --no-ff`). Resolve conflicts or re-queue failed tasks. Run the Step 3 gate once on the combined result; full `/test` if any task in the group is a milestone. Commit each via `/commit`.
 
 ### 1. Read & Understand
 
@@ -153,14 +153,14 @@ Run `/commit {task description}`. Check off `- [x] Done`. One-line status. **→
 
 ### When Stuck
 
-Never stop unless all done. 3 fix failures → stash + skip + note. Unclear requirement → best judgment + note. Failed dependency → attempt anyway. Always keep moving.
+Never stop unless all done — unless the user explicitly pauses the loop. 3 fix failures → stash + skip + note. Unclear requirement → best judgment + note. Failed dependency → attempt anyway. Always keep moving.
 
 ## Guard Rails
 
 - One task at a time (except parallel groups). Agents build, main thread tests.
 - Merge worktrees sequentially, `/test` after all merges.
 - Stash on failure after 3 attempts. Max 3 refactor iterations.
-- Small drive-bys OK. Test behavior, not internals. Fix code, not tests.
+- Small drive-bys OK. Test behavior, not internals. Fix code, not tests — a red-driven change to an existing assertion routes through `/verify`, which records provenance per edit.
 
 ## Verify
 
