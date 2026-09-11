@@ -1,6 +1,6 @@
 ---
 name: resolve-audit-findings
-description: Per-finding triage — researches each finding, applies inline when the solution is obviously better, defers substantial findings to a post-audit plan
+description: "Triage the judgment-only audit findings that /audit-branch deferred — research each, apply inline when the fix is clearly better, and defer substantial or architectural findings to a post-audit plan. Use after /audit-branch, or whenever you're handed a structured findings list to work through."
 ---
 
 # Resolve Audit Findings
@@ -44,6 +44,10 @@ For `Apply` returns with low/moderate confidence, downgrade to `Defer` — the a
 ## Step 3: Defer
 
 For each `Defer` (and downgraded-Apply) finding, write to `plans/post-audit-{slug}.md` using `plan-template.md` from the implement skill directory. Each = one Task with `**Files:**`, `**Acceptance:**`, and `recommended_edit` as `**Context:**`. Append if the file exists.
+
+## Step 3.5: Deferred doc gaps actually close
+
+Before a plan is treated as closed, grep every task's notes for deferral language about documentation — "doc update deferred", "will document in", "note this in `docs/…`", "follow-up doc" — and confirm the named content landed. A deferred doc gap has no build error, no failing test, and no reviewer: the task ticks complete on the code, and the doc sentence quietly never arrives.
 
 ## Step 4: Report
 

@@ -1,6 +1,6 @@
 ---
 name: audit-architecture
-description: Deep architecture review — catches overengineering, boundary violations, and considers simpler alternatives
+description: "Deep architecture review — catches overengineering, boundary/coupling violations, and weighs simpler alternatives. Use whenever the user asks for an architecture review, says the code feels overengineered or too abstract, questions whether an abstraction earns its keep, or wants module/dependency-boundary analysis. This is the DEPTH/design review; for a breadth code-quality sweep (naming, dead code, duplication) use /refactor-code instead."
 ---
 
 # Architecture Audit
@@ -50,7 +50,7 @@ Single pass over the in-scope files. **Must evaluate all four concerns** — do 
 **Verdict**: **Sound** / **Minor issues** / **Overengineered** / **Rethink**. Default assumption is **not Sound** — must earn Sound verdict by finding nothing across all four concerns.
 
 **Must act on findings:**
-- **Minor issues** → apply fixes automatically.
+- **Minor issues** → apply fixes automatically (inline fixes only — no new files, no public-API changes).
 - **Overengineered / Rethink** → ask via `AskUserQuestion` with three options:
   - **Apply inline** — make the fixes now (expect re-test by caller).
   - **Defer to plan** — write `plans/post-audit-{slug}.md` using `plan-template.md` from the implement skill directory; turn each finding into a Task with `**Files:**`, `**Acceptance:**`, and the audit's recommended fix as `**Context:**`. Report the plan path.
