@@ -7,6 +7,8 @@ User-level Claude config is a git repo at `~/.claude/`.
 
 Edit files directly. Use `/claude-push` to commit and sync. Use `/claude-sync` in projects to pull the latest global config and sync project-scaffolded skills.
 
+`local/projects.md` (gitignored) records which active projects are solo versus shared with colleagues — read it before scaffolding or questioning project-local skill copies.
+
 ## Slash commands
 
 User-level slash commands live in `~/.claude/commands/`. These are available in every project. Check what's there before creating project-level duplicates.

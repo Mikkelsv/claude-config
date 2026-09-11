@@ -121,10 +121,12 @@ Read `CLAUDE.md` for context first, then gather per skill — build command, dev
 
 ### 2.3 Forked-globals (for shared repos)
 
-Ask via `AskUserQuestion`: **is this a shared repo where colleagues may not have `~/.claude/` set up?**
+Check `~/.claude/local/projects.md` first — if it lists this project, take its posture as the answer and say which line you used. Otherwise ask via `AskUserQuestion`: **is this a shared repo where colleagues may not have `~/.claude/` set up?**
 
 - **No** (Recommended for solo projects) — skip to 2.4.
 - **Yes** — colleagues will rely on local copies. Continue.
+
+Either way, offer to record the answer in `local/projects.md` when the project was missing from it.
 
 If yes, list the global skills via the Classification above and present via `AskUserQuestion` (multiSelect, no pre-selection): which to scaffold as project-local forks? Prefer skills integral to colleague workflow (`plan`, `implement`, `commit`, `rebase-on-main`).
 

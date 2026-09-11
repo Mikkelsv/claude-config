@@ -103,7 +103,7 @@ The one legitimate reason to keep a project copy is a **shared repo whose collea
   rules/                          # Global rules (always loaded)
   skills/                         # Global skill implementations (one SKILL.md per skill)
   scripts/                        # PowerShell automation
-  local/                          # Gitignored, machine-local — holds rule-candidates/ drafts
+  local/                          # Gitignored, machine-local — rule-candidates/ drafts, projects.md posture table
 ```
 
 **No junctions, no wrapper directories.** The repo lives at `~/.claude/` directly.
