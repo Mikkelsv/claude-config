@@ -2,6 +2,28 @@
 
 Only lists changes that require project action. Global rules, scripts, and global skills are picked up automatically and not tracked here.
 
+## v1.2.1 — 2026-09-11 — `/test` gains a `gate` scope, and `/implement` finally honours `/plan`'s contract
+
+`/plan` has been writing a `**Verify:**` field, a `**Test:**` tier field and a `— **milestone**` heading marker into every plan since v1.1.18. `/implement` read **none of them** — its per-task gate ran a full `/test` after every task regardless. So `/plan` documented a contract no skill delivered, and the metadata it emitted was inert. This closes that gap; it is a correctness fix between two global skills, not a new feature.
+
+`/test` takes a third argument, **`gate`**: build plus every tier needing no preview server. Scope is a second axis alongside delegation, so `gate background` composes. Which tiers count as offline is **inferred from the config's tier table, not declared** — no new config field, because no project declares one and an override with no consumer is configurability for its own sake. Where a tier's command is opaque, treat it as server-dependent and say so: guessing "offline" runs a server-dependent tier for real, while guessing the reverse only costs coverage a full run recovers.
+
+`/implement`'s Step 3 now picks a gate, most specific first — milestone or last task re-grounds and runs the full suite, a task naming a browser instrument runs that instrument alone, everything else gets `/test gate`. A milestone **adds** the suite rather than replacing a named check, matching `/plan`'s own wording: a task-written scenario may not be in the tier table at all, so replacing would silently skip it. `/implement` names no tier and reads no test config — `/test` remains the sole reader.
+
+Verified by executing the spec rather than reading it: a `/test gate` run against a real tier table built clean, ran 2693 unit and 149 python tests, skipped and named the two browser tiers, and correctly classified a stale baseline. That run also exposed two wording defects now fixed — "offline" had been defined as "unit suites needing only compiled assemblies", which excludes a pytest tier by its own wording, and tier selection read as a mechanical parse when it is a judgement call.
+
+Smaller lifts in the same pass: **`/audit-branch` Phase 7.5** establishes merged-ness by content, because `git branch --no-merged` and `git cherry` reason about commit identity and so read a squash-merged branch as unmerged forever. **`/audit-architecture`** bounds its automatic minor fixes to inline only, no new files, no public-API changes. **`/resolve-audit-findings`** gains a closure check for deferred documentation, which has no build error and no failing test behind it. **`/rebase-on-main`** and **`/verify`** each record why a load-bearing step looks redundant, so a future editor doesn't fold it away.
+
+Three `/implement` directives were also wrong and are fixed: Squash said "always run" when on `main` that means force-pushing rewritten history; Phase 0 and Cleanup assumed `plans/` is tracked and tried to commit a plan-add in repos where it is gitignored; and Report still asked for a perf trend that `/test` stopped emitting when the perf tier was cut.
+
+**Thirteen forked skills were compared and had nothing to harvest** — `plan`, `plan-optimizer`, `refactor-code`, `refactor-tests`, `refactor-docs`, `refactor-comments`, `refactor-file-sizes`, `audit-file-sizes`, `squash`, `commit`, `study`, `build`, `setup-data`. Global is measurably ahead of the fork in eight places across them. Don't re-run those comparisons.
+
+**Project action:**
+
+- **Refresh any fork of `test` or `implement`.** These two now form a contract: a stale `implement` fork calls a full `/test` every task, and a stale `test` fork does not understand `gate` and will run everything. Mixing a fresh one with a stale one is the bad case — the caller asks for a cheap gate and gets the full stack, or asks for a tier that does not exist.
+- **Check that your tier table makes offline-ness legible.** Gate selection reads the command column. A tier whose command is a bare script name with no server-ish signal will be treated as server-dependent and skipped from the per-task gate, which costs coverage silently. Name the tier or make the command self-describing.
+- **Refresh any fork of `audit-branch`, `audit-architecture`, `resolve-audit-findings`, `rebase-on-main` or `verify`.** All five gained content; none is a breaking change on its own.
+
 ## v1.2.0 — 2026-09-11 — `CLAUDE.md` is an index; root `docs/` holds the substance
 
 Minor bump, marking the run from v1.1.17 through here: the template tier retired, skill configs moved to a committed path, eight stack rules promoted, plan references reclassified as findings, and now the documentation architecture stated as a rule.
