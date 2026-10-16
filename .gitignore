@@ -18,7 +18,7 @@ tasks/
 telemetry/
 todos/
 .aws_auth_refresh-*.json
-skills/plan-companion/.claude-plugin/types/
+skills/side-chat/.claude-plugin/types/
 
 # Machine-specific
 settings.json

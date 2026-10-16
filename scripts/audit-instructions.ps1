@@ -49,7 +49,7 @@ if ($Report) {
     # Bucket by scope. memory_type (User/Project) comes straight from the hook payload and is
     # authoritative; candidates need a path check because they are User/Project-agnostic.
     $byScope = $entries | Group-Object {
-        if ($_.file_path -match 'rules[\\/]candidates[\\/]') { 'candidates' }
+        if ($_.file_path -match 'local[\\/]rule-candidates[\\/]') { 'candidates' }
         elseif ($_.raw.memory_type) { "$($_.raw.memory_type)-memory" }
         else { 'unknown' }
     }

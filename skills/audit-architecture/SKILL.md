@@ -13,7 +13,7 @@ Do not be polite about findings. Do not soften language. If something is unneces
 
 ## Step 1: Scope
 
-**Mode A — Changes** (no args): run `~/.claude/scripts/git-diff-scope.ps1`. Abort if `MODE: none`.
+**Mode A — Changes** (no args): run `pwsh -NoProfile -File ".claude/scripts/git-diff-scope.ps1"` if that file exists, else `pwsh -NoProfile -File "$HOME/.claude/scripts/git-diff-scope.ps1"`. Abort if `MODE: none`.
 **Mode B — Focused** (path/module/area): Glob+Grep the specified area. Read in full.
 **Mode C — General** (`all`): scan solution structure from CLAUDE.md, pick 2-3 areas with most coupling/complexity.
 
@@ -25,7 +25,7 @@ Read all in-scope files in full, plus their consumers/dependencies. Also read CL
 
 ## Step 3: Analysis
 
-Single pass over the in-scope files. **Must evaluate all four concerns** — do not skip any:
+Single pass over the in-scope files. **Must evaluate all four concerns** — do not skip any — skipping the alternatives lens is how premature abstractions survive review:
 
 **Boundaries**: Module responsibilities bleeding? Dependency direction violations? Reverse/circular deps? Abstraction level mismatches? Derive project boundary rules from CLAUDE.md and `.claude/rules/`.
 
@@ -50,6 +50,7 @@ Single pass over the in-scope files. **Must evaluate all four concerns** — do 
 **Verdict**: **Sound** / **Minor issues** / **Overengineered** / **Rethink**. Default assumption is **not Sound** — must earn Sound verdict by finding nothing across all four concerns.
 
 **Must act on findings:**
+
 - **Minor issues** → apply fixes automatically (inline fixes only — no new files, no public-API changes).
 - **Overengineered / Rethink** → ask via `AskUserQuestion` with three options:
   - **Apply inline** — make the fixes now (expect re-test by caller).

@@ -42,7 +42,7 @@ A confirmation prompt on every commit would defeat the preference, so don't ask 
 
 ## Steps
 
-1. Run `~/.claude/scripts/git-preflight.ps1`. Stop if no changes.
+1. Run `pwsh -NoProfile -File "$HOME/.claude/scripts/git-preflight.ps1"`. Stop if no changes.
 2. Read the diff (`git diff` + `git diff --cached`) to pick tag and write the message.
 3. **Branch check** — read `.claude/rules/git-workflow.md` if it exists.
    - **Feature branches** + on `main`: stop and ask the user to switch or confirm.

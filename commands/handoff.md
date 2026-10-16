@@ -1,3 +1,7 @@
+---
+description: Write a session handoff summary to project memory so the next session can pick up where this one left off.
+---
+
 Write a session handoff summary to project memory so the next session can pick up where this one left off.
 
 **Execute mechanically.** Follow the steps; no need to weigh alternatives or deliberate.

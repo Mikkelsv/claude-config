@@ -15,7 +15,7 @@ Discover the project's test setup at runtime rather than assuming one: read any 
 
 If orchestrator provided scope, skip to Step 3.
 
-**Mode A** (no args): run `git-diff-scope.ps1` (project-local copy if present, else `~/.claude/scripts/`). Abort if `MODE: none`.
+**Mode A** (no args): run `pwsh -NoProfile -File ".claude/scripts/git-diff-scope.ps1"` if that file exists, else `pwsh -NoProfile -File "$HOME/.claude/scripts/git-diff-scope.ps1"`. Abort if `MODE: none`.
 **Mode B** (path/area): Glob relevant files, map to testable behavior.
 **Mode C** (`all`): review full test suite vs full codebase.
 

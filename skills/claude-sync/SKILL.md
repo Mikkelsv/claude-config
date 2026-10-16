@@ -13,9 +13,7 @@ Input: `$ARGUMENTS` (optional — `fresh` to force re-scaffold, or skill names t
 
 ## Tier-3 skill configs
 
-Global skills that need project-specific values read `.claude/skill-config/<name>.md`, **committed** so colleagues get it on clone. Currently `/build` (build command, preview server) and `/test` (build command, tier table, baseline path, drift mapping); `/refactor-comments` optionally takes a curated partition table. The config is always optional — every skill degrades honestly without one — so scaffold on request rather than by default.
-
-There is one location, and it is committed. If a project has a config in the old gitignored `.claude/local/skills/<name>/config.md`, move it — nothing reads that path any more.
+Global skills that need project-specific values read `.claude/skill-config/<name>.md`, **committed** so colleagues get it on clone. Currently `/build` (build command, preview server) and `/test` (build command, tier table, baseline path, drift mapping); `/refactor-comments` optionally takes a curated partition table. Always optional — scaffold on request, not by default. If a project has a config in the old gitignored `.claude/local/skills/<name>/config.md`, move it — nothing reads that path any more.
 
 ## Forked-Global Skills (project-local copies)
 
@@ -33,11 +31,11 @@ For each `.claude/skills/<name>/SKILL.md`:
 - `(~|$HOME)/.claude/` → `.claude/` (project-relative paths).
 - `powershell.exe` → `pwsh` (cross-platform per the rule).
 
-Applied to both SKILL.md and script content. Use one transform helper across all paths so behavior stays consistent.
+`mirror-skill.ps1` applies these to every file it mirrors. Apply them yourself only to the shared `.claude/scripts/` utilities in 2.3.
 
 ### Script sync (wholesale by directory)
 
-Forks depend on scripts at `.claude/scripts/*.ps1` and `.claude/skills/<fork>/scripts/*.ps1`. For each directory: sync every script present in the project from its `~/.claude/...` counterpart, **and** copy any script present in claude-config but missing in the project (new dependencies the fork pulls in).
+`mirror-skill.ps1` mirrors a fork's whole skill directory — `SKILL.md`, templates, and `scripts/`. Shared utilities in `.claude/scripts/*.ps1` are separate: sync every one present in the project from `~/.claude/scripts/`, **and** copy any the fork now depends on that the project lacks.
 
 ---
 
@@ -64,60 +62,15 @@ Ask via `AskUserQuestion`: which workflow does this project use?
 - **Direct to main** — solo project or prototype. `/implement` works on main directly, `/commit` pushes straight to main. No PR step.
 - **Worktree per feature** — like feature branches, but each plan gets its own worktree.
 
-Write the choice to `.claude/rules/git-workflow.md` using one of the templates below. Other skills (especially `/implement`, `/commit`, `/rebase-on-main`) read this rule to behave correctly.
-
-#### Template — Feature branches
-
-```markdown
-# Git Workflow: Feature Branches
-
-This project uses feature branches with PR-based merging to main.
-
-## How to apply
-
-- `/implement` creates a new branch `implement/{plan-name}` before starting work.
-- `/commit` pushes to the current feature branch — never directly to main.
-- After implementation completes, the user opens a PR to merge into main.
-- Use `/rebase-on-main` to keep feature branches current before merging.
-```
-
-#### Template — Direct to main
-
-```markdown
-# Git Workflow: Direct to Main
-
-Solo project — commits go directly to main, no branches.
-
-## How to apply
-
-- `/implement` does NOT create a branch. It works on main directly.
-- `/commit` pushes to main without confirmation (it's already the working branch).
-- Skip `/rebase-on-main` — there are no feature branches to rebase.
-- Worktrees are still allowed for parallel work, but each writes back to main on merge.
-```
-
-#### Template — Worktree per feature
-
-```markdown
-# Git Workflow: Worktree per Feature
-
-This project uses git worktrees + feature branches for parallel development.
-
-## How to apply
-
-- `/implement` defaults to creating a worktree (with branch `implement/{plan-name}`).
-- `/commit` pushes to the worktree's branch.
-- After implementation completes, user opens a PR.
-- `/rebase-on-main` cleans up the worktree after merge.
-```
+Write the choice to `.claude/rules/git-workflow.md` using the matching template in `git-workflow-templates.md` (this skill's directory). `/implement`, `/commit` and `/rebase-on-main` read it.
 
 ### 2.2 Tier-3 configs
 
 Ask via `AskUserQuestion` (multiSelect): which global skills should get a project config? Offer `build` and `test`; mention `refactor-comments` only if the project is large enough that a curated partition table beats a derived one.
 
-Read `CLAUDE.md` for context first, then gather per skill — build command, dev server name and port, test tiers and their commands, baseline path. Write each to `.claude/skill-config/<name>.md` as headed sections per the schema in `meta-skill-tiers.md`: commands, paths, names, small tables. Never architecture prose. These are **committed** — they are repo-wide truth, not per-machine state.
+Read `CLAUDE.md` for context first, then gather per skill — build command, dev server name and port, test tiers and their commands, baseline path. Write each to `.claude/skill-config/<name>.md` as headed sections per the schema in `meta-skill-tiers.md`: commands, paths, names, small tables. Never architecture prose.
 
-**Write project facts and nothing else.** No "generated on <date>", no "derived from <the owner's fork>", no note about global-vs-project precedence. A colleague reads this file and none of that helps them; worse, it reads as authoritative after it goes stale. If the migration produced owner-side context worth keeping, put it in a gitignored `.claude/local/skill-config-notes.md` instead.
+**Write project facts and nothing else** — no dates, provenance, or precedence notes (`meta-skill-tiers`). Owner-side context goes in a gitignored `.claude/local/skill-config-notes.md`.
 
 ### 2.3 Forked-globals (for shared repos)
 
@@ -130,10 +83,7 @@ Either way, offer to record the answer in `local/projects.md` when the project w
 
 If yes, list the global skills via the Classification above and present via `AskUserQuestion` (multiSelect, no pre-selection): which to scaffold as project-local forks? Prefer skills integral to colleague workflow (`plan`, `implement`, `commit`, `rebase-on-main`).
 
-Then for each selected fork:
-
-1. Read `~/.claude/skills/<name>/SKILL.md`, apply the Transformations, write to `.claude/skills/<name>/SKILL.md`.
-2. If `~/.claude/skills/<name>/scripts/` exists, copy each script with transformations applied.
+For each selected fork, run `pwsh -NoProfile -File "$HOME/.claude/scripts/mirror-skill.ps1" -Name <name> -ProjectRoot <project root>` — it mirrors the whole skill directory (`SKILL.md`, templates, `scripts/`) with the Transformations applied.
 
 Afterwards ensure `.claude/scripts/` has the shared utilities forks commonly depend on (`git-diff-scope.ps1`, `git-preflight.ps1`, `kill-port.ps1`), copied with transformations. Skip files the project already has — no overwrite without prompting.
 
@@ -161,21 +111,7 @@ Match, and no specific skills requested → "All current." Done. Differ → read
 
 ### 3.1b One-time migration off the retired template tier
 
-**Trigger:** the version file has a `skills` map. That map only ever recorded template-scaffolded skills, so its presence means this project predates v1.1.17 and still carries copies of skills that are now global. Skip this step entirely when it's absent.
-
-**Resolve redirector stubs first.** If a project `SKILL.md` is a thin stub whose body just points at another path (e.g. a capital-`C` `Claude/skills/<name>/SKILL.md`, the pre-v1.1.0 layout), the real content is there. Classify and migrate *that* file — migrating a redirector accomplishes nothing and leaves the real copy orphaned. Offer to collapse the stale layout while you're here.
-
-For each entry in the `skills` map, the named skill now exists globally. Classify its project copy and route:
-
-- **Mechanical scaffold** — nothing beyond placeholder fills and `<ProjectSpecific>` blocks → **safe to delete.** The global skill takes over.
-- **Carries hand-written content outside `<ProjectSpecific>`** → **stop and show it.** Report `projectOnlyLines` and the headings it sits under, exactly as 3.5 does for fork drift, and let the user decide: harvest it up to global first, keep the copy as a fork, or delete anyway. Never delete silently — that content is indistinguishable from stale drift to a diff, so the user is the only safeguard.
-- **Shared repo whose colleagues lack `~/.claude/`** → **keep it, re-register under `forks`.** It stops being a templated skill and becomes an ordinary fork; drift handling from 3.2 onward then applies.
-
-**Write the Tier-3 config and delete the copy in the same change.** Skill precedence is undocumented — nothing states whether a project copy shadows a global one — so a window where the copy is gone but the config is missing (or vice versa) has undefined behaviour. Gather what the global skill needs first (`/build`: build command, preview server; `/test`: build command, tier table, baseline path, optional drift mapping), write it per the schema in `meta-skill-tiers.md`, then remove the copy.
-
-**Check `.gitignore` covers `.claude/local/`** before writing any config — Tier 3 requires it, and a project that never had a local config may not have the entry. Offer to add it.
-
-Finally, drop the `skills` map from the version file on the 3.6 stamp. Keep `forks`.
+**Trigger:** the version file has a `skills` map — the project predates v1.1.17 and still carries template-scaffolded copies of now-global skills. Absent → skip. Present → follow `migrate-template-tier.md` (this skill's directory).
 
 ### 3.2 Per-fork drift categorization
 
@@ -197,36 +133,24 @@ Wait for all to return.
 
 ### 3.5 Apply updates per fork
 
-- **No drift** → apply silently (regenerate + reinsert blocks).
-- **Drift** → ask via `AskUserQuestion`: **Apply (overwrite drift)** / **Show full diff** / **Skip this skill**.
+- **No drift** → apply silently via `mirror-skill.ps1` (as in 2.3).
+- **Drift** → ask via `AskUserQuestion`: **Apply (overwrite drift)** (`mirror-skill.ps1 … -Force`) / **Show full diff** / **Skip this skill**.
 
-**Name the loss in the prompt.** State `projectOnlyLines` and `sectionsAtRisk` in the Apply option's description — "discards 82 project-only lines under Phase 6.5, Phase 8", not a bare "overwrite drift". Project content never wrapped in `<ProjectSpecific>` is indistinguishable from stale drift to the diff, so the user is the only safeguard and needs the magnitude up front.
+**Name the loss in the prompt.** State `projectOnlyLines` and `sectionsAtRisk` in the Apply option's description — "discards 82 project-only lines under Phase 6.5, Phase 8", not a bare "overwrite drift".
 
-When `projectOnlyLines` exceeds ~25, default the selection to **Skip**. A fork that far ahead of global is an unmerged feature branch, not drift — reconcile it deliberately rather than inside a sync.
+When `projectOnlyLines` exceeds ~25, default the selection to **Skip** — that far ahead is an unmerged feature, not drift.
 
-Applying a fork also syncs its scripts per Script sync above — unconditional resync, no per-script drift tracking.
+Applying a fork also resyncs its shared `.claude/scripts/` dependencies per Script sync above — unconditional, no per-script drift tracking.
 
 **Missing matching global** → a project fork with no `~/.claude/skills/<name>/SKILL.md` counterpart means the global was removed or renamed. Warn and skip; the user decides whether to delete the orphan.
 
 #### `<ProjectSpecific>` block preservation
 
-Project forks carry custom additions wrapped in:
-
-```markdown
-<ProjectSpecific>
-...content...
-</ProjectSpecific>
-```
-
-Each block is anchored to the most recent heading above it. When regenerating:
-
-1. Scan the project file for `<ProjectSpecific>` blocks, capturing each block's anchor heading.
-2. For each, find that anchor in the regenerated content and re-insert the block immediately after it.
-3. If the anchor no longer exists, append the block under a `## Project additions` section at the end and warn.
-
-`scripts/mirror-skill.ps1` implements this algorithm; prefer calling it over re-deriving. See `rules/wf-project-specific-blocks.md`.
+`mirror-skill.ps1` re-inserts each block after its anchor heading (orphans land under `## Project additions` with a warning). Format and authoring: `rules/wf-project-specific-blocks.md`.
 
 ### 3.6 Update the version stamp
+
+Write the new global version and date, and each fork's transformed hash under `forks`; drop any `skills` map.
 
 ### 3.7 Report
 
@@ -237,7 +161,7 @@ Updated, added, skipped, current forks. New version number.
 ## Edge Cases
 
 - **No `forks` map in the version file**: scan `.claude/skills/` per Classification, register all as **New**, ask the user to accept; later runs handle drift normally.
-- **A stale `skills` map** from the retired template tier: handled by Step 3.1b, not here. Don't drop the map without running that migration — it is the only signal that a project still carries copies of now-global skills.
+- **A stale `skills` map** from the retired template tier: handled by Step 3.1b, not here. Never drop the map without running that migration.
 - **Manual edits**: the drift check catches them. Wrapping edits in `<ProjectSpecific>` preserves them across syncs without prompting.
 - **Project-unique skills**: no matching global → left alone, never treated as forks.
 - **Pull fails**: offer to continue against the local global config.

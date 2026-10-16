@@ -41,7 +41,6 @@ $templatePath = "$claudeDir\settings.template.json"
 if (-not (Test-Path $settingsPath) -and (Test-Path $templatePath)) {
     Write-Host "Creating settings.json from template..." -ForegroundColor Cyan
     $content = Get-Content $templatePath -Raw
-    $content = $content -replace '<USERPROFILE>', ($env:USERPROFILE -replace '\\', '/')
     Set-Content $settingsPath $content -Encoding UTF8
     Write-Host "Created settings.json — review and customize as needed." -ForegroundColor Yellow
 } elseif (Test-Path $settingsPath) {

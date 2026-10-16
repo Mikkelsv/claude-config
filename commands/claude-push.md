@@ -1,3 +1,7 @@
+---
+description: Commit and push all changes in the ~/.claude/ config repo.
+---
+
 # Push Claude Config
 
 Commit and push all changes in the `~/.claude/` config repo.

@@ -74,6 +74,3 @@ If no lens surfaced anything actionable, leave the file untouched and say so.
 ## Project rules
 
 Project-specific plan critique criteria — performance baselines, known anti-patterns, testability conventions.
-
-<ProjectSpecific>
-</ProjectSpecific>

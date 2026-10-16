@@ -1,3 +1,7 @@
+---
+description: Capture a question, prompt, or to-do item for Claude to surface in future conversation turns.
+---
+
 # Todo Capture
 
 **Execute mechanically.** Follow the steps; no need to weigh alternatives or deliberate.
@@ -27,7 +31,7 @@ Input: `$ARGUMENTS` — the text to save as a todo item.
 
 4. Ensure `MEMORY.md` in the same directory has a pointer to `todo-prompts.md`. If not present, add:
 
-   ```
+   ```markdown
    ## Todo Prompts
 
    See `todo-prompts.md` for captured questions and to-do items to surface during work.

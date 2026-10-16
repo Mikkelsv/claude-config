@@ -8,18 +8,32 @@ if (-not $connections) {
     exit 0
 }
 
+# Ancestors of this script (shell, terminal, Claude app, VS Code) must never be killed,
+# even when they happen to be the listener's parent.
+$ancestors = @{}
+$walk = $PID
+while ($walk) {
+    $p = Get-CimInstance Win32_Process -Filter "ProcessId=$walk" -ErrorAction SilentlyContinue
+    if (-not $p -or $ancestors.ContainsKey([int]$p.ParentProcessId)) { break }
+    $walk = [int]$p.ParentProcessId
+    if ($walk) { $ancestors[$walk] = $true }
+}
+
 $killed = @()
 foreach ($conn in $connections) {
     $childPid = $conn.OwningProcess
 
-    # Find parent process
+    # Parent is killed only when it is a dev-server launcher (e.g. `dotnet watch`, `npm run dev`),
+    # otherwise it respawns the child; anything else is left alone.
     $parentPid = $null
-    try {
-        $proc = Get-CimInstance Win32_Process -Filter "ProcessId=$childPid" -ErrorAction SilentlyContinue
-        if ($proc) { $parentPid = $proc.ParentProcessId }
-    } catch {}
+    $proc = Get-CimInstance Win32_Process -Filter "ProcessId=$childPid" -ErrorAction SilentlyContinue
+    if ($proc -and $proc.ParentProcessId) {
+        $parent = Get-Process -Id $proc.ParentProcessId -ErrorAction SilentlyContinue
+        if ($parent -and $parent.ProcessName -match '^(dotnet|npm|npx|node|pnpm|yarn)$' -and -not $ancestors.ContainsKey([int]$parent.Id)) {
+            $parentPid = $parent.Id
+        }
+    }
 
-    # Kill parent first (if found), then child
     if ($parentPid) {
         Stop-Process -Id $parentPid -Force -ErrorAction SilentlyContinue
         $killed += $parentPid

@@ -1,8 +1,9 @@
 # Collapse all commits on the current branch since `-Base` (default 'main') into
-# 2-3 grouped commits, one per entry in the groups file.
+# 1-3 grouped commits, one per entry in the groups file.
 #
 # -GroupsFile points at JSON: [ { "message": "...", "paths": ["a/b", "c"] }, ... ]
-# Order matters: groups commit in array order. Written to a file rather than passed
+# Order matters: groups commit in array order. A path of "." claims every changed file
+# (the single-commit case). Written to a file rather than passed
 # inline because multi-line commit bodies do not survive shell quoting on Windows.
 #
 # Every changed path must be claimed by exactly one group. An unclaimed path aborts
@@ -10,7 +11,6 @@
 # half-committed. Groups do not need to build or compile individually — history here
 # is for communication, not bisection (branches merge to main as one commit).
 #
-# For a single commit use git-squash-execute.ps1 instead.
 # Optional -Push uses --force-with-lease.
 # Returns JSON: { ok, commits: [{ message, hash, files }], pushed, reason? }.
 
@@ -33,7 +33,7 @@ try {
     Fail "Groups file is not valid JSON: $($_.Exception.Message)"
 }
 
-if ($groups.Count -lt 2) { Fail "Expected 2+ groups; use git-squash-execute.ps1 for a single commit." }
+if ($groups.Count -lt 1) { Fail "Expected 1-3 groups; got none." }
 if ($groups.Count -gt 3) { Fail "Expected at most 3 groups; got $($groups.Count)." }
 
 foreach ($g in $groups) {
@@ -55,7 +55,7 @@ $claims = @{}
 foreach ($g in $groups) {
     foreach ($p in @($g.paths)) {
         $prefix = $p.TrimEnd('/')
-        $hits = @($changed | Where-Object { $_ -eq $prefix -or $_.StartsWith("$prefix/") })
+        $hits = if ($prefix -eq '.') { $changed } else { @($changed | Where-Object { $_ -eq $prefix -or $_.StartsWith("$prefix/") }) }
         foreach ($h in $hits) {
             if ($claims.ContainsKey($h)) {
                 Fail "Path '$h' is claimed by two groups ('$($claims[$h])' and '$($g.message)'). Each file belongs to exactly one commit."
@@ -79,23 +79,31 @@ foreach ($g in $groups) {
 }
 
 # Rewind to base keeping the working tree, then unstage so groups can be added selectively.
+# A single group (already proven to claim every changed file) commits the soft-reset index
+# as-is, so untracked files never get swept in by `git add -A`.
+$singleGroup = $groups.Count -eq 1
 $resetOut = git reset --soft $mergeBase 2>&1
 if ($LASTEXITCODE -ne 0) { Fail "git reset --soft failed: $resetOut" }
-$resetOut = git reset 2>&1
-if ($LASTEXITCODE -ne 0) { Fail "git reset (unstage) failed: $resetOut" }
+if (-not $singleGroup) {
+    $resetOut = git reset 2>&1
+    if ($LASTEXITCODE -ne 0) { Fail "git reset (unstage) failed: $resetOut" }
+}
 
 $commits = @()
 foreach ($g in $groups) {
-    $paths = @($g.paths)
-    $addOut = git add -A -- @paths 2>&1
-    if ($LASTEXITCODE -ne 0) { Fail "git add failed for group '$($g.message)': $addOut" }
+    if (-not $singleGroup) {
+        $paths = @($g.paths)
+        $addOut = git add -A -- @paths 2>&1
+        if ($LASTEXITCODE -ne 0) { Fail "git add failed for group '$($g.message)': $addOut" }
+    }
 
     $staged = @(git diff --cached --name-only 2>$null | Where-Object { $_ })
     if ($staged.Count -eq 0) { Fail "Group '$($g.message)' staged nothing. Its paths matched no changes." }
 
     $tmpFile = [System.IO.Path]::GetTempFileName()
     try {
-        Set-Content -Path $tmpFile -Value $g.message -Encoding UTF8 -NoNewline
+        # Explicit BOM-less UTF-8: PS 5.1 `Set-Content -Encoding UTF8` writes a BOM that prefixes the commit subject and breaks ^\[ tag parsers.
+        [System.IO.File]::WriteAllText($tmpFile, $g.message, (New-Object System.Text.UTF8Encoding $false))
         $commitOut = git commit -F $tmpFile 2>&1
     } finally {
         Remove-Item $tmpFile -Force -ErrorAction SilentlyContinue

@@ -6,26 +6,17 @@ param(
 
 $gitDir = git rev-parse --path-format=absolute --git-dir 2>$null
 if (-not $gitDir) {
-    Write-Error "Not in a git repository"
+    @{ status = 'error'; reason = 'Not in a git repository' } | ConvertTo-Json -Compress
     exit 1
 }
 
-# Worktree detection
+# Worktree detection. A worktree rebases in place (its branch cannot be checked out
+# anywhere else); isWorktree/mainRepoRoot are informational, for the merge step.
 $gitCommonDir = git rev-parse --path-format=absolute --git-common-dir 2>$null
 $gitDir = $gitDir -replace '/', '\'
 $gitCommonDir = $gitCommonDir -replace '/', '\'
 $isWorktree = $gitDir -ne $gitCommonDir
-
-if ($isWorktree) {
-    $mainRepoRoot = ($gitCommonDir -replace '[\\/]\.git$', '')
-    $branch = git rev-parse --abbrev-ref HEAD 2>$null
-    @{
-        status       = "worktree"
-        mainRepoRoot = $mainRepoRoot
-        branch       = $branch
-    } | ConvertTo-Json -Compress
-    exit 1
-}
+$mainRepoRoot = if ($isWorktree) { $gitCommonDir -replace '[\\/]\.git$', '' } else { $null }
 
 # Branch check
 $currentBranch = git rev-parse --abbrev-ref HEAD 2>$null
@@ -58,6 +49,8 @@ if ($dirtyFiles.Count -gt 0) {
 
 # --- Rebase ---
 
+$rebaseTarget = $BaseBranch
+
 # Fetch and update local base branch
 $fetchOutput = git fetch origin "${BaseBranch}:${BaseBranch}" 2>&1
 if ($LASTEXITCODE -ne 0) {
@@ -79,16 +72,19 @@ if ($LASTEXITCODE -ne 0) {
     git merge-base --is-ancestor $BaseBranch "origin/$BaseBranch" 2>$null
     if ($LASTEXITCODE -eq 0) {
         git branch -f $BaseBranch "origin/$BaseBranch" 2>$null
+        # `branch -f` refuses when the base is checked out in another worktree (the usual
+        # case inside a worktree); rebase onto the fetched remote ref instead.
+        if ($LASTEXITCODE -ne 0) { $rebaseTarget = "origin/$BaseBranch" }
     }
 }
 
 # Count commits before rebase for reporting
-$mergeBase = git merge-base HEAD $BaseBranch 2>$null
+$mergeBase = git merge-base HEAD $rebaseTarget 2>$null
 $commitsAhead = 0
 $commitsBehind = 0
 if ($mergeBase) {
     $ahead = @(git rev-list "$mergeBase..HEAD" 2>$null)
-    $behind = @(git rev-list "$mergeBase..$BaseBranch" 2>$null)
+    $behind = @(git rev-list "$mergeBase..$rebaseTarget" 2>$null)
     $commitsAhead = $ahead.Count
     $commitsBehind = $behind.Count
 }
@@ -98,14 +94,17 @@ if ($commitsBehind -eq 0) {
         status        = "up-to-date"
         branch        = $currentBranch
         baseBranch    = $BaseBranch
+        rebaseTarget  = $rebaseTarget
         commitsAhead  = $commitsAhead
         commitsBehind = 0
+        isWorktree    = $isWorktree
+        mainRepoRoot  = $mainRepoRoot
     } | ConvertTo-Json -Compress
     exit 0
 }
 
 # Attempt rebase
-$rebaseOutput = git rebase $BaseBranch 2>&1
+$rebaseOutput = git rebase $rebaseTarget 2>&1
 $rebaseExit = $LASTEXITCODE
 
 if ($rebaseExit -eq 0) {
@@ -113,8 +112,11 @@ if ($rebaseExit -eq 0) {
         status        = "success"
         branch        = $currentBranch
         baseBranch    = $BaseBranch
+        rebaseTarget  = $rebaseTarget
         commitsAhead  = $commitsAhead
         commitsBehind = $commitsBehind
+        isWorktree    = $isWorktree
+        mainRepoRoot  = $mainRepoRoot
     } | ConvertTo-Json -Compress
     exit 0
 }
@@ -126,10 +128,13 @@ $conflictFiles = @(git diff --name-only --diff-filter=U 2>$null)
     status        = "conflicts"
     branch        = $currentBranch
     baseBranch    = $BaseBranch
+    rebaseTarget  = $rebaseTarget
     commitsAhead  = $commitsAhead
     commitsBehind = $commitsBehind
     conflictFiles = $conflictFiles
     conflictCount = $conflictFiles.Count
     rebaseOutput  = "$rebaseOutput"
+    isWorktree    = $isWorktree
+    mainRepoRoot  = $mainRepoRoot
 } | ConvertTo-Json -Depth 4 -Compress
 exit 1

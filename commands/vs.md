@@ -1,3 +1,7 @@
+---
+description: Open the current project in VS Code with a per-project title-bar colour.
+---
+
 # Open VS Code
 
 **Execute mechanically.** Follow the steps; no need to weigh alternatives or deliberate.
@@ -11,7 +15,7 @@ Open the current session's project folder in VS Code. The title bar colour is ch
 1. Run the launch script with the current working directory:
 
    ```bash
-   powershell.exe -NoProfile -File "$HOME/.claude/scripts/launch-vscode.ps1" -Path "<cwd>"
+   pwsh -NoProfile -File "$HOME/.claude/scripts/launch-vscode.ps1" -Path "<cwd>"
    ```
 
 2. Report the script's output line verbatim.

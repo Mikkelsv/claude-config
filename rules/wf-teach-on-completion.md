@@ -8,7 +8,7 @@ Pick one: framework behavior used but unexplained, pattern applied, "why" behind
 
 Append after the task result:
 
-```
+```text
 ---
 
 **Learn something new:** [2-4 sentence nugget tied to specific code]
@@ -21,6 +21,7 @@ If quiz: 1-2 multiple-choice questions (one correct, 2-3 wrong, Skip option). Af
 ## Tracking
 
 Update `~/.claude/skills/teach/learner-profile.md`:
+
 - Add topic + date to "Topics Covered"
 - Quiz result → "Quiz History"
 - Wrong/uncertain → "Topics to Review"

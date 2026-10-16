@@ -8,32 +8,23 @@ Path: `~/.claude/skills/<name>/SKILL.md`. Generic workflows and meta-tooling. Av
 
 ## Tier 2 — Project-local forks (shared, committed)
 
-Path: `<project>/.claude/skills/<name>/SKILL.md`. A **copy of a global skill**, committed so colleagues without their own `~/.claude/` get the workflow on clone. Only for shared repos — see `meta-project-local-skill-copies`. `/claude-sync` scaffolds and drift-checks these; project additions go in `<ProjectSpecific>` blocks.
+Path: `<project>/.claude/skills/<name>/SKILL.md`. A **copy of a global skill**, committed so colleagues without their own `~/.claude/` get the workflow on clone. Only for shared repos — see `meta-project-local-skill-copies`. `/claude-sync` scaffolds and drift-checks these; project additions go in `<ProjectSpecific>` blocks. **Not a template tier:** Skills are never authored per-project from a template with `{PLACEHOLDER}` substitution — that tier was retired. A skill needing project values is Tier 1 plus a Tier 3 config.
 
-**Not a template tier.** Skills are never authored per-project from a template with `{PLACEHOLDER}` substitution — that tier was retired. A skill needing project values is Tier 1 plus a Tier 3 config.
-
-**Precedence: global wins.** Measured 2026-09-10 — with the same skill name in both places, the **global** `~/.claude/skills/<name>/SKILL.md` is the one that loads; the project copy does not shadow it. So a fork you have drifted ahead of global runs only for colleagues, never for you — you will not notice it is stale. Never rely on a Tier 2 fork to override a global skill; change the global one, or give the fork a different name.
+**Precedence: global wins.** With the same skill name in both places, the **global** `~/.claude/skills/<name>/SKILL.md` loads; the project copy does not shadow it. A fork drifted ahead of global runs only for colleagues, never for you. Never rely on a Tier 2 fork to override a global skill; change the global one, or give the fork a different name.
 
 ## Tier 3 — Skill config (committed)
 
-Path: `<project>/.claude/skill-config/<name>.md`, **committed**. The skill hardcodes the path and treats the file as optional.
+Path: `<project>/.claude/skill-config/<name>.md`, **committed**. The skill hardcodes the path and treats the file as optional. Carries the values a *generic* skill can't guess about a *specific* project — build command, test tiers, a baseline path, a server name. Project parameters, not machine config.
 
-Carries the values a *generic* skill can't guess about a *specific* project — build command, test tiers, a baseline path, a server name. Project parameters, not machine config.
+**Why not a rule or `CLAUDE.md`?** Those are **always-on**; a skill config is **read on demand**, so `/test`'s tier table costs nothing until `/test` runs. The axis is always-loaded vs read-when-needed, not committed vs ignored.
 
-**Why not a rule or `CLAUDE.md`?** Because those are **always-on**: they load into every session whether or not the owning skill runs. Measured 2026-09-10 in one project — `CLAUDE.md` alone was 27,678 bytes, 23% of a 119 KB eager load. A skill config is **read on demand**, so `/test`'s tier table costs nothing until `/test` runs. The axis is always-loaded vs read-when-needed, not committed vs ignored.
+**Committed, because colleagues need it.** A build command is repo-wide truth, identical for every developer. Gitignored, a cloned repo gets a skill that silently degrades. Corollary: never put a machine-specific path in one; there is no gitignored shadowing layer.
 
-**Committed, because colleagues need it.** A build command is repo-wide truth, identical for every developer. Putting it somewhere gitignored means anyone cloning the repo gets a skill that silently degrades — which is exactly what happened when this rule previously specified `local/`. Corollary: never put a machine-specific path in one. There is no gitignored shadowing layer, and nothing needs one.
+**Shape:** one `##` section per project fact. Values are **commands, paths, names, or small tables** — never architecture prose. `/test`'s config is the reference: build command, a tier table (name → command → result shape), baseline path, and a per-tier drift mapping. **A stated result shape must be what the command actually returns**, verified by running it (see `/test`).
 
-**Shape:** one `##` section per project fact. Values are **commands, paths, names, or small tables** — never architecture prose. `/test`'s config is the reference: build command, a tier table (name → command → result shape), baseline path, and a per-tier drift mapping.
-
-**Project facts only — a colleague reads this file.** No provenance or dates, no reference to anyone's personal `~/.claude`, no notes about which skill shadows which. That context is meaningless to a teammate and reads as authoritative long after it stops being true. Owner-side notes belong in a gitignored file such as `.claude/local/skill-config-notes.md`.
-
-**A stated result shape must be what the command actually returns**, verified by running it — not what a wrapper script does with the output afterwards. A shape copied from the harness rather than the underlying call is the kind of error that reports a green tally over zero tests.
+**Project facts only — a colleague reads this file.** No provenance or dates, no reference to anyone's personal `~/.claude`, no notes about which skill shadows which. Owner-side notes belong in a gitignored file such as `.claude/local/skill-config-notes.md`.
 
 ```markdown
-## Build
-`dotnet build`
-
 ## Test Tiers
 | Tier | Command | Result shape |
 | --- | --- | --- |

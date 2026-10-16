@@ -1,6 +1,6 @@
 ---
 name: audit-file-sizes
-description: Audit source files against soft (400) / near-cap (760) / hard (800) line-count caps. Reports violations grouped by tier; respects top-of-file `SIZE-EXEMPT:` comments. Run before merge or when a file feels overgrown.
+description: "Audit source files against soft (400) / near-cap (760) / hard (800) line-count caps. Reports violations grouped by tier; respects top-of-file `SIZE-EXEMPT:` comments. Run before merge, when a file feels overgrown, or when the user asks \"is this file too long\" or \"should I split this\". This is the read-only check — to actually execute splits use /refactor-file-sizes."
 disable-model-invocation: true
 ---
 
@@ -20,10 +20,10 @@ Mechanical scan of source files vs. the soft (400) and hard (800) line-count cap
    - **Mode A** — collect changed files: `git diff --name-only HEAD` (unstaged) + `git diff --name-only --cached` (staged). If both empty, fall back to `git diff --name-only main...HEAD` (branch scope). If still empty, report "no changes; pass `all` to scan the full tree" and exit.
    - **Mode B** — scope = the supplied path.
    - **Mode C** — scope = repo root.
-2. **Resolve the script path.** Prefer the project-local copy if present, else the global one:
-   - **Project-local**: `.claude/scripts/check-file-sizes.ps1` (use this if it exists — per `meta-project-local-skill-copies`, project copies are deliberate forks and may carry a customized extension list).
-   - **Global fallback**: `~/.claude/scripts/check-file-sizes.ps1`.
-3. **Run the script** with `pwsh -NoProfile -File <resolved-path>`:
+2. **Resolve the script.** Prefer the project-local copy (per `meta-project-local-skill-copies`, project copies are deliberate forks and may carry a customized extension list):
+   - **Project-local**, if `.claude/scripts/check-file-sizes.ps1` exists: `pwsh -NoProfile -File ".claude/scripts/check-file-sizes.ps1"`.
+   - **Global fallback**: `pwsh -NoProfile -File "$HOME/.claude/scripts/check-file-sizes.ps1"`.
+3. **Run the script** with the invocation from step 2, plus:
    - Mode A: `-Files <list>` (pass the collected files).
    - Mode B: `-Path <dir>`.
    - Mode C: no args.

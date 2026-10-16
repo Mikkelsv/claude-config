@@ -2,6 +2,16 @@
 
 Only lists changes that require project action. Global rules, scripts, and global skills are picked up automatically and not tracked here.
 
+## v1.2.4 — 2026-10-16 — `/claude-refactor` sweep: script fixes forks need, skill trims, rule rename
+
+**Project action:**
+
+- **Wrap project content in `<ProjectSpecific>` blocks first.** Several forks (`commit`, `audit-branch`, `refactor-code`, `refactor-tests`, `implement`, `plan`, `plan-optimizer`, `test`, `verify`) carry project additions outside blocks; the next refresh overwrites them.
+- **Then refresh forks of** `rebase-on-main` (incl. `scripts/` — the old `git-rebase-onto.ps1` can force-move local main past unpushed commits on a failed fetch; worktrees now rebase in place; new `fetch-failed` status), `squash` (incl. `scripts/` — BOM-less commit messages; one grouped-script path for 1–3 commits), `test` (non-circular baseline freshness from v1.2.2; restarts the preview server it stopped), `implement` (incl. `plan-template.md`; side-chat checkpoints; failures carry forward, no stash), `claude-sync` (new side files `git-workflow-templates.md`, `migrate-template-tier.md`), `verify` (new `settling.md`), `audit-branch` (`git-diff-scope -Scope branch`), `plan`, `build`.
+- **Re-copy shared `.claude/scripts/`**: `git-diff-scope.ps1` (new `-Scope auto|branch`), `kill-port.ps1` (no longer kills a non-dev-server parent).
+- `mirror-skill.ps1` now applies the fork path rewrites and mirrors every non-script skill file, so `/claude-sync` no longer reports false drift on rewritten lines.
+- Global `rules/git-workflow.md` is now `rules/wf-git-workflow.md`. The project file `.claude/rules/git-workflow.md` keeps its name.
+
 ## v1.2.1 — 2026-09-11 — `/test` gains a `gate` scope, and `/implement` finally honours `/plan`'s contract
 
 `/plan` has been writing a `**Verify:**` field, a `**Test:**` tier field and a `— **milestone**` heading marker into every plan since v1.1.18. `/implement` read **none of them** — its per-task gate ran a full `/test` after every task regardless. So `/plan` documented a contract no skill delivered, and the metadata it emitted was inert. This closes that gap; it is a correctness fix between two global skills, not a new feature.

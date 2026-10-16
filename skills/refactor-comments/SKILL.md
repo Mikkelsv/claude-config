@@ -24,7 +24,7 @@ Excluded everywhere: `bin/`, `obj/`, `node_modules/`, generated CSS and build ou
 
 ## Steps
 
-1. **Size the problem first.** Run `pwsh -NoProfile -File ~/.claude/scripts/audit-comment-blocks.ps1 -Path <scope>` (project-local copy if present). It returns `{findings:[{path,startLine,lineCount}], totalScanned}` — runs of consecutive comment-only lines, sorted longest first. This is **quantify-only**: a long run isn't automatically wrong, since `arch-docs-over-inline` is a qualitative rubric. Use it to aim the sweep at the worst files and to have a before/after number. A `totalScanned` of 0 means the scope resolved to nothing — treat that as a bug, not a clean result.
+1. **Size the problem first.** Run `pwsh -NoProfile -File "$HOME/.claude/scripts/audit-comment-blocks.ps1" -Path <scope>` (or `pwsh -NoProfile -File ".claude/scripts/audit-comment-blocks.ps1" -Path <scope>` if that project copy exists). It returns `{findings:[{path,startLine,lineCount}], totalScanned}` — runs of consecutive comment-only lines, sorted longest first. This is **quantify-only**: a long run isn't automatically wrong, since `arch-docs-over-inline` is a qualitative rubric. Use it to aim the sweep at the worst files and to have a before/after number. A `totalScanned` of 0 means the scope resolved to nothing — treat that as a bug, not a clean result.
 
    Also run a plan-reference count if the project has a checker (e.g. `.claude/scripts/check-plan-citations.ps1`, emitting `{paths:{dead,live},labels,deadCount,liveCount,labelCount}`). Feed its file list to the partition agents as concrete targets — this class is mechanical to find and easy to miss by eye.
 2. **Determine scope + partition.** Path mode narrows to that path; no-args uses the partitions above. For `--dry-run`, partition strategy is identical.
@@ -44,9 +44,9 @@ Excluded everywhere: `bin/`, `obj/`, `node_modules/`, generated CSS and build ou
 
 A comment must not cite a `plans/*.md` path, nor a plan's internal labels — `Task 3`, `Phase 2c`, `Defect B`, `P2 Task 6`, "the plan's Decisions", a post-audit finding number. Plans are deleted when their feature ships, so every such reference has a scheduled expiry. Cut it and keep the fact, or repoint to `docs/<file>.md "<section>"` after verifying that section exists.
 
-**Reversed 2026-09-11.** This section previously told you to *leave* a citation to a completion-deleted plan alone, as "a deliberate, git-recoverable pointer". That was wrong in practice: a reader cannot tell a git-only pointer from a live one, and on one measured repo 61% were already dead (278 citations, 171 broken) — so the signal was noise. Provenance belongs in the commit message, which is permanent and is where `git log` already looks.
+This holds even for a plan only recoverable from git: a reader cannot tell a git-only pointer from a live one. Provenance belongs in the commit message, which is permanent and is where `git log` already looks.
 
-Still true, and the useful half of the old guidance: when a **`docs/*.md`** citation breaks, run `git log --oneline -- <deleted-path>`. If that content moved into another named document, **repoint** rather than cut — dropping it loses a live cross-reference.
+When a **`docs/*.md`** citation breaks, run `git log --oneline -- <deleted-path>`. If that content moved into another named document, **repoint** rather than cut — dropping it loses a live cross-reference.
 
 **Never regex-sweep plan labels.** `Task` is a BCL type (`async Task`, `Task.Run`) and `phase` is a domain word in some codebases (`zero-phase`, `minimum-phase`); a mechanical substitution corrupts both, per `wf-blanket-rename-safety`. Judge per site. Expect false positives from any detector: `docs/x.md "Phase 4b — provenance" (Task 4)` has a legitimate section name and one real violation on the same line.
 
@@ -54,4 +54,3 @@ Still true, and the useful half of the old guidance: when a **`docs/*.md`** cita
 
 - Path scope is your lever for risk control — start narrow, expand once confidence is established. `--dry-run` on a single partition is the safest first validation.
 - If agents repeatedly cut something you wanted kept, add a `cq-comments-track-code` clause naming the pattern rather than fighting it per-file.
-- Called by `/refactor-code` as an optional post-step: scope = files in the refactor's diff; 1 agent, 1 round, same rubric.

@@ -5,7 +5,7 @@ description: "Autonomous development loop — implements a plan task-by-task wit
 
 # Implementation Loop
 
-Work through a plan task-by-task with build, test, refactor gates. One task = one commit during the loop; **all tasks squash to one commit per plan / per phase before Final Audit** (see Squash section below).
+Work through a plan task-by-task with build, test, refactor gates. One task = one commit during the loop; **all tasks squash to one commit per plan / per phase after Final Audit and Cleanup** (see Squash section below).
 
 ## Input
 
@@ -54,34 +54,11 @@ Phase-level decisions are logged in the managing plan's **Decisions & Review Ite
 
 ## Plan Format
 
-Optional front matter at the top of the file pins the execution mode (otherwise auto-detected by task count):
+Task shape: `plan-template.md` (managing plans: `managing-plan-template.md`). Beyond the template:
 
-```yaml
----
-mode: agentic  # or inline; omit for auto-detect
----
-```
-
-Task block:
-
-```markdown
-### Task 1: Short description — **milestone** (marker optional; Step 3 reads it)
-- [ ] Implement
-- [ ] Refactor
-- [ ] Docs & tests
-- [ ] Done
-
-**Context:** what and why
-**Files:** files to touch
-**Acceptance:** what done looks like
-**Verify:** one instrument per acceptance criterion — the ladder is in `/plan`'s "The `**Verify:**` field"; `human:` is first-class
-**Test:** how to verify
-**Dependencies:** Task N (if any)
-**Parallel group:** A (or — for sequential)
-**Result:** <verdict> · <short sha> · <one-line summary> (written by Step 6)
-**Implementation notes:** (appended by the executing sub-agent in agentic mode)
-- <gotcha, deviation, or cross-cutting flag>
-```
+- Optional front matter `mode: agentic` (or `inline`) pins the execution mode.
+- A task heading may end ` — **milestone**`; Step 3 reads it.
+- `**Result:**` is written by Step 6; `**Implementation notes:**` is appended by the agentic sub-agent.
 
 ## Loop
 
@@ -92,9 +69,7 @@ Runs until all tasks completed or skipped. After each checkpoint, pick next unch
 If a task has a group letter, collect every unchecked task in that group. Main thread takes one (prefer most downstream dependents); the rest run as background agents, `isolation: "worktree"`, `model: "sonnet"`.
 
 - Each agent: implement, build, must run `/refactor-code` (skip only if < 20 lines changed), no `/test`, no commit.
-- **Give each agent its expected base SHA and require it to confirm the worktree matches before editing.** A diff from an unexpected parent is internally correct and applies to the wrong tree — the merge then conflicts confusingly or silently drops the change.
-- **A write-capable agent re-reads live state** (the file, the diff range) rather than trusting what it got at spawn time. Siblings edit concurrently, so a frozen snapshot goes stale and acting on it clobbers their work.
-- Where the partition is genuinely disjoint, a shared tree is acceptable if no agent runs a git write — but verify the touched-file set afterwards either way, per `wf-check-the-artifact-not-the-self-report`.
+- **Give each agent its expected base SHA; it confirms the worktree matches before editing**, and re-reads live state (file, diff range) rather than its spawn-time snapshot. A genuinely disjoint partition may share a tree if no agent runs a git write. Either way, check base and touched-file set afterwards per `wf-check-the-artifact-not-the-self-report`.
 - After all return: merge one at a time (`git merge --no-ff`), resolving conflicts or re-queuing failures. Run the Step 3 gate once on the combined result — full `/test` if any task in the group was a milestone. Run Step 6 per task, but make one `checkpoint` call after the last, listing every task id in the group.
 
 ### 1. Read & Understand
@@ -114,13 +89,12 @@ Scan remaining tasks in the plan (don't paint into a corner). Take `preview_scre
 - Target task ID + its `Context:` / `Files:` / `Acceptance:` / `Verify:` / `Test:` block
 - Project root path
 - Mandate:
-  1. Implement the task following `CLAUDE.md` + project rules. Add tests for new user-facing functionality.
-  2. **Before returning, run each `**Verify:**` instrument for the task's acceptance criteria.** If the instrument doesn't exist yet, build it — the plan already committed to it being checkable.
-  3. **Before returning, append a `**Implementation notes:**` bullet list under this task in the plan file** — gotchas, deviations from plan, helpers/types introduced, anything future tasks need to know.
-  4. DO NOT run `/test` (orchestrator handles).
-  5. DO NOT commit.
-  6. Return a brief structured summary: files touched, work summary, any cross-cutting flags affecting future tasks, and each judgment call made (the call, the options, what you chose).
-  7. DO NOT call `mcp__side-chat__ask` — the orchestrator is the only asker.
+  1. Implement as in inline mode above: `CLAUDE.md` + project rules, tests for new user-facing functionality, and **run each `**Verify:**` instrument before returning** (build it if missing).
+  2. **Before returning, append a `**Implementation notes:**` bullet list under this task in the plan file** — gotchas, deviations from plan, helpers/types introduced, anything future tasks need to know.
+  3. DO NOT run `/test` (orchestrator handles).
+  4. DO NOT commit.
+  5. Return a brief structured summary: files touched, work summary, any cross-cutting flags affecting future tasks, and each judgment call made (the call, the options, what you chose).
+  6. DO NOT call `mcp__side-chat__ask` — the orchestrator is the only asker.
 
 Read the agent's returned summary. Don't re-read the touched files — trust the summary + the Implementation notes in the plan. Post the judgment calls worth asking per When Stuck.
 
@@ -137,7 +111,7 @@ Route on the verdict:
 - **ALL GOOD** → continue.
 - **TEST DRIFT** → continue, and log the touched test plus its diff hunk in `Decisions & Review Items`.
 - **TEST FAILURE** → short fix loop, max 3 (diagnose, fix, re-test). If it survives all three, record it in `Decisions & Review Items` and **carry forward** — no stash, no mid-loop pause.
-- **TEST REGRESSION** or **NEEDS REVIEW** → don't attempt a fix and don't pause. Record the verdict, the failing test names and `/test`'s reported baseline state, then carry forward. `/verify` pauses on both at end-of-plan with the whole branch in view; stopping here would block the loop on a judgment this gate can't make.
+- **TEST REGRESSION** or **NEEDS REVIEW** → don't attempt a fix and don't pause. Record the verdict, the failing test names and `/test`'s reported baseline state, then carry forward. `/verify` pauses on both at end-of-plan.
 
 If `/test` reports `baseline: none`, its classification is degraded — every failure arrives as TEST FAILURE regardless of history. Note that next to the verdict rather than treating the class as established.
 
@@ -154,7 +128,7 @@ Check off `- [x] Refactor`. Verify acceptance criteria still met. Take "after" s
 
 ### 5. Design Decisions
 
-Log non-obvious choices to **Decisions & Review Items** in the plan. In agentic mode, also promote any cross-cutting items from the sub-agent's `**Implementation notes:**` (issues that affect future tasks, not just local quirks) into Decisions & Review Items so they're visible at plan-level, not buried under one task. Check off `- [x] Docs & tests`.
+Log non-obvious choices to **Decisions & Review Items** in the plan — every task, as the decision is made, not batched for Final Audit; a decision left only in this conversation doesn't survive to later tasks. In agentic mode, also promote any cross-cutting items from the sub-agent's `**Implementation notes:**` (issues that affect future tasks, not just local quirks) into Decisions & Review Items so they're visible at plan-level, not buried under one task. Check off `- [x] Docs & tests`.
 
 ### 6. Checkpoint
 
@@ -171,7 +145,7 @@ Log non-obvious choices to **Decisions & Review Items** in the plan. In agentic 
 
 ### When Stuck
 
-Never stop unless all done — unless the user explicitly pauses the loop. 3 fix failures → stash + skip + note. Failed dependency → attempt anyway. Always keep moving.
+Never stop unless all done — unless the user explicitly pauses the loop. Test/build failures: see Step 3 (carry forward). Failed dependency → attempt anyway. Always keep moving.
 
 **Unclear requirement** → post it via `mcp__side-chat__ask` (`planPath`, `task`, `question`, `options`, the `defaultOption` you proceed on, `loadBearing`), then continue on the default; the answer arrives at a later checkpoint. Never pause for it.
 
@@ -181,23 +155,19 @@ Never stop unless all done — unless the user explicitly pauses the loop. 3 fix
 ## Guard Rails
 
 - One task at a time (except parallel groups). Agents build, main thread tests.
-- Merge worktrees sequentially, `/test` after all merges.
-- Stash on failure after 3 attempts. Max 3 refactor iterations.
+- Merge worktrees sequentially, the Step 3 gate after all merges.
+- Max 3 refactor iterations.
 - Small drive-bys OK. Test behavior, not internals. Fix code, not tests — a red-driven change to an existing assertion routes through `/verify`, which records provenance per edit.
 
 ## Verify
 
-After all tasks are committed: run `/verify {plan-path}`. Confirms the work holds **before** auditing its quality — a criterion `/verify` reports `fail` or `can't-tell` on is unfinished work, not a Final Audit style nit. `/verify` owns its own routing, including pausing on a regression; this step is only the call site.
-
-In Phase Chain mode this runs once after the whole chain completes, alongside Final Audit — not per phase.
-
-**`/verify` runs twice by design — don't collapse them.** This call asks "did we build it," before six audit sub-agents run against unfinished work. `/audit-branch`'s trailing call (its Phase 8) asks "did the audit break it," after the fleet has edited more code.
+After all tasks are committed: run `/verify {plan-path}`. Confirms the work holds **before** auditing its quality — a criterion `/verify` reports `fail` or `can't-tell` on is unfinished work, not a Final Audit style nit. `/verify` owns its own routing, including pausing on a regression. In Phase Chain mode it runs once after the whole chain, not per phase. Don't collapse this with `/audit-branch`'s Phase 8 `/verify`: this one asks "did we build it", that one "did the audit break it".
 
 ## Final Audit
 
 After all tasks committed (but before Cleanup + Squash):
 
-1. Run `/audit-branch` on the full branch diff. Since this runs at the tail of an implementation, prefer **Defer to plan** for any major architectural rework — it belongs in its own focused plan, not folded into this one. `/audit-branch` handles rule candidates internally.
+1. Run `/audit-branch` on the full branch diff. Prefer **Defer to plan** for major architectural rework — it gets its own plan. `/audit-branch` handles rule candidates internally.
 2. If `/audit-branch` applied fixes inline: run `/test`. If passing, `/commit "[Refac] Apply Final Audit fixes"`. If failing, stash, note in report, leave to user.
 3. If `/audit-branch` deferred to a plan, mention its path in the Report so the user can pick it up via `/implement` next.
 
@@ -213,7 +183,7 @@ After all tasks + Final Audit + Cleanup committed. Collapses per-task commits, a
 
 1. **Compose subject + body.** Subject = imperative summary of the plan (or phase) title. Body = `Squashed from N tasks:` + the completed task subjects.
 2. **Invoke `/squash`** with `base=<sha-recorded-at-Phase-0>`, `message=<subject>\n\n<body>`, `push=true`. Those arguments skip its interactive confirmation.
-3. **Skip when the commits are already pushed to a shared branch** — on `main`, or any branch someone else may have pulled. Rewriting there needs a force-push, which is never worth a tidier history; per-task commits stand.
+3. **Skip when the commits are already pushed to a shared branch** — on `main`, or any branch someone else may have pulled. Never force-push for a tidier history; per-task commits stand.
 4. **Skip** if `git rev-list --count <base>..HEAD` is 0 or 1 — nothing to squash.
 5. **On error**: report and continue. The per-task commits remain valid history.
 

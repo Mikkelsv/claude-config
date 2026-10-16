@@ -8,21 +8,7 @@ Stubs look like "leaving room to grow" but they force every consumer to thread d
 
 ## How
 
-**Instead of:**
-
-```csharp
-public enum LayeringStrategy { Proportional, TopConformable, BottomConformable }
-
-public Layers Build(..., LayeringStrategy strategy) => strategy switch
-{
-    LayeringStrategy.Proportional      => BuildProportional(...),
-    LayeringStrategy.TopConformable    => throw new NotImplementedException(),
-    LayeringStrategy.BottomConformable => throw new NotImplementedException(),
-    _ => throw new ArgumentOutOfRangeException(nameof(strategy)),
-};
-```
-
-**Write:**
+Instead of an enum + parameter whose unimplemented arms throw `NotImplementedException`, write:
 
 ```csharp
 // Future extension: alternative layering modes (top-conformable, bottom-conformable)

@@ -17,13 +17,13 @@ $unlisted = @{ Base = '#8a4a10'; Bright = '#d1741a' }             # orange
 $segments = @($Path -split '[\\/]' | Where-Object { $_ })
 
 $worktreeIndex = -1
-for ($i = 0; $i -lt $segments.Count; $i++) {
-    if ($segments[$i] -ieq '.claude-worktrees') { $worktreeIndex = $i; break }
+for ($i = 1; $i -lt $segments.Count - 1; $i++) {
+    if ($segments[$i] -ieq '.claude' -and $segments[$i + 1] -ieq 'worktrees') { $worktreeIndex = $i; break }
 }
 
-# A worktree lives at <project>/.claude-worktrees/<name>, so the project is the
-# segment before the marker; it gets the brighter variant of its project's color.
-$isWorktree = $worktreeIndex -gt 0
+# A worktree lives at <project>/.claude/worktrees/<name> (same layout as get-worktrees.ps1),
+# so the project is the segment before `.claude`; it gets the brighter variant of its color.
+$isWorktree = $worktreeIndex -gt 0 -and $segments.Count -gt $worktreeIndex + 2
 $project = if ($isWorktree) { $segments[$worktreeIndex - 1] } else { $segments[-1] }
 
 $entry = if ($palette.ContainsKey($project)) { $palette[$project] } else { $unlisted }
@@ -51,17 +51,23 @@ $colorCustomizations = @{
 
 $settings = @{}
 if (Test-Path $settingsPath) {
+    # Unparseable settings (e.g. JSONC comments on PS 5.1) must not be overwritten with colours only.
     try {
-        $existing = Get-Content $settingsPath -Raw | ConvertFrom-Json
+        $existing = Get-Content $settingsPath -Raw | ConvertFrom-Json -ErrorAction Stop
+    } catch {
+        Write-Error "Opened $Path, but left colours unset: cannot parse ${settingsPath}: $($_.Exception.Message)"
+        exit 1
+    }
+    if ($existing) {
         foreach ($prop in $existing.PSObject.Properties) {
             $settings[$prop.Name] = $prop.Value
         }
-    } catch {}
+    }
 }
 
 $settings['workbench.colorCustomizations'] = $colorCustomizations
 
-$settings | ConvertTo-Json -Depth 4 | Set-Content $settingsPath -Encoding UTF8
+$settings | ConvertTo-Json -Depth 10 | Set-Content $settingsPath -Encoding UTF8
 
 $scope = if ($isWorktree) { "$project worktree '$($segments[-1])'" } else { $project }
 Write-Output "Opened $scope with color $color"

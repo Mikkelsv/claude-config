@@ -15,8 +15,8 @@ Sweep for files over the 800-line hard cap and split them. The audit phase ident
 
 ## Phase 1 — Audit
 
-1. **Resolve `check-file-sizes.ps1`.** Prefer project-local (`.claude/scripts/`) if present, else global (`~/.claude/scripts/`). Per `meta-project-local-skill-copies`, project copies are deliberate forks that may carry a customized extension list.
-2. Run it as `pwsh -NoProfile -File <resolved path>` (mode A: changed files; mode C: full tree per scope above). Parse the JSON. `-NoProfile` keeps a user profile from polluting the output.
+1. **Resolve `check-file-sizes.ps1`.** If `.claude/scripts/check-file-sizes.ps1` exists, run `pwsh -NoProfile -File ".claude/scripts/check-file-sizes.ps1"`; else `pwsh -NoProfile -File "$HOME/.claude/scripts/check-file-sizes.ps1"`. Per `meta-project-local-skill-copies`, project copies are deliberate forks that may carry a customized extension list.
+2. Run it (no args: no params; path arg: `-Path <dir>`). Parse the JSON. `-NoProfile` keeps a user profile from polluting the output.
 3. **Drop** `justified` entries (SIZE-EXEMPT) and `soft` entries — only hard-cap violators (>800 lines) are in scope.
 4. **Coupling detection.** For each pair of violators, `Grep` the basename (no extension) of one in the other's content. If matched, mark them coupled. Coupled violators group into one batch; standalone violators are their own batch. This grep is loud and cheap — false positives are fine, over-grouping is harmless, under-grouping risks broken consumers.
 5. Report: `N violators in M batches`.

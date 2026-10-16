@@ -37,7 +37,7 @@ Be concrete (always code examples). Respect experience (don't explain basics). U
 
 After the lesson, offer in plain text (not AskUserQuestion):
 
-```
+```text
 **Quiz:** Want to test your understanding? (1) Take Quiz  (2) Skip
 ```
 

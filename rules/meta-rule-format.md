@@ -21,4 +21,4 @@ Keep them tight — see `wf-tight-claude-config`.
 
 ## Capture flow
 
-Use `/rule-candidate` to stage a candidate; `/rule-review` promotes and triages. See `wf-surface-rule-candidates`. Don't write directly to the rules folder.
+Use `/rule-candidate` to stage a candidate; `/rule-review` promotes and triages. See `wf-surface-rule-candidates`. Don't write directly to the rules folder, except via `/capture-rule` or `/rule-review`.

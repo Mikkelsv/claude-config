@@ -19,7 +19,7 @@ try {
     # rules/, skills/, commands/ → a shared repo forking any of these needs to know to re-pull.
     # Deliberately NOT every directory — agents/ and scripts/ ride along in a fork refresh.
     # The bump is a SIGNAL. Whether project action is required is decided by the changelog
-    # entry (only added when manual re-copy is actually needed; see rules/meta-user-config.md).
+    # entry (only added when manual re-copy is actually needed; see commands/claude-push.md).
     $trackedDirs = @("rules", "skills", "commands")
     $staged = git diff --cached --name-only 2>$null
     $meaningful = $staged | Where-Object { $f = $_; $trackedDirs | Where-Object { $f.StartsWith("$_/") } }

@@ -1,5 +1,5 @@
 # Inspect whether the current branch can be squashed onto a base.
-# Returns JSON with `status` ∈ on-main, detached, dirty, none, single, ok.
+# Returns JSON with `status` ∈ on-main, detached, dirty, none, single, error, ok.
 # When status = ok, also returns: branch, commitCount, mergeBase, subjects[], log, stat.
 #
 # `-Base` defaults to 'main' (the original /squash use case). Pass a commit SHA
@@ -38,10 +38,15 @@ if ($count -eq 1) {
     exit 0
 }
 
-$mergeBase = (git merge-base $Base HEAD 2>$null).Trim()
+$mergeBase = (git merge-base $Base HEAD 2>$null)
+if (-not $mergeBase) {
+    @{ status = 'error'; reason = "Failed to find merge-base with $Base" } | ConvertTo-Json -Compress
+    exit 1
+}
+$mergeBase = $mergeBase.Trim()
 $subjects  = @(git log "$Base..HEAD" --reverse --format='%h %s' 2>$null)
 $log       = (git log "$Base..HEAD" --reverse --format='%H%n%s%n%b%n---' 2>$null) -join "`n"
-$stat      = (git diff "$Base..HEAD" --stat 2>$null) -join "`n"
+$stat      = (git diff "$mergeBase..HEAD" --stat 2>$null) -join "`n"
 
 @{
     status      = 'ok'

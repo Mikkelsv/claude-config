@@ -25,13 +25,13 @@ Once the task is complete (or immediately if no task was given):
 1. Read `.claude/launch.json` for the server config (name, port, command).
 2. If `.claude/skill-config/build.md` exists, read it for overrides (e.g. a separate build command that differs from the serve command). Optional — infer from `launch.json` when it's absent, and say so.
 3. Stop any existing preview server (use `preview_stop` if one is running, check with `preview_list` first).
-4. Kill any orphaned processes on the port (cross-platform via `pwsh`):
+4. Kill any orphaned processes on the port (Windows: `kill-port.ps1`; elsewhere `lsof -ti :<port> | xargs kill`):
 
    ```bash
    pwsh -NoProfile -File "$HOME/.claude/scripts/kill-port.ps1" -Port <port>
    ```
 
-5. Build using the build command from config.md if present, otherwise infer from `launch.json` (can run in parallel with steps 3–4).
+5. Build using the build command from `.claude/skill-config/build.md` if present, otherwise infer from `launch.json` (can run in parallel with steps 3–4).
 6. If the build **fails**, fix the errors and rebuild. If it still fails after 2 attempts, stop and report.
 7. If the build **succeeds**, start the dev server via `preview_start` with the server name from `launch.json`. If `preview_start` fails after a successful build, re-run the port-kill step and retry once before reporting.
 8. Report: "Build OK. Dev server running in preview."

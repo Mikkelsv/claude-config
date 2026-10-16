@@ -13,21 +13,21 @@ param(
 # Verify on base
 $current = git rev-parse --abbrev-ref HEAD 2>$null
 if ($current -ne $BaseBranch) {
-    @{ ok = $false; reason = "Not on $BaseBranch (current: $current)" } | ConvertTo-Json -Compress
+    @{ ok = $false; status = 'error'; reason = "Not on $BaseBranch (current: $current)" } | ConvertTo-Json -Compress
     exit 1
 }
 
 # Branch must not already exist
 git rev-parse --verify $BranchName 2>$null | Out-Null
 if ($LASTEXITCODE -eq 0) {
-    @{ ok = $false; reason = "Branch '$BranchName' already exists" } | ConvertTo-Json -Compress
+    @{ ok = $false; status = 'error'; reason = "Branch '$BranchName' already exists" } | ConvertTo-Json -Compress
     exit 1
 }
 
 # Stash (-u to include untracked)
 $stashOut = git stash push -u -m "rebase-on-main: branch from $BaseBranch" 2>&1
 if ($LASTEXITCODE -ne 0) {
-    @{ ok = $false; reason = "Stash failed: $stashOut" } | ConvertTo-Json -Compress
+    @{ ok = $false; status = 'error'; reason = "Stash failed: $stashOut" } | ConvertTo-Json -Compress
     exit 1
 }
 $stashed = -not ($stashOut -match 'No local changes')
@@ -36,7 +36,7 @@ $stashed = -not ($stashOut -match 'No local changes')
 $pullOut = git pull --ff-only origin $BaseBranch 2>&1
 if ($LASTEXITCODE -ne 0) {
     if ($stashed) { git stash pop 2>$null | Out-Null }
-    @{ ok = $false; reason = "Pull failed: $pullOut. Stash restored to $BaseBranch."; pulled = $false } | ConvertTo-Json -Compress
+    @{ ok = $false; status = 'error'; reason = "Pull failed: $pullOut. Stash restored to $BaseBranch."; pulled = $false } | ConvertTo-Json -Compress
     exit 1
 }
 
@@ -44,7 +44,7 @@ if ($LASTEXITCODE -ne 0) {
 $branchOut = git checkout -b $BranchName 2>&1
 if ($LASTEXITCODE -ne 0) {
     if ($stashed) { git stash pop 2>$null | Out-Null }
-    @{ ok = $false; reason = "Branch creation failed: $branchOut. Stash restored."; pulled = $true } | ConvertTo-Json -Compress
+    @{ ok = $false; status = 'error'; reason = "Branch creation failed: $branchOut. Stash restored."; pulled = $true } | ConvertTo-Json -Compress
     exit 1
 }
 

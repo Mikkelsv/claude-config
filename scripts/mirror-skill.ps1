@@ -4,78 +4,154 @@ param(
     [switch]$Force
 )
 
-# Mirrors a global skill into a project's .claude/skills/<Name>/SKILL.md, preserving
-# <ProjectSpecific> blocks (the project-specific content delimited by <ProjectSpecific>...</ProjectSpecific>).
+# Mirrors a global skill folder into a project's .claude/skills/<Name>/, applying the fork
+# transformations from skills/claude-sync/SKILL.md "Transformations" and preserving
+# <ProjectSpecific> blocks in SKILL.md. Other non-script files (templates etc.) are
+# transformed and copied wholesale; scripts/ is out of scope (claude-sync's Script sync).
 #
-# DRIFT DETECTION:
-# Compares project file (with blocks stripped) against global. If they differ — i.e. the
-# project has unmarked edits — refuses to overwrite unless -Force is passed. The drift
-# sample is returned so the user can review before deciding to overwrite or merge by hand.
+# DRIFT DETECTION (SKILL.md only):
+# Compares the project file and the transformed global, both with blocks stripped, in order.
+# If they differ — i.e. the project has unmarked edits — refuses to overwrite anything
+# unless -Force is passed, returning a drift sample for review.
 #
-# Returns JSON: { ok, action, preserved, driftLines?, sample?, orphans?, orphanAnchors? }.
+# Returns JSON: { ok, action, preserved, driftLines?, sample?, orphans?, orphanAnchors?, files? }.
 # action ∈ copied (no project copy), in-sync (identical), replaced (no blocks), merged.
+# files = [{ path, action }] for non-SKILL.md files, action ∈ copied, in-sync, replaced.
 
-$globalPath  = Join-Path $env:USERPROFILE ".claude/skills/$Name/SKILL.md"
-$projectPath = Join-Path $ProjectRoot ".claude/skills/$Name/SKILL.md"
+$globalDir  = Join-Path $env:USERPROFILE ".claude/skills/$Name"
+$projectDir = Join-Path $ProjectRoot ".claude/skills/$Name"
+$globalPath  = Join-Path $globalDir 'SKILL.md'
+$projectPath = Join-Path $projectDir 'SKILL.md'
 
 if (-not (Test-Path $globalPath)) {
     @{ ok = $false; reason = "Global skill not found: $globalPath" } | ConvertTo-Json -Compress
     exit 1
 }
+$globalDir = (Resolve-Path $globalDir).Path
+
+# Keep in step with claude-sync's Transformations list.
+function Convert-ForFork([string]$text) {
+    $text = $text -replace '(~|\$HOME)/\.claude/', '.claude/'
+    $text -replace 'powershell\.exe', 'pwsh'
+}
+
+function Read-Lines([string]$path) {
+    $lines = [System.IO.File]::ReadAllText($path) -split '\r?\n'
+    if ($lines.Count -gt 0 -and $lines[-1] -eq '') { $lines = $lines[0..($lines.Count - 2)] }
+    $lines
+}
+
+function Write-Text([string]$path, [string]$text) {
+    New-Item -ItemType Directory -Path (Split-Path $path -Parent) -Force | Out-Null
+    [System.IO.File]::WriteAllText($path, $text, (New-Object System.Text.UTF8Encoding $false))
+}
+
+function Join-Lines([string[]]$lines) { ($lines -join "`n") + "`n" }
+
+# Splits lines into base (blocks removed) and blocks (with anchor heading).
+# Headings inside fenced code are not anchors. A blank line following a block is dropped
+# when the line before the block was blank, so merge output (which pads blocks with a
+# blank line for markdownlint) strips back to exactly the global text.
+# Blocks under "## Project additions" carry their original anchor in a preceding comment.
+function Split-Blocks([string[]]$lines) {
+    $base = New-Object System.Collections.Generic.List[string]
+    $blocks = New-Object System.Collections.Generic.List[object]
+    $lastHeading = $null
+    $inFence = $false
+    $inBlock = $false
+    $current = $null
+    $blockHeading = $null
+    $dropNextBlank = $false
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $line = $lines[$i]
+        if ($inBlock) {
+            $current.Add($line)
+            if ($line -match '^\s*</ProjectSpecific>\s*$') {
+                $blocks.Add([pscustomobject]@{ Heading = $blockHeading; Lines = $current.ToArray() })
+                $inBlock = $false
+                $dropNextBlank = $base.Count -gt 0 -and $base[$base.Count - 1] -eq ''
+            }
+            continue
+        }
+        if ($dropNextBlank) {
+            $dropNextBlank = $false
+            if ($line -eq '') { continue }
+        }
+        $nextOpens = -not $inFence -and ($i + 1) -lt $lines.Count -and $lines[$i + 1] -match '^\s*<ProjectSpecific>\s*$'
+        if ($nextOpens -and $line -match '^<!-- Original anchor: (.*) -->$') { $blockHeading = $Matches[1]; continue }
+        # Markers count only on their own line outside fences, so prose and fenced examples
+        # that mention the tag are left alone.
+        if (-not $inFence -and $line -match '^\s*<ProjectSpecific>\s*$') {
+            $inBlock = $true
+            $current = New-Object System.Collections.Generic.List[string]
+            $current.Add($line)
+            $prev = if ($i -gt 0) { $lines[$i - 1] } else { '' }
+            if ($prev -notmatch '^<!-- Original anchor: ') { $blockHeading = $lastHeading }
+            continue
+        }
+        if ($line -match '^\s*(```|~~~)') { $inFence = -not $inFence }
+        elseif (-not $inFence -and $line -match '^#{1,6}\s') { $lastHeading = $line }
+        $base.Add($line)
+    }
+    # Drop a trailing "## Project additions" left empty once its orphan blocks are stripped.
+    while ($base.Count -gt 0 -and $base[$base.Count - 1] -eq '') { $base.RemoveAt($base.Count - 1) }
+    if ($base.Count -gt 0 -and $base[$base.Count - 1] -eq '## Project additions') {
+        $base.RemoveAt($base.Count - 1)
+        while ($base.Count -gt 0 -and $base[$base.Count - 1] -eq '') { $base.RemoveAt($base.Count - 1) }
+    }
+    [pscustomobject]@{ Base = $base.ToArray(); Blocks = $blocks.ToArray() }
+}
+
+function Sync-OtherFiles {
+    $results = @()
+    $files = Get-ChildItem $globalDir -Recurse -File | Where-Object {
+        $rel = $_.FullName.Substring($globalDir.Length).TrimStart('\', '/')
+        $rel -ne 'SKILL.md' -and $rel -notmatch '^scripts[\\/]'
+    }
+    foreach ($f in $files) {
+        $rel = $f.FullName.Substring($globalDir.Length).TrimStart('\', '/')
+        $dest = Join-Path $projectDir $rel
+        $text = Join-Lines @(Read-Lines $f.FullName | ForEach-Object { Convert-ForFork $_ })
+        $action = if (-not (Test-Path $dest)) { 'copied' }
+                  elseif ((Join-Lines @(Read-Lines $dest)) -ceq $text) { 'in-sync' }
+                  else { 'replaced' }
+        if ($action -ne 'in-sync') { Write-Text $dest $text }
+        $results += @{ path = ($rel -replace '\\', '/'); action = $action }
+    }
+    , @($results)
+}
+
+function Emit([hashtable]$result) {
+    $result.files = Sync-OtherFiles
+    $result | ConvertTo-Json -Depth 10 -Compress
+    exit 0
+}
+
+$globalSplit = Split-Blocks @(Read-Lines $globalPath | ForEach-Object { Convert-ForFork $_ })
+$globalLines = $globalSplit.Base
 
 # No project copy yet → straight copy, no drift possible
 if (-not (Test-Path $projectPath)) {
-    New-Item -ItemType Directory -Path (Split-Path $projectPath -Parent) -Force | Out-Null
-    Copy-Item $globalPath $projectPath
-    @{ ok = $true; action = 'copied'; preserved = 0 } | ConvertTo-Json -Compress
-    exit 0
+    Write-Text $projectPath (Join-Lines $globalLines)
+    Emit @{ ok = $true; action = 'copied'; preserved = 0 }
 }
 
-$projectLines = Get-Content $projectPath
-$globalLines  = Get-Content $globalPath
+$projectRaw   = @(Read-Lines $projectPath)
+$projectSplit = Split-Blocks $projectRaw
+$blocks       = $projectSplit.Blocks
+$projectBase  = $projectSplit.Base
 
-# Extract PROJECT-SPECIFIC blocks from project (capturing each block's anchor heading)
-$blocks       = New-Object System.Collections.Generic.List[object]
-$lastHeading  = $null
-$inBlock      = $false
-$currentLines = New-Object System.Collections.Generic.List[string]
-$blockHeading = $null
-
-foreach ($line in $projectLines) {
-    if (-not $inBlock -and $line -match '^#{1,6}\s') { $lastHeading = $line }
-    if ($line -match '<ProjectSpecific\b') {
-        $inBlock = $true
-        $currentLines.Clear()
-        $currentLines.Add($line)
-        $blockHeading = $lastHeading
-        continue
-    }
-    if ($inBlock) {
-        $currentLines.Add($line)
-        if ($line -match '</ProjectSpecific>') {
-            $blocks.Add([pscustomobject]@{ Heading = $blockHeading; Lines = $currentLines.ToArray() })
-            $inBlock = $false
-        }
-    }
+# Ordered drift: Compare-Object alone ignores order, so a moved line would read as in sync.
+$diff = @(Compare-Object -ReferenceObject $globalLines -DifferenceObject $projectBase -CaseSensitive)
+$sameText = (Join-Lines $globalLines) -ceq (Join-Lines $projectBase)
+if (-not $sameText -and $diff.Count -eq 0) {
+    $diff = @(Compare-Object -ReferenceObject $globalLines -DifferenceObject $projectBase -CaseSensitive -SyncWindow 0)
 }
-
-# Compute project base (strip PROJECT-SPECIFIC blocks) for drift comparison
-$projectBase = New-Object System.Collections.Generic.List[string]
-$inBlock2 = $false
-foreach ($line in $projectLines) {
-    if ($line -match '<ProjectSpecific\b') { $inBlock2 = $true;  continue }
-    if ($line -match '</ProjectSpecific>')  { $inBlock2 = $false; continue }
-    if (-not $inBlock2) { $projectBase.Add($line) }
-}
-
-# Drift = differences between project base and global
-$diff = @(Compare-Object -ReferenceObject $globalLines -DifferenceObject $projectBase.ToArray())
-$driftCount = $diff.Count
+$driftCount = if ($sameText) { 0 } else { [Math]::Max($diff.Count, 1) }
 
 # Already in sync (no drift, no blocks)
 if ($driftCount -eq 0 -and $blocks.Count -eq 0) {
-    @{ ok = $true; action = 'in-sync'; preserved = 0 } | ConvertTo-Json -Compress
-    exit 0
+    Emit @{ ok = $true; action = 'in-sync'; preserved = 0 }
 }
 
 # Drift detected and not forced → refuse, show sample
@@ -96,27 +172,32 @@ if ($driftCount -gt 0 -and -not $Force) {
 
 # No blocks → straight replace (drift either absent, or forced)
 if ($blocks.Count -eq 0) {
-    Copy-Item $globalPath $projectPath -Force
+    Write-Text $projectPath (Join-Lines $globalLines)
     $msg = if ($driftCount -gt 0) { "drift overwritten with -Force ($driftCount lines)" } else { 'replaced' }
-    @{ ok = $true; action = 'replaced'; preserved = 0; note = $msg } | ConvertTo-Json -Compress
-    exit 0
+    Emit @{ ok = $true; action = 'replaced'; preserved = 0; note = $msg }
 }
 
-# Merge: walk global, re-insert blocks after their anchor heading
+# Merge: walk global, re-insert blocks after their anchor heading (headings in fences skipped).
+# A blank line after the heading is kept above the block and one is added below it.
 $result   = New-Object System.Collections.Generic.List[string]
 $inserted = @{}
+$inFence  = $false
 
-foreach ($line in $globalLines) {
+for ($g = 0; $g -lt $globalLines.Count; $g++) {
+    $line = $globalLines[$g]
     $result.Add($line)
-    if ($line -match '^#{1,6}\s') {
-        for ($i = 0; $i -lt $blocks.Count; $i++) {
-            if ($inserted[$i]) { continue }
-            if ($blocks[$i].Heading -eq $line) {
-                $result.Add('')
-                foreach ($bl in $blocks[$i].Lines) { $result.Add($bl) }
-                $inserted[$i] = $true
-            }
-        }
+    if ($line -match '^\s*(```|~~~)') { $inFence = -not $inFence; continue }
+    if ($inFence -or $line -notmatch '^#{1,6}\s') { continue }
+    $matching = @(for ($i = 0; $i -lt $blocks.Count; $i++) {
+        if (-not $inserted[$i] -and $blocks[$i].Heading -eq $line) { $i }
+    })
+    if ($matching.Count -eq 0) { continue }
+    $padded = ($g + 1) -lt $globalLines.Count -and $globalLines[$g + 1] -eq ''
+    if ($padded) { $result.Add(''); $g++ }
+    foreach ($i in $matching) {
+        foreach ($bl in $blocks[$i].Lines) { $result.Add($bl) }
+        if ($padded) { $result.Add('') }
+        $inserted[$i] = $true
     }
 }
 
@@ -135,14 +216,16 @@ if ($orphans.Count -gt 0) {
     }
 }
 
-$result -join "`n" | Set-Content -Path $projectPath -Encoding UTF8 -NoNewline
+$merged = Join-Lines $result.ToArray()
+$unchanged = $merged -ceq (Join-Lines $projectRaw)
+if (-not $unchanged) { Write-Text $projectPath $merged }
 
-@{
+Emit @{
     ok            = $true
-    action        = 'merged'
+    action        = if ($unchanged) { 'in-sync' } else { 'merged' }
     preserved     = $blocks.Count
     orphans       = $orphans.Count
     orphanAnchors = @($orphans | ForEach-Object { $_.Heading })
     driftLines    = $driftCount
     note          = if ($driftCount -gt 0) { "drift overwritten with -Force" } else { $null }
-} | ConvertTo-Json -Depth 10 -Compress
+}

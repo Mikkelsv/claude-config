@@ -9,11 +9,12 @@ param(
     [switch]$Push
 )
 
-$mergeBase = (git merge-base $Base HEAD 2>$null).Trim()
+$mergeBase = (git merge-base $Base HEAD 2>$null)
 if (-not $mergeBase) {
     @{ ok = $false; reason = "Failed to find merge-base with $Base" } | ConvertTo-Json -Compress
     exit 1
 }
+$mergeBase = $mergeBase.Trim()
 
 $resetOut = git reset --soft $mergeBase 2>&1
 if ($LASTEXITCODE -ne 0) {
@@ -24,7 +25,8 @@ if ($LASTEXITCODE -ne 0) {
 # Use a temp file for the message to avoid shell-escaping issues with multi-line bodies.
 $tmpFile = [System.IO.Path]::GetTempFileName()
 try {
-    Set-Content -Path $tmpFile -Value $Message -Encoding UTF8 -NoNewline
+    # Explicit BOM-less UTF-8: PS 5.1 `Set-Content -Encoding UTF8` writes a BOM that prefixes the commit subject and breaks ^\[ tag parsers.
+    [System.IO.File]::WriteAllText($tmpFile, $Message, (New-Object System.Text.UTF8Encoding $false))
     $commitOut = git commit -F $tmpFile 2>&1
 } finally {
     Remove-Item $tmpFile -Force -ErrorAction SilentlyContinue

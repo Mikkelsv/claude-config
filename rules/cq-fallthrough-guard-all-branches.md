@@ -6,8 +6,6 @@ When a routing function branches on a validated input range (`if idx in 3..6 the
 
 Open-ended `else` branches silently absorb inputs the author didn't intend. Common pattern: a routing function originally split as `if cond then A, else B`, then someone tightens `cond`'s range. The `else` now absorbs inputs that should have been a new third path — but the routing function happily routes them to B, masking a real bug.
 
-The pattern repeats anywhere a function gates on "expected range" of a discrete input — handle indices, axis enums encoded as ints, version tags, message-kind codes. The fix is the same: every branch asserts its own sub-range; the routing function trusts callers but verifies its own gates.
-
 ## How
 
 ```csharp

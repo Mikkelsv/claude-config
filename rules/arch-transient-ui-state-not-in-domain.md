@@ -4,11 +4,7 @@ Per-session UI toggles (visibility flags, expanded/collapsed state, hover state,
 
 ## Why
 
-Domain records represent persistent, durable state — what's loaded, what's named, what gets saved. UI toggles are session/local and intentionally not persisted; putting them on a domain record:
-
-- Pollutes serialization paths with fields that must be explicitly excluded from save/load.
-- Confuses readers about which fields participate in the persistence contract.
-- Mixes "data the user authored" with "UI display state" at the type level, making both harder to reason about.
+Domain records carry durable state; a session-only UI toggle on one pollutes serialization and blurs which fields belong to the persistence contract.
 
 Heuristic: if a domain field needs a doc comment saying "not persisted across save/load," it doesn't belong on the persisted type. The comment is the giveaway.
 

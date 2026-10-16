@@ -1,6 +1,6 @@
 ---
 name: audit-branch
-description: Branch-level audit across architecture, code, docs, tests, file-sizes, and comments. Phase 3a runs all 6 sub-skills in parallel (audits + refactors). Phase 3b conditionally runs refactor-file-sizes if 3a flagged cap violations. Mechanical findings inline; judgment routes to /resolve-audit-findings. Self-paces 1-3 passes, then closes with one /verify run (Phase 8) — the skill's only suite run.
+description: "Branch-level audit across architecture, code, docs, tests, file-sizes, and comments. Use whenever the user wants to audit or review a whole branch, says \"review everything I've changed\", or asks \"is this branch ready to merge?\". Phase 3a runs all 6 sub-skills in parallel (audits + refactors). Phase 3b conditionally runs refactor-file-sizes if 3a flagged cap violations. Mechanical findings inline; judgment routes to /resolve-audit-findings. Self-paces 1-3 passes, then closes with one /verify run (Phase 8) — the skill's only suite run."
 ---
 
 # Audit Branch
@@ -12,7 +12,7 @@ Branch-level review combining architecture audit + refactor sweeps across code, 
 - Verdict was **Needs work** or **Rethink**
 - 5+ findings landed (applied or deferred) across the sub-agents
 - A single sub-agent reported a structural finding that touched files outside its original scope (e.g. refactor-code applied changes that may have invalidated refactor-tests' assertions)
-- **Phase 3b ran at all** — file splits create new files with potentially stale top-of-file comments, carryover imports, and fresh refactoring opportunities; the next pass re-audits the post-split structure
+- **Phase 3b ran at all** — the next pass re-audits the post-split structure
 
 Stop conditions:
 
@@ -21,23 +21,22 @@ Stop conditions:
 - Phase 6 build failed → stop and surface the break, don't compound it
 - Hard cap at **3 passes** regardless
 
-Phase 7 (rule candidates) and Phase 8 (`/verify`) both run once after the final pass — not per pass. Phase 7 pools candidates from all passes; Phase 8 is the skill's only suite run, so budget it once rather than 3×.
+Phase 7 (rule candidates) and Phase 8 (`/verify`) both run once after the final pass — not per pass. Phase 7 pools candidates from all passes.
 
 ## Phase 1 — Scope
 
-Run `~/.claude/scripts/git-diff-scope.ps1` to capture the `main..HEAD` diff scope. Abort if `MODE: none`. Pass the captured scope to every sub-agent so each skips its own scope-detection step.
+Capture the `main..HEAD` diff scope (merge-base, even with a dirty tree), using the project copy if it exists:
+
+```bash
+pwsh -NoProfile -File ".claude/scripts/git-diff-scope.ps1" -Scope branch
+pwsh -NoProfile -File "$HOME/.claude/scripts/git-diff-scope.ps1" -Scope branch
+```
+
+Abort if `MODE: none`. Pass the captured scope to every sub-agent so each skips its own scope-detection step.
 
 ## Phase 2 — Resolve Sub-Skills
 
-For each review, look up the SKILL.md (project-first, global fallback):
-
-- `audit-architecture` — global available.
-- `refactor-code` — typically project-scoped.
-- `refactor-docs` — global available.
-- `refactor-tests` — typically project-scoped.
-- `audit-file-sizes` — global available.
-- `refactor-comments` — typically project-scoped.
-- `refactor-file-sizes` — typically project-scoped.
+Sub-skills: `audit-architecture`, `refactor-code`, `refactor-docs`, `refactor-tests`, `audit-file-sizes`, `refactor-comments`, `refactor-file-sizes`. All seven are global; prefer a project fork if one exists.
 
 All sub-skills are always run — resolve each SKILL.md **from disk**, never from the session's invocable-skill list. `disable-model-invocation: true` hides `audit-file-sizes`, `refactor-comments`, and `refactor-file-sizes` from that list, but their files are on disk and this orchestration always spawns them.
 
@@ -52,7 +51,7 @@ Spawn all 6 sub-skills below in **parallel** (one message, multiple `Agent` call
 - `audit-file-sizes` — read-only scan
 - `refactor-comments` — source-file comments (writes)
 
-`refactor-code` and `refactor-comments` both write source files. They coexist safely because the `Edit` tool's `old_string` match is fail-on-mismatch — a collided edit fails and the agent retries with a fresh read. No silent lost updates, just transient retries.
+`refactor-code` and `refactor-comments` may both write source files; a collided `Edit` fails and the agent retries with a fresh read.
 
 Each agent's prompt:
 
@@ -64,7 +63,7 @@ Each agent's prompt:
 
 ## Phase 3b — Conditional File-Size Refactor
 
-Run only if Phase 3a's `audit-file-sizes` reported cap violations. File splits change the file structure mid-run (one file becomes two), which would invalidate any other agent's in-flight reads — that's why this can't live in 3a.
+Run only if Phase 3a's `audit-file-sizes` reported cap violations. Splits would invalidate other agents' in-flight reads, so this can't live in 3a.
 
 - `refactor-file-sizes` — applies splits inline.
 
@@ -101,29 +100,18 @@ No `AskUserQuestion` prompt here — `/resolve-audit-findings` owns the apply/de
 
 ## Phase 6 — Build Verify
 
-After inline fixes have landed (whether from agents in Phase 3 or orchestrator in Phase 5), invoke `/build`. Report if the build broke — comment-only edits shouldn't affect the build, so a break signals an agent slip-up where a comment edit accidentally crossed into code. `/build` returns success in no-build repos via its graceful-skip path, so this step is a no-op there. The user reviews the diff before committing regardless.
+After inline fixes have landed (whether from agents in Phase 3 or orchestrator in Phase 5), invoke `/build`. Report if the build broke — likely an agent edit that crossed from comments into code. No-op in no-build repos.
 
 ## Phase 7 — Rule Candidates
 
-Pool the `## Rule candidates` blocks from all sub-agents. Per `wf-surface-rule-candidates.md`, surface up to 3 candidates in one batched prompt at the end. Skip this phase if nothing qualifies — don't fabricate.
+Pool the `## Rule candidates` blocks from all sub-agents. Log each qualifying candidate via `/rule-candidate` and append the standard "Rule candidates added" footer (`wf-surface-rule-candidates`). Skip if nothing qualifies — don't fabricate.
 
 ## Phase 7.5 — Was this branch already merged?
 
-Establish merged-ness by content, not by git's ancestry helpers. `git branch --no-merged` and `git cherry` both reason about commit identity, so a branch that landed via squash or rebase reads as unmerged forever — its commits genuinely don't exist on `main`. Acting on that reading means re-auditing already-shipped work, or worse, "restoring" it.
+Establish merged-ness by content, not by `git branch --no-merged` / `git cherry` — a squash- or rebase-merged branch reads as unmerged forever.
 
-Grep `main` for a signature symbol the branch introduced (a new function, type, or rule filename). Present on `main` → the content shipped, whatever the commit graph says. Absent → genuinely unmerged. Check for a stale local `main` first (`git fetch`) — a stale local `main` produces the same false "unmerged" reading.
+Grep `main` for a signature symbol the branch introduced (a new function, type, or rule filename). Present on `main` → the content shipped, whatever the commit graph says. Absent → genuinely unmerged. `git fetch` first — a stale local `main` gives the same false reading.
 
 ## Phase 8 — Verify
 
-Runs **once, after the final pass** — not per pass.
-
-Invoke `/verify`. Plan-path resolution:
-
-- **Called from `/implement`'s Final Audit** → the plan path passes through, and `/verify` executes that plan's `**Verify:**` entries on top of the fleet's edits. This passthrough is conversational, not a formal parameter — neither skill declares an `$ARGUMENTS` hand-off for it; the orchestrating session simply still has the plan path in context. Note that rather than assuming a literal parameter binding exists.
-- **Standalone, with no plan** → pass `/verify` the explicit `none` sentinel, **not** an empty argument. `/verify`'s default for an empty argument is "most recent file in `plans/`", which in an active implementation loop is very likely a real plan with real `**Verify:**` entries — silently defeating the standalone case. `/verify` still runs its Phase C triage on the suite (that half is unconditional); the criteria half reports `no-instrument`, never a pass and never silently omitted.
-
-This is the **one and only** suite run this skill triggers. Phase 6 is `/build` only — it compiles and serves, it does not run tests. That distinction matters: Phase 3a checks dangling references and error-log entries, and neither measures whether the suite passes, so any "the app is healthy" claim made before this phase would be asserted rather than backed.
-
-**Not a re-pass trigger.** A non-green verdict here is the fleet's own damage or a pre-existing failure to report, not something re-running the audit fleet resolves. That decision belongs to `/resolve-audit-findings` (already run in Phase 5) or the user — never an automatic re-pass.
-
-**Cost note.** `/verify`'s Phase C runs the suite, so this phase is not free. Budget it as part of the skill's overall cost: up to 6 sub-agents × up to 3 passes, plus one `/verify` at the end.
+Invoke `/verify` once after the final pass; pass the plan path when called from `/implement`, else `none`. Not a re-pass trigger.

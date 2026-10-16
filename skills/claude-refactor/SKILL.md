@@ -22,6 +22,7 @@ Launch 2 parallel agents (`model: "sonnet"`):
 Launch 3 background agents (`model: "sonnet"`) with the inventory:
 
 **Agent A — Content Quality**:
+
 - **Correctness**: logic flow, script param mismatches, stale references, JSON output mismatches.
 - **Script extraction**: multi-line bash blocks that should be scripts (especially if repeated). Not single-liners.
 - **Token efficiency** (per `wf-tight-claude-config.md`): rules and CLAUDE.md load every session; skills and commands load on invocation. Flag verbose prose, redundant tables, repeated explanations, cross-file duplication, and examples that restate the directive.
@@ -31,11 +32,13 @@ Launch 3 background agents (`model: "sonnet"`) with the inventory:
   Rank by **always-on bytes**, not line count. A 40-line always-loaded rule costs more than a 200-line skill nobody invokes this week, and a `paths:`-scoped rule costs nothing until a matching file is opened.
 
 **Agent B — Structure & Permissions**:
+
 - **Permissions**: walk skills/commands, find Bash/Write/Edit calls not covered by settings.json globs. Draft safe patterns. Update template if portable.
 - **Placement**: global skills with project-specific assumptions? Project skills that are generic? Commands that should be skills or vice versa?
 - **Parallelization**: independent read-only phases that could be parallel agents? Write-independent phases safe for worktrees?
 
 **Agent C — Sync & Docs**:
+
 - **Fork drift**: compare each project fork to the global skill it copies. Generic improvements in the fork → propagate **up** to global. Global ahead → the fork is stale. Project-specific divergence inside `<ProjectSpecific>` → expected.
 - **Invisible drift is the one to hunt.** Global wins on same-named skills, so a fork that has drifted ahead runs only for colleagues, never for its author — nothing surfaces it. Flag any fork whose non-block content exceeds its global counterpart.
 - **README accuracy**: `~/.claude/README.md`. All items listed? Descriptions accurate? Directory layout correct? Script catalog complete?
@@ -53,7 +56,7 @@ Update `~/.claude/README.md` to reflect all Phase 3 changes. Update Global Rules
 ## Phase 5 — Summary
 
 | Category | High | Medium | Low |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Correctness | N | N | N |
 | Script opportunities | N | N | N |
 | Permission gaps | N | N | N |

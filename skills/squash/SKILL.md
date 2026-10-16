@@ -19,7 +19,7 @@ This is safe because the branch merges to `main` as one unit: `git bisect` stays
 
 ## Modes
 
-- **Interactive (default)**: invoked by user; runs steps 1-6. Base = `main`.
+- **Interactive (default)**: invoked by user; runs steps 1-7. Base = `main`.
 - **Automated**: invoked by another skill (e.g., `/implement` for per-phase squash). `$ARGUMENTS` carries `base=<sha>` and `message=<text>`. A supplied `message=` means one commit — skip grouping, skip confirmation.
 
 Argument format when called by another skill:
@@ -32,9 +32,9 @@ push=true
 
 ## Steps
 
-1. **Parse arguments**. If `$ARGUMENTS` contains `base=...` and `message=...`, enter automated mode → single commit, skip to step 6a. Otherwise interactive.
-2. **Inventory** — `git-squash-inventory.ps1 -Base <base-or-main>`. Handle `status`:
-   - `on-main` / `detached` / `dirty` / `none` / `single` → report the reason and stop. (`single` → suggest `/commit` amend.)
+1. **Parse arguments**. If `$ARGUMENTS` contains `base=...` and `message=...`, enter automated mode → single commit, skip to step 7a. Otherwise interactive.
+2. **Inventory** — `pwsh -NoProfile -File "$HOME/.claude/skills/squash/scripts/git-squash-inventory.ps1" -Base <base-or-main>`. Handle `status`:
+   - `on-main` / `detached` / `dirty` / `none` / `single` / `error` → report the reason and stop. (`single` → suggest `/commit` amend.)
    - `ok` → continue with `commitCount`, `subjects`, `log`, `stat`.
 3. **Decide the commit count** from the inventory's `subjects` and `stat`. Default to **1**. Split into 2-3 only when *all* of these hold:
    - Two or three **separable concerns** are present — not just many files. Ask whether a reader scanning `git log` would want them listed apart.
@@ -51,11 +51,13 @@ push=true
    - **Landing on 2-3** → show the proposed grouping (subject + file count per group) and confirm: **Squash as proposed** (Recommended) / **Collapse to one instead** / **Cancel**. Then confirm push as above.
 
    In automated mode, push follows the `push=true|false` arg (default true).
-7. **Execute**:
-   - **a. One commit** — `git-squash-execute.ps1 -Base <base> -Message "<full message>"` (add `-Push` if pushing). Use a bash heredoc + command substitution for multi-line messages, mirroring `/commit`.
-   - **b. Two or three** — write the groups to a temp JSON file with the `Write` tool (a file, not inline, because multi-line bodies do not survive shell quoting), shaped `[ { "message": "...", "paths": [...] }, ... ]` in commit order. Then `git-squash-execute-grouped.ps1 -Base <base> -GroupsFile <path>` (add `-Push`). It verifies every changed file is claimed by exactly one group **before** committing anything, so a bad grouping fails clean.
+7. **Execute** — record `git rev-parse HEAD` first as the pre-squash sha. Write the groups with the `Write` tool to `$HOME/.claude/local/tmp/squash-groups.json` (a file, not inline, because multi-line bodies do not survive shell quoting), shaped `[ { "message": "...", "paths": [...] }, ... ]` in commit order:
+   - **a. One commit** — a single group with `"paths": ["."]` (claims every changed file).
+   - **b. Two or three** — one group per commit, each listing its paths.
 
-   Report each `commit` hash and `pushed` from the JSON result.
+   Then `pwsh -NoProfile -File "$HOME/.claude/skills/squash/scripts/git-squash-execute-grouped.ps1" -Base <base> -GroupsFile "$HOME/.claude/local/tmp/squash-groups.json"` (add `-Push`). It verifies every changed file is claimed by exactly one group **before** committing anything, so a bad grouping fails clean.
+
+   Report each `commits[].hash` and `pushed` from the JSON result.
 
 ## Rules
 

@@ -12,7 +12,7 @@ When the response contains a lot of text the user should read through (teaching 
 
 Instead, present choices as a plain numbered list with integer selectors:
 
-```
+```text
 (1) Option A  (2) Option B  (3) Option C
 ```
 

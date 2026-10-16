@@ -1,3 +1,7 @@
+---
+description: Check for session handoff context from a previous session and resume where it left off.
+---
+
 Check for session handoff context from a previous session and resume where it left off.
 
 **Execute mechanically.** Follow the steps; no need to weigh alternatives or deliberate.
@@ -15,6 +19,7 @@ Check for session handoff context from a previous session and resume where it le
 ## After pickup
 
 Once context is loaded, briefly summarize:
+
 - What was done in the previous session
 - What's pending or unfinished
 - Any open decisions or blockers

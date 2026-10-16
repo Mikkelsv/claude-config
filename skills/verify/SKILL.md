@@ -5,7 +5,7 @@ description: "Verify that implemented work actually holds in the running app. Ex
 
 # Verify
 
-`/test` **measures** — build, suite, scenarios, perf, baseline compare. It never edits a test.
+`/test` **measures** — build, test tiers, baseline compare. It never edits a test.
 `/verify` **decides** — it executes each task's `**Verify:**` entries against the running app, routes every test result, and records what it changed and why.
 
 Runs once at the end of an implementation loop. Per-task gating stays `/test`.
@@ -14,20 +14,16 @@ Runs once at the end of an implementation loop. Per-task gating stays `/test`.
 
 `$ARGUMENTS` = plan path. Empty → most recent file in `plans/`. A managing plan (has `## Phases`) → verify each phase's task plan in order.
 
-**`$ARGUMENTS` = `none` (explicit)** — a caller with no plan of its own (e.g. `/audit-branch`'s verify phase run standalone) passes this literal sentinel rather than leaving `$ARGUMENTS` empty. Skip the plan lookup: no `**Verify:**` entries exist, so every criterion reads `no-instrument`. Still run Phase A and Phase C. Without the sentinel, an empty argument is indistinguishable from "no plan given" — and the default would autodetect the most recently touched plan file, which in an active loop is very likely a real plan with real criteria, defeating the caller's intent.
+**`$ARGUMENTS` = `none` (explicit)** — a caller with no plan of its own (e.g. `/audit-branch`'s verify phase run standalone) passes this literal sentinel rather than leaving `$ARGUMENTS` empty. Skip the plan lookup: no `**Verify:**` entries exist, so every criterion reads `no-instrument`. Still run Phase A and Phase C.
 
 ## Phase A — Readiness
 
 1. Bring the app up via `/build` or `preview_start` with the project's launch-config name.
-2. Establish that the app booted and is reachable, and capture whatever readiness signal the project exposes. **Fire the readiness check, then poll for its result — never await it inline.** A tool call caps out around 30s and a cold app can take ~20s to boot, so an inline await risks a timeout that reads identically to a wedged app. Detaching the call and polling separately makes the timeout itself informative: "still booting" and "never responded" stop being indistinguishable.
-3. **Enumerate the live instrument surface rather than trusting a doc.** Every criterion below should be written against an instrument confirmed to exist right now. A hand-maintained list in a skill or doc drifts; the running app does not.
+2. Establish that the app booted and is reachable, and capture whatever readiness signal the project exposes. **Fire the readiness check, then poll for its result — never await it inline.** A tool call caps out around 30s and a cold app can take ~20s to boot, so an inline await risks a timeout that reads identically to a wedged app.
+3. **Enumerate the live instrument surface rather than trusting a doc.** Every criterion below should be written against an instrument confirmed to exist right now.
 4. **`visibility !== 'visible'` → record PANE HIDDEN for the run.** Every `human:` entry escalates and no claim about pixels may be made. This is not a degraded mode to work around — with the pane hidden nothing composites, so there is no frame to inspect.
 5. **Never wait on a frame.** `requestAnimationFrame` never fires while hidden, so a frame-gated wait burns its full timeout in exactly the unattended sessions this exists for. Use `setTimeout`-based polling.
 6. **Wedged vs still booting.** If a readiness probe returns but reports the app never registered, JS evaluated fine and the app failed to boot — read `preview_logs` and `preview_console_logs`. If the probe call *itself* times out, the renderer is wedged; recover by reloading or re-navigating. Restarting the server does not clear it.
-
-<ProjectSpecific>
-Name the launch config, the readiness probe and how to fire it, and any boot-failure signatures specific to this app.
-</ProjectSpecific>
 
 ## Phase B — Acceptance verification
 
@@ -43,38 +39,27 @@ Execute each task's `**Verify:**` entries. Report **one verdict per criterion**:
 
 Map each entry to the concrete call the project provides — a named smoke test, a state probe, a standing scenario, a command dispatch. Read the project's own instrument registry for call names rather than a copy kept here. A result meaning "declined to assert" (typically `skipped`) is `can't-tell`, not a pass. An instrument that exists but cannot reach the thing under test is also `can't-tell`, not `fail`.
 
-**Never infer an instrument from `**Acceptance:**` prose.** A task with no `**Verify:**` entry reports `no-instrument` and its criteria stay unverified. Guessing produces a verdict that reads like mechanism and isn't — the whole failure the `**Verify:**` field exists to prevent. A plan missing the field is itself the finding worth reporting.
-
-<ProjectSpecific>
-List this project's instrument categories and their exact call shapes, plus where the authoritative registry lives.
-</ProjectSpecific>
+**Never infer an instrument from `**Acceptance:**` prose.** A task with no `**Verify:**` entry reports `no-instrument` and its criteria stay unverified. A plan missing the field is itself the finding worth reporting.
 
 ### Delegate the execution, never the adjudication
 
 Above ~5 criteria, hand the **execution** to the read-only `verifier` agent by its own `subagent_type: "verifier"` — never `general-purpose`, which carries every tool and would silently erase the read-only restriction with no error.
 
-Give it the `**Verify:**` entries and ask for **raw results per criterion**: the call it made and what came back. Not verdicts. Instrument payloads are the bulk of this phase and the caller needs none of them — each collapses to one row. The agent's context is discarded; the caller's is carried for the rest of the session. Below ~5 criteria the spawn overhead outweighs the saving, so run inline.
+Give it the `**Verify:**` entries and ask for **raw results per criterion**: the call it made and what came back. Not verdicts. Below ~5 criteria, run inline.
 
-**Assigning the verdict stays here, and that boundary is not stylistic.** The failure mode is a `can't-tell` quietly upgraded to `pass`, and from a summary that is undetectable — the report would simply read `VERIFIED`. `/test` is safe to delegate wholesale because its verdict can be checked against baseline files on disk; a per-criterion judgment leaves no such artifact. So the agent reports what it observed and the caller decides what it means.
-
-For the same reason **Phase D never delegates.** That is where a red-driven test edit gets its provenance recorded, and an agent's provenance record would be self-reported — exactly what `wf-check-the-artifact-not-the-self-report` exists for. The `verifier` agent's tool allowlist enforces this structurally: it has no `Edit`, `Write` or `Bash`, so it *cannot* edit a test even if a prompt told it to. Keep it that way; do not widen its tools to "help".
+**Assigning the verdict stays here** — a `can't-tell` upgraded to `pass` inside a summary is undetectable. **Phase D never delegates** (`wf-check-the-artifact-not-the-self-report`). Never widen the `verifier` agent's tools; its lack of `Edit`, `Write` and `Bash` is the enforcement.
 
 ## Settling — the render is not synchronous with your call
 
-Two timing traps make a live check read the *previous* state and report it as current.
-
-- **Before a screenshot**, interpose a double-rAF plus a short settle (~120 ms). A capture taken immediately after an action lags one action behind, so the image shows the pre-action frame and looks like the change never landed. When a screenshot and a DOM or state read disagree, trust the read and re-capture — the pixels are the stale side.
-- **Between clicks**, never batch synchronous multi-clicks in unattended verification. Re-query the DOM and wait ~1.5–2 s per click: the element resolved before the first click may have been re-rendered out from under you, so the second lands on a detached node and silently does nothing. Then verify the *state* consequence, not just the DOM — markup can update while the underlying scene or model has not.
-
-Both are instances of one rule: the frame you can observe is not necessarily the frame after your action.
+Before any screenshot or multi-click check, read `settling.md` in this skill's directory — two render-timing traps that make a live check report the previous state.
 
 ## Phase C — Triage
 
-**Run `/test` — it is the instrument that produces the classes below.** This run is unconditional, regardless of whether the tasks under review were milestones; the lighter per-task gate lives in `/implement`. Only `/test` compares each result against its baseline and the branch diff, which is what separates a regression from a fresh failure and detects an edit made after a test was seen red. A bare test outcome carries no baseline signal, so every failure would look alike. Take each row's class from `/test`'s classification, not from the outcome string.
+**Run `/test` — it is the instrument that produces the classes below.** Unconditional, milestone or not. Take each row's class from `/test`'s classification, not from the outcome string.
 
-**`/test` being present is not the same as its classification being trustworthy.** Read the `baseline:` state it carries on each row. Anything other than *fresh* — absent, unseeded, stale, rewritten-away — means it classified conservatively: every failure became `TEST FAILURE`, and the NEEDS REVIEW / TEST DRIFT split was skipped entirely. In that case report the classification itself as **unavailable** rather than routing on rows that only look classified, and say which baseline state caused it. A degraded baseline is a `can't-tell` about the classification, not a licence to treat `TEST FAILURE` as established. Expect this state routinely in a project that has never seeded a baseline.
+**`/test` being present is not the same as its classification being trustworthy.** Read the `baseline:` state it carries on each row. Anything other than *fresh* — absent, unseeded, stale, rewritten-away — means it classified conservatively: every failure became `TEST FAILURE`, and the NEEDS REVIEW / TEST DRIFT split was skipped entirely. In that case report the classification itself as **unavailable** rather than routing on rows that only look classified, and say which baseline state caused it.
 
-Then route **each result on its own class, never the composed verdict.** A run mixing a regression and a fresh failure composes to one `TEST REGRESSION`; routing on that force-pauses a fresh failure that deserved its fix loop, while one standing failure drags every otherwise-clean run into it.
+Then route **each result on its own class, never the composed verdict.** A mixed run composes to `TEST REGRESSION`, which would force-pause a fresh failure that deserved its fix loop.
 
 | Class | Route |
 | --- | --- |
@@ -91,7 +76,7 @@ A new test can be added anywhere — a failure cannot supply the content of a te
 - Driven by the plan or spec, before execution → legitimate. The contract changed, so the old assertion was genuinely wrong.
 - Driven by observed red → suspect, because the failure supplied the content of the edit. Report as NEEDS REVIEW with the before/after assertion diff and exclude it from the pass count.
 
-The same keystrokes carry opposite epistemic weight depending on that ordering, and it is the only thing separating a fix from a laundered assertion. Fix the code, not the test: a gate whose premise is empirically wrong is a root-cause fix; an assertion relaxed to match observed behaviour is not.
+Fix the code, not the test: a gate whose premise is empirically wrong is a root-cause fix; an assertion relaxed to match observed behaviour is not.
 
 ## Report
 
@@ -117,7 +102,7 @@ Lead with the counts that are not `pass`. A reader scanning a green report learn
 
 ### Closing verdict — always the last thing in the response
 
-End with this block, after any other prose, so the reader sees the standing of the work without scrolling back. It is deliberately a restatement: by the time it renders, a long run has usually pushed the details out of view.
+End with this block, after any other prose, so the reader sees the standing of the work without scrolling back.
 
 ```markdown
 **/verify — <VERDICT>**
@@ -130,8 +115,6 @@ End with this block, after any other prose, so the reader sees the standing of t
 - Executed by: inline | verifier agent (adjudicated here either way)
 ```
 
-The last line exists so a reader knows whether raw results passed through a sub-agent. It changes what the report is evidence of: delegated execution means the caller saw a summary of each instrument's output, not the output. An acceptable trade for the context saved, but it should be visible rather than implied.
-
 Verdict vocabulary, most severe first — pick the first that applies:
 
 | Verdict | Means |
@@ -142,14 +125,8 @@ Verdict vocabulary, most severe first — pick the first that applies:
 | **VERIFIED WITH ESCALATIONS** | every executable criterion passed; `human:` entries await eyes. |
 | **VERIFIED** | every criterion passed, nothing skipped, nothing escalated, no test edited. |
 
-**UNVERIFIED is not a pass and must never be reported as one.** It is the honest verdict when the instruments could not settle a claim, and collapsing it into VERIFIED is the precise failure this skill exists to prevent — a criterion nobody could check reading as one that held. Same for `human:` entries in VERIFIED WITH ESCALATIONS: outstanding, not satisfied.
-
-`VERIFIED` is expected to be rare on a first run, and that is fine. A verdict that is almost always green is not measuring anything.
+**UNVERIFIED is not a pass and must never be reported as one.** Same for `human:` entries in VERIFIED WITH ESCALATIONS: outstanding, not satisfied.
 
 ## Tier boundaries
 
 State once, in the project's own docs, what can and cannot be asserted with the pane hidden, then read it rather than re-deriving. In general: application state, command round-trips and DOM structure work hidden; rendered pixels, camera poses and anything needing a composited frame require a displayed pane and escalate via `human:`.
-
-<ProjectSpecific>
-Point at this project's verification-tier doc and note any app-specific instrument that behaves differently when hidden.
-</ProjectSpecific>

@@ -11,7 +11,7 @@ description: "Breadth code-quality sweep of recent changes — naming, dead code
 
 If orchestrator provided scope, skip to Step 2.
 
-**Mode A** (no args): run `git-diff-scope.ps1` — prefer a project-local copy at `.claude/scripts/` if present, else `~/.claude/scripts/`. It already prefers uncommitted changes and falls back to the branch diff, so don't hand-roll that. Abort if `MODE: none`.
+**Mode A** (no args): run `pwsh -NoProfile -File ".claude/scripts/git-diff-scope.ps1"` if that file exists, else `pwsh -NoProfile -File "$HOME/.claude/scripts/git-diff-scope.ps1"`. It already prefers uncommitted changes and falls back to the branch diff, so don't hand-roll that. Abort if `MODE: none`.
 **Mode B** (path/area): Glob+Grep relevant files.
 **Mode C** (`all`): scan solution from CLAUDE.md, pick 2-3 areas with most quality risk.
 

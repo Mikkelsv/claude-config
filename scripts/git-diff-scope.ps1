@@ -1,7 +1,11 @@
 param(
     [string]$RepoPath,
     [string]$BaseBranch = "main",
-    [switch]$StatOnly
+    [switch]$StatOnly,
+    # auto: uncommitted changes if any, else the branch diff. branch: always merge-base..HEAD,
+    # noting any uncommitted/untracked files instead of diffing them.
+    [ValidateSet('auto', 'branch')]
+    [string]$Scope = 'auto'
 )
 
 if ($RepoPath) {
@@ -14,6 +18,17 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+# Branch scope never diffs the working tree; it lists what was left out instead.
+function Write-UncommittedNote {
+    if ($Scope -ne 'branch') { return }
+    $uncommitted = @(git status --porcelain 2>$null | Where-Object { $_ })
+    if ($uncommitted.Count -gt 0) {
+        Write-Output "=== UNCOMMITTED (not in branch diff) ==="
+        Write-Output $uncommitted
+        Write-Output ""
+    }
+}
+
 # Check for uncommitted changes
 $unstagedStat = git diff --stat 2>$null
 $stagedStat = git diff --cached --stat 2>$null
@@ -21,7 +36,7 @@ $stagedStat = git diff --cached --stat 2>$null
 $hasUnstaged = [bool]$unstagedStat
 $hasStaged = [bool]$stagedStat
 
-if ($hasUnstaged -or $hasStaged) {
+if ($Scope -eq 'auto' -and ($hasUnstaged -or $hasStaged)) {
     Write-Output "MODE: uncommitted"
     Write-Output ""
 
@@ -51,7 +66,7 @@ if ($hasUnstaged -or $hasStaged) {
     exit 0
 }
 
-# No uncommitted changes — fall back to branch scope
+# Branch scope: requested explicitly, or auto with a clean tree
 $currentBranch = git rev-parse --abbrev-ref HEAD 2>$null
 $mergeBase = git merge-base HEAD $BaseBranch 2>$null
 $hasMergeBase = ($LASTEXITCODE -eq 0) -and $mergeBase
@@ -65,8 +80,9 @@ if ($hasMergeBase) {
 }
 
 if (-not $base) {
-    # On main with no uncommitted changes — nothing to review
+    # No commits ahead of base (and, in auto scope, no uncommitted changes) — nothing to review
     Write-Output "MODE: none"
+    Write-UncommittedNote
     exit 0
 }
 
@@ -94,3 +110,5 @@ if (-not $StatOnly) {
     git diff "$mergeBase..HEAD"
     Write-Output ""
 }
+
+Write-UncommittedNote

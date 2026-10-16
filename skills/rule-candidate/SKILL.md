@@ -21,7 +21,7 @@ Capture a candidate as a **standalone rule-shaped file** in the project's gitign
    - config / file placement / tooling → `meta-`
 
    Ambiguous? `AskUserQuestion` with the four options.
-3. **Slug.** Compute from directive — lowercase + hyphenate the main noun/verb, prepend the category prefix. Example: "Justify state mirrors" → `wf-justify-state-mirrors`.
+3. **Slug.** Compute from directive — lowercase + hyphenate the main noun/verb, prepend the category prefix. Example: "Justify state mirrors" → wf-justify-state-mirrors.
 4. **Signal.** Auto-fill from conversation context (e.g. "from /audit-architecture on `b24f06c..HEAD`"). Free-text if nothing fits.
 5. **Dup check.** Glob `<project>/.claude/local/rule-candidates/*.md`, `~/.claude/rules/*.md`, and `<project>/.claude/rules/*.md` for similar slugs or directives. If close match found, ask: **merge** / **save with different slug** / **cancel**.
 6. **Write file** at `<project>/.claude/local/rule-candidates/<slug>.md`. Create the folder if missing.

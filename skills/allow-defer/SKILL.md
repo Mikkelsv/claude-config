@@ -54,7 +54,7 @@ Parse `$ARGUMENTS` to identify the **tool type** and **pattern**:
 
 ## Suggestion file format
 
-```markdown
+````markdown
 ---
 type: allow
 created: <ISO 8601 UTC timestamp>
@@ -74,6 +74,6 @@ Append to `permissions.allow` in `~/.claude/settings.json`:
 ```
 <rule>
 ```
-```
+````
 
 The frontmatter `type: allow` tells `/suggestions` how to apply the action. The body is human-readable so the user can review it raw if they want.

@@ -19,9 +19,8 @@ For decisions that touch architecture — module boundaries, data shape, API sur
 
 ## What this is NOT
 
-- Not a hard halt. The orchestrator proceeds on reversible decisions on its own.
-- Not "ask for every line of code". Most code is reversible — refactor, rename, swap. Only architectural shape changes warrant surfacing the trade-off.
+- Not a hard halt, and not "ask for every line of code" — proceed on reversible decisions; only architectural shape changes warrant surfacing the trade-off.
 
 ## Why
 
-Architectural decisions compound silently. The failure mode is making them implicitly mid-implementation, then discovering the choice was wrong weeks later when unwinding is expensive. Surfacing the trade-off keeps it visible and the user in the decision loop.
+Architectural decisions made implicitly mid-implementation compound silently and are expensive to unwind later.

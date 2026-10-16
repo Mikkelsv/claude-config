@@ -8,13 +8,13 @@ Personal Claude Code configuration — slash commands, skills, rules, and PowerS
 
 | Command | What it does |
 | --- | --- |
-| `/claude-sync [skills\|fresh]` | Pull global config, scaffold committed `.claude/skill-config/` files, and sync project-local forks of global skills for shared repos (per `meta-project-local-skill-copies`). Step 3.1b migrates a project off the retired template tier. |
+| `/claude-sync [fresh\|<skill>...]` | Pull global config, scaffold committed `.claude/skill-config/` files, and sync project-local forks of global skills for shared repos (per `meta-project-local-skill-copies`). Step 3.1b migrates a project off the retired template tier. |
 | `/claude-refactor` | Audit all skills, commands, scripts, rules, and agents. Fixes bugs, stale refs, permission gaps. |
 | `/claude-push` | Commit and push config changes. Auto-bumps version when `rules/`, `skills/` or `commands/` change. |
 | `/allow-defer [prompt]` | Parse a blocked permission prompt and save a suggested allow rule to `~/.claude/suggestions/` for later review (non-interrupting). |
 | `/allow-now [prompt]` | Parse a blocked permission prompt and append it to `~/.claude/settings.json` immediately. Use when you've decided and want the rule active now. |
 | `/suggestions [type]` | Walk through pending suggestions in `~/.claude/suggestions/` one at a time and accept/skip/discard each. |
-| `/capture-rule [idea]` | Capture a new code-quality, architecture, or workflow rule. Asks category + scope, drafts the rule, saves after your approval. |
+| `/capture-rule [idea]` | Capture a new code-quality, architecture, workflow, or meta rule. Asks category + scope, drafts the rule, saves after your approval. |
 | `/rule-candidate [idea]` | Write a rule candidate as a standalone file in the project's gitignored `.claude/local/rule-candidates/`. Lightweight — no commitment. Promotion happens via `/capture-rule` or `/rule-review`. |
 | `/rule-review` | Critical single-pass triage of pending candidates AND existing rules. Surfaces dupes, retires stale rules, proposes prefix migrations, promotes candidates. |
 
@@ -25,7 +25,7 @@ Available in every project via the global config.
 | Skill | What it does |
 | --- | --- |
 | `/build` | Build & serve. Reads project config from the committed `.claude/skill-config/build.md`. |
-| `/rebase-on-main` | Rebase on main, resolve conflicts, optionally merge/push. |
+| `/rebase-on-main` | Rebase on main, resolve conflicts, build, run `/test` (warns, never blocks), then prompt merge / fast-forward / squash. |
 | `/study [topic]` | Codebase-first research — parallel sonnet agents map an area, synthesize into session context. No file output. Use before `/plan` when context is thin. |
 | `/voice-mode [opening]` | Install a voice-input contract for the conversation — parse rambly dictated input for intent, not literal text. Stays on until "voice mode off" or `/implement`. Pair with `/plan` for big dictated planning sessions. |
 | `/plan [feature]` | Collaborative feature discovery + plan creation. Skeptical senior-engineer persona — challenges premise before accepting the framing. Phase 1 invokes `/study` when session context is thin. UI features spawn `design-scout` and settle one ASCII mockup as the plan's `## UI Contract`. Tasks carry `**Verify:**` instruments, a `**Test:**` tier, optional `— **milestone**` markers, and must be cold-executable by a fresh agent. Auto-runs `/plan-optimizer` at 3+ tasks. Default is one plan per shippable feature — split only when the user names distinct increments. |
@@ -41,11 +41,11 @@ Available in every project via the global config.
 | `/refactor-file-sizes [scope]` | Audit + execute file-size refactors. Companion to `/audit-file-sizes` — splits violators by batch, one Sonnet agent each. Phase 3.5 checks that extracted files also clear the cap rather than the split just relocating it. |
 | `/refactor-docs [focus]` | Documentation sync — checks docs match code changes. Usually invoked via `/audit-branch`. |
 | `/audit-architecture [focus]` | Strict, skeptical architecture review (single-pass): boundaries, overengineering, alternatives. Usually invoked via `/audit-branch`. |
-| `/audit-file-sizes [mode]` | Mechanical scan vs. 400-line soft / 800-line hard caps. Respects top-of-file `SIZE-EXEMPT:` markers. |
+| `/audit-file-sizes [mode]` | Mechanical scan vs. 400-line soft / 760-line near-cap / 800-line hard caps. Respects top-of-file `SIZE-EXEMPT:` markers. |
 | `/teach [mode]` | Interactive programming lesson — contextual deep-dive, codebase exploration, or random topic. |
 | `/explain [focus]` | Read-only, parallel-session walkthrough of the current branch/plan — always-shown core (simple explanation, what's decided, example, architecture + file fit) then numbered drill-downs. Wraps `/teach`; never writes files. |
 | `/commit [hint]` | Stage all changes, craft a bracket-tagged commit message — a custom PascalCase feature tag by default (`[GridCreation]`), with Title-case fallbacks (`[Fix]`/`[Refac]`/`[Docs]`/`[Feat]`) when no coherent area exists — and push. |
-| `/squash [tag]` | Squash all commits since the branch diverged from main into one, using `/commit`'s tag format and a synthesized message. Force-pushes with lease. |
+| `/squash [base]` | Squash all commits since the branch diverged from main (or a custom base) down to 1-3 commits — one by default, 2-3 only for genuinely separable work split on file boundaries — using `/commit`'s tag format and synthesized messages. Force-pushes with lease. |
 
 ### Project-local forks (Tier 2)
 
@@ -68,6 +68,7 @@ The one legitimate reason to keep a project copy is a **shared repo whose collea
 | `/todo [text]` | Capture a to-do item for future sessions. |
 | `/handoff` | Write a session handoff summary to project memory. |
 | `/pickup` | Resume from a previous session's handoff. |
+| `/vs` | Open the current project in VS Code via a background Haiku agent; title-bar colour comes from a fixed per-project palette (worktrees get a brighter variant). |
 
 ### Fresh machine setup
 
@@ -87,7 +88,7 @@ The one legitimate reason to keep a project copy is a **shared repo whose collea
 
 - **Edit directly at `~/.claude/`.** Writes to `.claude/**` are allow-listed in `settings.json` so no permission prompts.
 - **Sync changes** with `/claude-push` (commit + push) or `/claude-sync` (pull + sync project skills).
-- **Add project skills** with `/claude-sync` in any project directory.
+- **Scaffold skill configs / refresh forks** with `/claude-sync` in a project directory (forks only in shared repos; see `local/projects.md`).
 
 ---
 
@@ -109,7 +110,7 @@ The one legitimate reason to keep a project copy is a **shared repo whose collea
   agents/                         # Global subagent definitions (scope-skeptic, verifier, design-scout)
   commands/                       # Slash commands
   rules/                          # Global rules (always loaded)
-  skills/                         # Global skill implementations (one SKILL.md per skill)
+  skills/                         # Global skills (one SKILL.md each) + mods (side-chat)
   scripts/                        # PowerShell automation
   local/                          # Gitignored, machine-local — rule-candidates/ drafts, projects.md posture table
 ```
@@ -133,7 +134,7 @@ The one legitimate reason to keep a project copy is a **shared repo whose collea
 Rules in `rules/` are always loaded:
 
 - **meta-user-config.md** — Config conventions, sync rules, version staleness detection
-- **meta-skill-tiers.md** — 3-tier skill placement (global, project, local config)
+- **meta-skill-tiers.md** — 3-tier skill placement (global, project-local fork, committed skill config)
 - **wf-use-commit-skill.md** — Always commit via `/commit`, never raw git
 - **wf-no-shell-chains.md** — Avoid chained shell commands
 - **meta-plans-location.md** — Plan files in project root `plans/`
@@ -171,7 +172,7 @@ Rules in `rules/` are always loaded:
 - **wf-repro-test-first.md** — Write the failing test before the change; watch it go red for the right reason
 - **wf-verify-premises-before-acting.md** — Verify a claimed premise (a plan's bug, an audit finding, a "missing" feature) against current code before acting on it
 - **wf-blanket-rename-safety.md** — Multi-file rename checklist (exclude vendor paths, stdlib clobber, build-green-isn't-enough)
-- **git-workflow.md** — Default to feature branches over direct-to-main; use `/commit` and `/rebase-on-main`
+- **wf-git-workflow.md** — Default to feature branches over direct-to-main; use `/commit` and `/rebase-on-main`
 - **arch-docs-over-inline.md** — Heavy context lives in `docs/`; code carries thin pointers, not narration
 - **arch-claude-md-is-an-index.md** — `CLAUDE.md` says where a thing lives and what it's called; root `docs/` says how it works
 - **arch-transient-ui-state-not-in-domain.md** — Per-session UI toggles don't belong on persisted domain records
@@ -198,6 +199,15 @@ Deliberately always-on despite being stack-flavoured:
 - **cq-field-removal-graceful.md** — check the deserializer's unknown-property handling before calling a field removal a migration. Fires at planning time, when persistence files may not be open
 - **wf-build-error-list-is-a-frontier.md** — a shrinking build-error list measures progress through the frontier, not remaining scope
 
+#### Rule rationale
+
+Justification trimmed from always-loaded rules, kept here so it is read once rather than every session:
+
+- **meta-skill-tiers.md** — Global-wins precedence was measured 2026-09-10. Same date, one project: `CLAUDE.md` alone was 27,678 bytes, 23% of a 119 KB eager load, which is why parameters go in a read-on-demand skill config. The config is committed because an earlier version of the rule put it in gitignored `local/`, and cloned repos got silently degraded skills. A result shape copied from a harness wrapper rather than the underlying call once reported a green tally over zero tests.
+- **cq-fallthrough-guard-all-branches.md** — The pattern recurs wherever a function gates on the expected range of a discrete input: handle indices, axis enums encoded as ints, version tags, message-kind codes.
+- **arch-transient-ui-state-not-in-domain.md** — A UI flag on a domain record must be explicitly excluded from save/load, confuses which fields are in the persistence contract, and mixes authored data with display state at the type level.
+- **wf-verify-premises-before-acting.md** — The bullets come from observed failures: a plan's bug already fixed by a later merge; an audit "smell" the target's doc comment justified as a deliberate optimization; a config "enabling" an SDK default; a recalled `plans/*.md` name that no longer existed propagating as a dead pointer; a sub-agent brief built on an unverified claim; a handoff asserting "shipped" from a plan marked done; a perf gate run concurrently with a build fan-out and the numbers blamed on the machine.
+
 New rules use category prefixes: `cq-` (code-quality), `arch-` (architecture), `wf-` (workflow), `meta-` (config / tooling / file placement). `/rule-review` proposes migrations for older un-prefixed rules.
 
 ### Script Catalog
@@ -214,9 +224,9 @@ All scripts in `scripts/`.
 
 Worktree creation and exit are handled by Claude Code's native `EnterWorktree` / `ExitWorktree` tools.
 
-`audit-instructions` is a **temporary instrument**, wired as an `InstructionsLoaded` hook in `settings.json` to measure which rule files load into each session and why. It writes JSONL to `debug/instruction-loads/` (gitignored); read it with `-Report`. It spawns one `pwsh` per loaded instruction file per session, including subagent sessions, so unregister the hook once rule-scope measurement is finished.
+`audit-instructions` is wired as an `InstructionsLoaded` hook in `settings.json` and has logged which rule files load into each session, and why, continuously since 2026-08-31. It writes JSONL to `debug/instruction-loads/` (gitignored); read it with `-Report`. It spawns one `pwsh` per loaded instruction file per session, including subagent sessions; prune `debug/instruction-loads/` periodically.
 
 Skill-local scripts:
 
 - `skills/rebase-on-main/scripts/`: `git-rebase-onto`, `git-merge-cleanup`, `git-branch-from-main`
-- `skills/squash/scripts/`: `git-squash-inventory`, `git-squash-execute`
+- `skills/squash/scripts/`: `git-squash-inventory`, `git-squash-execute`, `git-squash-execute-grouped`

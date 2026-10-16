@@ -1,6 +1,6 @@
 ---
 name: rebase-on-main
-description: Rebase current branch on main with conflict resolution, build verification, and optional merge/fast-forward/squash
+description: Rebase current branch on main with conflict resolution, build verification, and optional merge/fast-forward/squash. Use when the user wants to merge to main, update a branch from main, ship a feature, or get ready for a PR.
 ---
 
 # Rebase on Main
@@ -20,12 +20,14 @@ Check current branch and working-tree state first:
 Run: `pwsh -NoProfile -File "$HOME/.claude/skills/rebase-on-main/scripts/git-rebase-onto.ps1"`
 
 Handle `status`:
-- **worktree** → `ExitWorktree` (keep), `git checkout <branch>`, re-run script.
 - **error** → report `reason`, stop.
+- **fetch-failed** → report `fetchOutput`, stop (never rebase onto a stale base).
 - **dirty** → list files, ask via `AskUserQuestion`: **Retry** / **Cancel**.
 - **up-to-date** → skip to Phase 2.
 - **success** → Phase 2.
 - **conflicts** → resolve (see below).
+
+Inside a worktree the script rebases in place (`isWorktree: true`, `mainRepoRoot` set); `rebaseTarget` is `origin/main` when local `main` is checked out elsewhere and can't be moved. Merge actions then run from `mainRepoRoot` (see Merge prompt).
 
 ### Branch-from-main sub-flow
 
@@ -63,7 +65,7 @@ After Phase 1 succeeds (or branch was already up-to-date), always run `/build` b
 
 One fix attempt. If still failing, prompt (numbered list — no clickable):
 
-```
+```text
 Build failed after rebase. One fix attempt didn't recover.
 
 (1) Fix again  (2) Abort  (3) Drop into manual
@@ -75,14 +77,9 @@ Build failed after rebase. One fix attempt didn't recover.
 
 ### Test verdict
 
-After the build gate passes, invoke `/test` — **before** rendering the merge prompt.
+Run `/test` once, after `/build`, before the prompt; reuse the verdict.
 
-- **After the build**, so a compile break is never reported as a test failure.
-- **Before the prompt renders**, so the verdict is on screen when the merge choice is made. Merging first and testing after inverts the point.
-- **Compute it once per invocation and reuse it** across the whole prompt loop. The loop can re-render up to four times (audit → back to prompt, squash cancelled → back to prompt); re-running `/test` each pass runs the suite four times for one merge.
-- **Looks redundant next to `/build`, and is kept anyway.** `/test` Phase 1 also builds and serves, costing one incremental build (not a cold one) plus a server restart. `/build` carries the no-build-repo skip and its own failure-recovery prompt (Fix again / Abort / Drop into manual) that this phase depends on — folding `/build` away as "covered by `/test`" would silently drop both.
-
-A non-green verdict is a **critical event: it warns, it never blocks.** Render it in the prompt's critical-events area carrying `/test`'s classification and the failing test names, then let the user choose. Per `git-workflow.md` this prompt is the last backstop before main in a repo without CI, so the warning has to be visible — but the user decides, not the skill.
+A non-green verdict is a **critical event: it warns, it never blocks.** Render it in the prompt's critical-events area carrying `/test`'s classification and the failing test names, then let the user choose. Per `wf-git-workflow.md` this prompt is the last backstop before main in a repo without CI, so the warning has to be visible — but the user decides, not the skill.
 
 If `/test` reports `baseline: none` its classification is degraded (no `TEST REGRESSION` / `NEEDS REVIEW` / `TEST DRIFT` split — every failure reads as `TEST FAILURE`). Say so in the warning rather than presenting the rows as authoritative. `/test` no-ops gracefully in repos with no test config.
 
@@ -90,16 +87,16 @@ If `/test` reports `baseline: none` its classification is degraded (no `TEST REG
 
 Show the **Audit branch** option in the merge prompt only when:
 
-- `git rev-list --count main..HEAD` returns **≥ 5**, OR
-- `git diff --name-only main..HEAD` returns **≥ 20** files,
+- the rebase script's `commitsAhead` is **≥ 5** (after the branch-from-main sub-flow: 1, with `rebaseTarget` = `main`), OR
+- `git diff --name-only <rebaseTarget>..HEAD` returns **≥ 20** files,
 
-AND `git log -1 --format=%s main..HEAD` does NOT start with `[Refac]`, matched case-insensitively so pre-rename `[REFAC]` commits still count (user hasn't audited recently).
+AND `git log -1 --format=%s <rebaseTarget>..HEAD` does NOT start with `[Refac]`, matched case-insensitively so pre-rename `[REFAC]` commits still count (user hasn't audited recently).
 
 ### Merge prompt (numbered list)
 
 Plain numbered list. Critical-event warnings, if any, appear above the prompt as plain text.
 
-```
+```text
 Rebase complete. Build passing.
 
 [<critical events, one per line, if any>]
@@ -113,9 +110,11 @@ Rebase complete. Build passing.
 Numbering: when Audit is shown it's `(1)`; otherwise the list starts at Squash with `(1)`.
 
 - **Audit branch** — invoke `/audit-branch`. After it returns, loop back to this prompt. If user applied fixes, the new tail commit is `[Refac]`-tagged → Audit hides on the next round.
-- **Squash** — invoke `/squash`. Then `git-merge-cleanup.ps1 -Branch <branch> -Mode ff`. If `/squash` cancelled, loop back.
-- **Fast-forward** — `git-merge-cleanup.ps1 -Branch <branch> -Mode ff` (no merge commit).
-- **Merge** — `git-merge-cleanup.ps1 -Branch <branch> -Mode merge` (PR-style `--no-ff`).
+- **Squash** — invoke `/squash`. Then `pwsh -NoProfile -File "$HOME/.claude/skills/rebase-on-main/scripts/git-merge-cleanup.ps1" -Branch <branch> -Mode ff`. If `/squash` cancelled, loop back.
+- **Fast-forward** — `pwsh -NoProfile -File "$HOME/.claude/skills/rebase-on-main/scripts/git-merge-cleanup.ps1" -Branch <branch> -Mode ff` (no merge commit).
+- **Merge** — `pwsh -NoProfile -File "$HOME/.claude/skills/rebase-on-main/scripts/git-merge-cleanup.ps1" -Branch <branch> -Mode merge` (PR-style `--no-ff`).
+
+In a worktree, `ExitWorktree` (keep) first and run the cleanup script from `mainRepoRoot`: it checks out `main` there, merges, then removes the worktree before deleting the branch.
 
 Freeform text: words like "cancel" / "exit" / "stop" / "leave" → report "Rebase complete, not merged. Branch left as-is." and stop. No revert; user can `git reset --hard ORIG_HEAD` if desired. Other freeform text → interpret intent or ask for clarification.
 

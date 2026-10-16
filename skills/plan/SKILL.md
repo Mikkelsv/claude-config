@@ -5,17 +5,11 @@ description: "Collaborative feature planning through discovery, external researc
 
 # Feature Planning
 
-**Think carefully.** This skill rewards deliberation — work through trade-offs and alternatives explicitly. Don't shortcut to a recommendation; reason through edge cases, framework conventions, and what could go wrong before drafting.
+**Think carefully** — reason through trade-offs, edge cases, and failure modes before recommending. Act as a skeptical senior engineer, not an eager assistant: **do not default to agreement**, and assume the first approach (yours or the user's) isn't the best until you've looked for a simpler one.
 
-You are a skeptical, senior engineer pairing on design — not an eager assistant. **Do not default to agreement.** Challenge the user's premise before accepting the feature as framed. Assume the first approach proposed (by the user or by you) is probably not the best one until you've actively looked for a simpler alternative.
-
-Bias toward pushback:
-- If the user proposes an architecture, your first job is to find what's wrong with it, not to validate it.
-- If a simpler approach exists in the idiomatic patterns of the project's own language and framework, **surface it even if the user didn't ask.** Establish what that stack is before critiquing — don't assume it.
-- Name the pattern the user is reinventing when applicable (e.g. "this is a repository pattern over EF's DbSet, which is already a repository — skip it").
-- Question whether the feature needs to exist at all if the motivation is unclear.
-
-Collaborative discovery → structured implementation plan. But collaborative means honest disagreement, not polite yes-ing.
+- Find what's wrong with a proposed architecture before validating it. Name the pattern being reinvented (e.g. a repository over EF's `DbSet`).
+- Surface a simpler idiomatic alternative in the project's own stack, unasked — establish the stack first.
+- Question whether the feature needs to exist if the motivation is unclear.
 
 ## Input
 
@@ -48,30 +42,14 @@ Present the synthesis at the start of Phase 1.5.
 
 ## Phase 1.5 — External Research
 
-**Do not trust your training data alone.** Library APIs, framework conventions, and best practices change. Your knowledge may be outdated, incomplete, or wrong. **Must do external research** before drafting the plan when any of the following apply:
+Per `wf-verify-api-before-using`, research before drafting when the feature involves:
 
-- Feature involves a **third-party library, framework, or service** — any version-sensitive integration, whatever the stack (ORMs, UI frameworks, cloud SDKs, identity providers, payment APIs, etc.)
-- Feature touches an **API surface you'd otherwise have to guess at** (method signatures, configuration keys, lifecycle hooks, breaking changes between versions)
-- Feature involves a **pattern with multiple competing approaches** (auth flows, real-time sync, caching, background jobs) — verify what the current idiomatic answer is
-- User mentions a **specific library/version** — confirm it exists, check changelog, look for known issues
-- You're about to recommend an **anti-pattern alternative** (per the Architecture scrutiny list below) — verify the framework still recommends what you think it does
+- A **third-party library, framework, or service**, or an **API surface you'd otherwise guess at** (signatures, config keys, lifecycle hooks, version breaks)
+- A **pattern with competing approaches** (auth, real-time sync, caching, background jobs) — confirm the current idiom
+- A **specific library/version** the user named — confirm it exists, check the changelog and known issues
+- An **anti-pattern alternative** you're about to recommend — confirm the framework still recommends it
 
-**How to research:**
-
-1. **Identify open questions** explicitly. Write them down: "I need to verify X about library Y at version Z."
-2. **Use `WebSearch`** to find current documentation, recent (last 2 years) blog posts, GitHub issues, Stack Overflow. Search with the current year in queries to avoid stale results.
-3. **Use `WebFetch`** on official docs URLs (Microsoft Learn, library README, framework guides) to read primary sources directly.
-4. **Cross-check** at least 2 sources before treating a fact as confirmed. If they disagree, flag it as a question for the user.
-5. **Check version compatibility** — confirm the library version in the project (`*.csproj`, `package.json`) supports what you're proposing.
-6. **Note the source** for each non-obvious claim you'll make in Phase 2 (e.g., "per Microsoft Learn 2026 docs, ..." or "EF Core 9 deprecated this in 2025").
-
-**When you can skip research:**
-
-- Pure UI tweaks with no library API decisions
-- Refactoring within existing code (no new external dependencies)
-- Feature is fully explained by reading the project's own code
-
-**If you're uncertain whether to research, research.** The cost of a 2-minute web search is far less than the cost of a wrong plan. Surface what you learned (and what surprised you) at the start of Phase 2.
+Use `WebSearch` + `WebFetch` on primary docs, cross-check 2 sources, confirm the project's package version supports it, and note the source of each non-obvious claim. Skip for pure UI tweaks, internal refactors, or features fully explained by the project's code. **If uncertain whether to research, research.** Surface what you learned at the start of Phase 2.
 
 ## Phase 2 — Discovery
 
@@ -79,11 +57,7 @@ Use `AskUserQuestion` to clarify the feature. Prefer clickable options with 2-3 
 
 Draw from these dimensions as needed: **Functional** (what, inputs/outputs, edge cases), **Philosophy** (problem being solved, fit with app vision), **Technical** (where in architecture, DB changes, perf), **Future** (design for now vs leave door open).
 
-**Must include at least one critical/skeptical question per round.** Do not only ask clarifying questions — ask challenging ones. Examples:
-- "Why build this instead of using [existing feature/library]?"
-- "This duplicates [existing pattern] — is that intentional?"
-- "What happens if we just don't build this?"
-- "This sounds like [known pattern/anti-pattern] — is that what you want?"
+**Must include at least one critical/skeptical question per round** — e.g. "Why build this instead of [existing feature/library]?", "This duplicates [pattern] — intentional?", "What if we just don't build this?"
 
 ### Architecture scrutiny
 
@@ -91,13 +65,9 @@ When the user proposes or implies an architectural choice, **must evaluate again
 
 Apply both the global `arch-*` rules in `~/.claude/rules/` (auto-loaded — covering common .NET / EF Core / DI anti-patterns) and the project-specific `arch-*` rules in `.claude/rules/`. Project specifics override generic guidance where they overlap.
 
-If the user's plan hits any flagged anti-pattern, **must** raise it in Phase 2 and propose the idiomatic alternative as the recommended option — even if they seemed set on the original approach. Accepting a plan that hits an anti-pattern buys future refactor cost, not just a style nit.
+If the user's plan hits any flagged anti-pattern, **must** raise it in Phase 2 and propose the idiomatic alternative as the recommended option — even if they seemed set on the original approach.
 
-Guidelines:
-- Offer your own suggestions — make one option your recommendation, but your recommendation is often "don't build it this way"
-- Flag conflicts with existing patterns directly, not "constructively softened"
-- Raise edge cases the user hasn't mentioned
-- If you genuinely agree with the user's approach after scrutiny, say so and why — but only after scrutiny
+Make one option your recommendation (often "don't build it this way"), flag conflicts with existing patterns directly, raise unmentioned edge cases, and agree only after scrutiny — saying why.
 
 ### Design agreement (features with a UI surface)
 
@@ -107,15 +77,15 @@ Before drafting, spawn `design-scout` (`subagent_type: "design-scout"` — **nev
 
 Reach agreement on **structure**, never inferred from surrounding code: where the feature lives (new page / panel in existing chrome / modal / inline), the primary interaction model, the information hierarchy, and the scale of the change ("adds a panel" vs "restructures the sidebar").
 
-**The instrument is a concrete artifact, not a questionnaire.** Draw one ASCII mockup and ask "is this what you pictured?" via `AskUserQuestion`. Default to **one** mockup; use the `preview` field to offer 2–3 alternatives only where the genuinely-open bucket surfaces a real fork worth the user's time — divergence surfaces on the first picture, so three drawings rarely buy three times the signal. This instrument **replaces** a battery of detail questions rather than supplementing one: **detail-level UI — spacing, hover, empty/loading/error/disabled/overflow states — is out of scope here.** It's cheap to fix once built and the design system already determines most of it; chasing it here is failing this pass's job, not being thorough.
+**The instrument is a concrete artifact, not a questionnaire.** Draw one ASCII mockup and ask "is this what you pictured?" via `AskUserQuestion`. Default to **one** mockup; use the `preview` field to offer 2–3 alternatives only where the genuinely-open bucket surfaces a real fork worth the user's time. This instrument **replaces** a battery of detail questions rather than supplementing one: **detail-level UI — spacing, hover, empty/loading/error/disabled/overflow states — is out of scope here.**
 
 The agreed mockup becomes Phase 3's `## UI Contract` verbatim — the artifact itself, not a paragraph describing it. It is a structural agreement, not a spec: an implementing agent settles undecided detail within it rather than treating silence as a blocker.
 
-**An undecided design question never stops the implementation loop.** If one surfaces mid-run, the agent makes the recommended call and continues, logging it to `Decisions & Review Items` as an in-flight decision (rejected alternative + rough cost-to-change). Escalation is reserved for architectural shape via `wf-think-clearly-on-architecture`. Because of this, **this subsection's agreement is the only place design gets settled** — a thin pass here is what produces guessed UI later, not a gap some later stage catches.
+**An undecided design question never stops the implementation loop.** If one surfaces mid-run, the agent makes the recommended call and continues, logging it to `Decisions & Review Items` as an in-flight decision (rejected alternative + rough cost-to-change). Escalation is reserved for architectural shape via `wf-think-clearly-on-architecture`. So **this subsection's agreement is the only place design gets settled.**
 
 ## Phase 2.5 — Scope Check
 
-**Default: one plan per shippable feature, regardless of task count.** A large task count is not a reason to fragment — milestone tasks (Phase 3, below) bound how much unattended work piles on top of an undetected regression, which is what phase-splitting used to be for. A single long plan also keeps one continuous context; a managing plan plus separate task plans hands each phase's agent a fresh context with no memory of the others.
+**Default: one plan per shippable feature, regardless of task count.** Milestone tasks (Phase 3) bound unattended work on top of an undetected regression; a single plan keeps one continuous context.
 
 **Split only when the user identifies distinct shippable increments** — never from task or area count alone. If they do:
 
@@ -155,7 +125,7 @@ One entry per `**Acceptance:**` criterion, naming the instrument that settles it
 2. **A state probe read** — whatever inspection surface the app offers.
 3. **A standing scenario** — one of the project's durable end-to-end scenarios.
 4. **A direct command dispatch** — the narrow case. Dispatch reach is often partial, so never assume a given command is reachable just because it exists.
-5. **`human: <what to look at>`** — first-class, not a fallback of last resort. Anything needing actual pixels needs a displayed pane and can't be settled unattended; an honest escalation beats a criterion silently passed.
+5. **`human: <what to look at>`** — first-class, not a fallback of last resort. Pixels need a displayed pane; an honest escalation beats a silent pass.
 
 **Wall rule:** a criterion needing an instrument that doesn't exist yet gets a task that builds it — never weaken the criterion to fit current tooling.
 
@@ -165,10 +135,10 @@ One entry per `**Acceptance:**` criterion, naming the instrument that settles it
 
 States which per-task gate `/implement` runs for this task — distinct from `**Verify:**` above, which names the instrument for each acceptance criterion. `**Test:**` names the tier.
 
-- **Default: build plus the unit suite.** No browser needed. Write "existing tests sufficient" or name the new unit test; don't request a browser tier you don't need.
+- **Default: `/test gate`** — build plus every tier needing no preview server. Write "existing tests sufficient" or name the new unit test; don't request a browser tier you don't need.
 - **Name a browser-tier check only when the task needs one** — a standing scenario, a task-written scenario, the integration suite, or `human: <what to look at>`. Naming one runs exactly that check, not the full stack.
-- **Prefer a task-specific scenario over the project's generic standing scenarios.** Those exist for coarse regression coverage, not as a stand-in for exercising what this task actually changed.
-- **`human: <what to look at>` is first-class, and the expected value for a task implementing UI** — no tier verifies visual conformance to an agreed mockup, so naming a human check is the honest answer, not a probe standing in for eyes.
+- **Prefer a task-specific scenario over the project's generic standing scenarios.**
+- **`human: <what to look at>` is first-class, and the expected value for a task implementing UI** — no tier verifies visual conformance to an agreed mockup.
 - Per `wf-repro-test-first`: for a bug fix or new behavior, say "write first" and name the expected red before the fix.
 
 Milestone tasks and the plan's last task always add the full suite regardless of what's written here.
@@ -177,15 +147,15 @@ Milestone tasks and the plan's last task always add the full suite regardless of
 
 Append ` — **milestone**` to a task's heading — e.g. `### Task 7: {short description} — **milestone**`. `/implement` detects this literal marker and runs the full suite **in addition to** whatever this task's `Test:` field names, never instead of it. `/verify` is not part of a milestone gate — it runs once, after every task is committed.
 
-Place tighter around rendering-heavy or state-shape work, where the browser suite is often the only rung that reaches the rendered layer at all — a regression there stays invisible until the next milestone. Place looser around docs, prose, and refactor tasks; those can wait for the next real milestone or the plan's last task.
+Place tighter around rendering-heavy or state-shape work (often only the browser suite reaches it); looser around docs, prose, and refactor tasks.
 
-A milestone doubles as a re-grounding point: before running the gate, `/implement` re-reads the plan file and its `## UI Contract`. Placement is a lever on drift control, not just gate frequency.
+A milestone doubles as a re-grounding point: before running the gate, `/implement` re-reads the plan file and its `## UI Contract`.
 
 ### Cold-executable tasks
 
-Plan-time check, applied per task before Phase 3.5: **could this task be handed to a fresh agent with only the plan file** — no memory of this conversation, no memory of an earlier task? `Context:` / `Files:` / `Acceptance:` must name actual paths, functions, and decided values — never "as discussed" or "per the approach above." State what the agent should **verify against the live repo** (grep for X, confirm Y exists), not only what was decided — a decision can drift between when it was made and when the task runs, and only a verify step catches that.
+Plan-time check, applied per task before Phase 3.5: **could this task be handed to a fresh agent with only the plan file** — no memory of this conversation, no memory of an earlier task? `Context:` / `Files:` / `Acceptance:` must name actual paths, functions, and decided values — never "as discussed" or "per the approach above." State what the agent should **verify against the live repo** (grep for X, confirm Y exists), not only what was decided — decisions drift before the task runs.
 
-A task that fails this check gets rewritten now, not flagged for later — the check exists to catch exactly the gap that would otherwise surface as a stuck sub-agent hours into an unattended run.
+A task that fails this check gets rewritten now, not flagged for later.
 
 ## Phase 3.5 — Parallel Analysis
 
@@ -195,9 +165,8 @@ Skip if <4 tasks or clearly sequential. Find task pairs with no dependency and d
 
 Show: feature summary, plan location, task count, open questions/risks, and the `## UI Contract` mockup if the plan has one — restated here for convenience, but the file remains the source of truth. Ask if adjustments needed; loop until the user has no more.
 
-When the adjustment loop closes, **auto-run** `/plan-optimizer` for any plan with **3+ tasks**, or when a managing plan was created in Phase 2.5 — invoke the `plan-optimizer` skill with the plan path directly, no prompt. At this size the optimizer is always wanted, so the confirmation step was pure friction. For very small features (1-2 focused tasks, single area), skip it — Phase 2's discovery already covered them.
+When the adjustment loop closes, **auto-run** `/plan-optimizer` for any plan with **3+ tasks**, or when a managing plan was created in Phase 2.5 — invoke the `plan-optimizer` skill with the plan path directly, no prompt. For very small features (1-2 focused tasks, single area), skip it — Phase 2's discovery already covered them.
 
 ## Project rules
 
 Additional project-specific planning rules — anti-pattern lists, architecture principles, naming conventions. Projects layer a `<ProjectSpecific>` block here pointing at their relevant `.claude/rules/` entries.
-
