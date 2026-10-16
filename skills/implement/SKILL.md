@@ -36,6 +36,7 @@ Work through a plan task-by-task with build, test, refactor gates. One task = on
    - Plan file **already the last commit** (resumed session): record `HEAD~1`, don't re-commit.
    - **`plans/` gitignored**: record current `HEAD`; there is no plan commit to make.
 7. Find first unchecked `- [ ] Done` task (or phase). Print: "Resuming at Task/Phase N. M/T done."
+   Then call `mcp__side-chat__checkpoint` once with `{ planPath: <absolute plan path> }`, so the mod's progress band shows from the start. Tool absent → print `side-chat not loaded — no inbox` once and make no further `checkpoint` calls this run.
 
 ## Phase Chain (Managing Plans)
 
@@ -64,7 +65,7 @@ mode: agentic  # or inline; omit for auto-detect
 Task block:
 
 ```markdown
-## Task 1: Short description — **milestone** (marker optional; Step 3 reads it)
+### Task 1: Short description — **milestone** (marker optional; Step 3 reads it)
 - [ ] Implement
 - [ ] Refactor
 - [ ] Docs & tests
@@ -77,6 +78,7 @@ Task block:
 **Test:** how to verify
 **Dependencies:** Task N (if any)
 **Parallel group:** A (or — for sequential)
+**Result:** <verdict> · <short sha> · <one-line summary> (written by Step 6)
 **Implementation notes:** (appended by the executing sub-agent in agentic mode)
 - <gotcha, deviation, or cross-cutting flag>
 ```
@@ -93,7 +95,7 @@ If a task has a group letter, collect every unchecked task in that group. Main t
 - **Give each agent its expected base SHA and require it to confirm the worktree matches before editing.** A diff from an unexpected parent is internally correct and applies to the wrong tree — the merge then conflicts confusingly or silently drops the change.
 - **A write-capable agent re-reads live state** (the file, the diff range) rather than trusting what it got at spawn time. Siblings edit concurrently, so a frozen snapshot goes stale and acting on it clobbers their work.
 - Where the partition is genuinely disjoint, a shared tree is acceptable if no agent runs a git write — but verify the touched-file set afterwards either way, per `wf-check-the-artifact-not-the-self-report`.
-- After all return: merge one at a time (`git merge --no-ff`), resolving conflicts or re-queuing failures. Run the Step 3 gate once on the combined result — full `/test` if any task in the group was a milestone. Commit each via `/commit`.
+- After all return: merge one at a time (`git merge --no-ff`), resolving conflicts or re-queuing failures. Run the Step 3 gate once on the combined result — full `/test` if any task in the group was a milestone. Run Step 6 per task, but make one `checkpoint` call after the last, listing every task id in the group.
 
 ### 1. Read & Understand
 
@@ -117,9 +119,10 @@ Scan remaining tasks in the plan (don't paint into a corner). Take `preview_scre
   3. **Before returning, append a `**Implementation notes:**` bullet list under this task in the plan file** — gotchas, deviations from plan, helpers/types introduced, anything future tasks need to know.
   4. DO NOT run `/test` (orchestrator handles).
   5. DO NOT commit.
-  6. Return a brief structured summary: files touched, work summary, any cross-cutting flags affecting future tasks.
+  6. Return a brief structured summary: files touched, work summary, any cross-cutting flags affecting future tasks, and each judgment call made (the call, the options, what you chose).
+  7. DO NOT call `mcp__side-chat__ask` — the orchestrator is the only asker.
 
-Read the agent's returned summary. Don't re-read the touched files — trust the summary + the Implementation notes in the plan.
+Read the agent's returned summary. Don't re-read the touched files — trust the summary + the Implementation notes in the plan. Post the judgment calls worth asking per When Stuck.
 
 ### 3. Build & Test
 
@@ -155,11 +158,25 @@ Log non-obvious choices to **Decisions & Review Items** in the plan. In agentic 
 
 ### 6. Checkpoint
 
-Run `/commit {task description}`. Check off `- [x] Done`. One-line status. **→ Next task.**
+1. Write the task's `**Result:** <verdict> · pending · <one-line summary>` (Step 3's verdict) under `**Parallel group:**`, so it folds into the task's commit.
+2. Run `/commit {task description}`.
+3. Replace `pending` with the new short sha and check off `- [x] Done`; both ride into the next commit, as the tick always has.
+4. Call `mcp__side-chat__checkpoint` with `{ planPath: <absolute plan path>, completedTasks: ["<task id>"], applied: <pending list> }` — after the tick, because the mod counts that box and refuses a listed id left unticked. Skip when Phase 0 found the tool absent.
+5. Apply its returned `notes` and `answers`, logging each in Decisions & Review Items:
+   - **Note** → insert a task, amend the next unchecked task, or log only.
+   - **Answer** equal to its `defaultOption` → log only. Different → insert `### Task <current id>.1: Rework — <question>` directly after the current task (next free `.N` if taken).
+   - An inserted task copies `plan-template.md`'s block shape (four checkboxes, every field, empty `**Result:**`), so the mod counts it.
+   - Keep `{ id, outcome }` per item as the pending list for the next `checkpoint` call, then clear it. It lives in working memory only; a resumed session starts empty and never sends ids it didn't receive.
+6. One-line status. **→ Next task.**
 
 ### When Stuck
 
-Never stop unless all done — unless the user explicitly pauses the loop. 3 fix failures → stash + skip + note. Unclear requirement → best judgment + note. Failed dependency → attempt anyway. Always keep moving.
+Never stop unless all done — unless the user explicitly pauses the loop. 3 fix failures → stash + skip + note. Failed dependency → attempt anyway. Always keep moving.
+
+**Unclear requirement** → post it via `mcp__side-chat__ask` (`planPath`, `task`, `question`, `options`, the `defaultOption` you proceed on, `loadBearing`), then continue on the default; the answer arrives at a later checkpoint. Never pause for it.
+
+- **Load-bearing** (data shape, persisted format, public API surface) → leave this task unchecked and take an independent unchecked task if one exists; otherwise proceed on the default and mark the dependent tasks at-risk in Decisions & Review Items.
+- **Tool absent** (Phase 0) → best judgment + note, no posting.
 
 ## Guard Rails
 
@@ -203,4 +220,3 @@ After all tasks + Final Audit + Cleanup committed. Collapses per-task commits, a
 ## Report
 
 Branch name + N commits, tasks completed/skipped, tests added, refactor iterations, parallel stats, decisions count, architecture audit findings.
-

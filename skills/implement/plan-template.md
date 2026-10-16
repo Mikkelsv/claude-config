@@ -22,6 +22,7 @@
 **Test:** {new test? existing tests sufficient? visual check?}
 **Dependencies:** None
 **Parallel group:** —
+**Result:**
 
 ### Task 2: {short description}
 
@@ -37,6 +38,7 @@
 **Test:**
 **Dependencies:**
 **Parallel group:** —
+**Result:**
 
 ## Decisions & Review Items
 
