@@ -1,0 +1,7 @@
+{
+  "name": "side-chat",
+  "version": "0.1.0",
+  "description": "A band in every session with [Open] and a hide button (plus /implement progress; /side-chat brings it back), and a side-chat pane to ask a fork about the session, confirm its steers, and answer /implement's posted questions, delivered at task boundaries via checkpoint.",
+  "author": { "name": "Mikkelsv" },
+  "types": "./types/index.d.ts"
+}

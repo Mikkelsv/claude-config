@@ -7,7 +7,7 @@ Personal Claude Code configuration — slash commands, skills, rules, and PowerS
 ### Config Management
 
 | Command | What it does |
-|---|---|
+| --- | --- |
 | `/claude-sync [skills\|fresh]` | Pull global config, scaffold committed `.claude/skill-config/` files, and sync project-local forks of global skills for shared repos (per `meta-project-local-skill-copies`). Step 3.1b migrates a project off the retired template tier. |
 | `/claude-refactor` | Audit all skills, commands, scripts, rules, and agents. Fixes bugs, stale refs, permission gaps. |
 | `/claude-push` | Commit and push config changes. Auto-bumps version when `rules/`, `skills/` or `commands/` change. |
@@ -23,12 +23,12 @@ Personal Claude Code configuration — slash commands, skills, rules, and PowerS
 Available in every project via the global config.
 
 | Skill | What it does |
-|---|---|
+| --- | --- |
 | `/build` | Build & serve. Reads project config from the committed `.claude/skill-config/build.md`. |
 | `/rebase-on-main` | Rebase on main, resolve conflicts, optionally merge/push. |
 | `/study [topic]` | Codebase-first research — parallel sonnet agents map an area, synthesize into session context. No file output. Use before `/plan` when context is thin. |
 | `/voice-mode [opening]` | Install a voice-input contract for the conversation — parse rambly dictated input for intent, not literal text. Stays on until "voice mode off" or `/implement`. Pair with `/plan` for big dictated planning sessions. |
-| `/plan [feature]` | Collaborative feature discovery + plan creation. Skeptical senior-engineer persona — challenges premise before accepting the framing. Phase 1 invokes `/study` when session context is thin. UI features spawn `design-scout` and settle one ASCII mockup as the plan's `## UI Contract`. Tasks carry `**Verify:**` instruments, a `**Test:**` tier, optional ` — **milestone**` markers, and must be cold-executable by a fresh agent. Auto-runs `/plan-optimizer` at 3+ tasks. Default is one plan per shippable feature — split only when the user names distinct increments. |
+| `/plan [feature]` | Collaborative feature discovery + plan creation. Skeptical senior-engineer persona — challenges premise before accepting the framing. Phase 1 invokes `/study` when session context is thin. UI features spawn `design-scout` and settle one ASCII mockup as the plan's `## UI Contract`. Tasks carry `**Verify:**` instruments, a `**Test:**` tier, optional `— **milestone**` markers, and must be cold-executable by a fresh agent. Auto-runs `/plan-optimizer` at 3+ tasks. Default is one plan per shippable feature — split only when the user names distinct increments. |
 | `/plan-optimizer [plan]` | Second-pass critique across 6 lenses (shape, data, performance reality-check, risk/feasibility, verifiability, design coverage). Requires each task to name a real instrument rather than restate its acceptance prose, and checks the plan against its agreed `## UI Contract` for structural drift via `design-scout`. Overwrites the plan in place — `git diff` to see changes. |
 | `/implement [plan] [--inline\|--agentic]` | Autonomous dev loop with build/test/refactor/audit gates. Mode resolves via CLI flag → plan front matter (`mode: agentic\|inline`) → auto-detect (agentic for >5 tasks). Agentic spawns one Sonnet sub-agent per task; plan file carries cross-task state via `**Implementation notes:**`. Final Audit uses `/audit-branch`. The per-task gate honours what `/plan` writes: `/test gate` by default, a task-declared browser instrument alone, full `/test` at a `— **milestone**` task and the plan's last task (a milestone *adds* the suite, never replaces a named check). |
 | `/audit-branch [focus]` | Branch-level audit across architecture, code, docs, tests, file-sizes, and comments. Phase 3a runs all 6 sub-skills in parallel against `main..HEAD`; Phase 3b only fires if `audit-file-sizes` flagged cap violations (file splits need a stable file structure to operate on). Self-paces 1-3 passes (decided after each pass). Hands disposition to `/resolve-audit-findings`, then closes with one `/verify` run (Phase 8) — the skill's only suite run. |
@@ -55,10 +55,16 @@ There is **no template tier**. Every skill is global and discovers project speci
 
 The one legitimate reason to keep a project copy is a **shared repo whose colleagues don't have their own `~/.claude/`** — they need the workflow on clone. `/claude-sync` scaffolds those forks and drift-checks them against global; project additions belong in `<ProjectSpecific>` blocks so they survive a resync. See `rules/meta-project-local-skill-copies.md` and `rules/meta-skill-tiers.md`.
 
+### Mods
+
+| Mod | What it does |
+| --- | --- |
+| `side-chat` | Present in every session: a band above the prompt with `[Open]` and `[–]` to hide it (plus `/implement` progress once a plan checkpoints; `/side-chat` shows it again), and a side-chat pane to ask a fork of the main thread about the session without interrupting it and to answer the judgment calls `/implement` posts. The fork proposes steers you confirm with ✓: delivered at the next task boundary during a plan (or released to the main thread if still queued when it goes idle), otherwise submitted as a prompt once the main thread is idle. It hands questions needing code to an automatic, isolated `claude -p` look-up on Haiku. Lives in `skills/side-chat/` and auto-loads as a plugin from the skills folder. `/implement` calls its `checkpoint` tool at each task boundary and its `ask` tool for judgment calls; when the mod is absent it prints one `side-chat not loaded — no inbox` notice and carries on. See `skills/side-chat/README.md`. |
+
 ### Utility Commands
 
 | Command | What it does |
-|---|---|
+| --- | --- |
 | `/todo [text]` | Capture a to-do item for future sessions. |
 | `/handoff` | Write a session handoff summary to project memory. |
 | `/pickup` | Resume from a previous session's handoff. |
@@ -68,10 +74,12 @@ The one legitimate reason to keep a project copy is a **shared repo whose collea
 1. Install [git](https://git-scm.com/) and ensure it's on PATH.
 2. If `~/.claude/` already exists, back it up and remove it.
 3. Run from PowerShell:
+
    ```powershell
    git clone https://github.com/Mikkelsv/claude-config.git "$env:USERPROFILE\.claude"
    powershell -File "$env:USERPROFILE\.claude\setup.ps1"
    ```
+
 4. `setup.ps1` generates `settings.json` from the template. Machine-specific wiring (model provider, credentials) is not templated — add it to `settings.json` by hand.
 5. Open Claude Code — rules, commands, and skills are active immediately.
 
@@ -209,5 +217,6 @@ Worktree creation and exit are handled by Claude Code's native `EnterWorktree` /
 `audit-instructions` is a **temporary instrument**, wired as an `InstructionsLoaded` hook in `settings.json` to measure which rule files load into each session and why. It writes JSONL to `debug/instruction-loads/` (gitignored); read it with `-Report`. It spawns one `pwsh` per loaded instruction file per session, including subagent sessions, so unregister the hook once rule-scope measurement is finished.
 
 Skill-local scripts:
+
 - `skills/rebase-on-main/scripts/`: `git-rebase-onto`, `git-merge-cleanup`, `git-branch-from-main`
 - `skills/squash/scripts/`: `git-squash-inventory`, `git-squash-execute`
