@@ -71,11 +71,11 @@ New rule **`arch-claude-md-is-an-index`**. A project's `CLAUDE.md` says **where*
 **Project action:**
 
 - **Refresh any fork of `rebase-on-main` or `refactor-comments`.** The former has a net-new section; the latter has a new Step 1 that shells out to the script. Global wins on same-named skills, so a stale fork affects colleagues only.
-- **Refresh any project-local `audit-comment-blocks.ps1`.** Project copies match the exclusion pattern against `$item.FullName` instead of the path relative to the scan root. When the scan root is itself inside a `worktrees/` checkout — routine for agent work — every candidate is excluded and the script reports **zero findings with no error**, which reads as "clean". Verified in GridPreviewPoc at line 66. Its `check-file-sizes.ps1` already carried the fix; that copy is what global's merge took it from, so that one needs nothing.
+- **Refresh any project-local `audit-comment-blocks.ps1`.** Project copies match the exclusion pattern against `$item.FullName` instead of the path relative to the scan root. When the scan root is itself inside a `worktrees/` checkout — routine for agent work — every candidate is excluded and the script reports **zero findings with no error**, which reads as "clean". Project copies of `check-file-sizes.ps1` already carry the fix and need nothing.
 
 ## v1.1.19 — 2026-09-10 — Stack rules, a verdict-routing fix, and a 50-line rule cap
 
-Eight C#/Blazor/WASM stack rules promoted from GridPreviewPoc, six carrying `paths:` frontmatter so they load only when a matching `.cs` / `.razor` / `.js` / `.css` / `.csproj` file is opened — 8.4 KB that stays lazy, against 2.7 KB added to the always-on set. `paths:`-at-user-level was verified working by probe on 2026-09-10; issue #21858 did not reproduce.
+Eight C#/Blazor/WASM stack rules promoted from a project, six carrying `paths:` frontmatter so they load only when a matching `.cs` / `.razor` / `.js` / `.css` / `.csproj` file is opened — 8.4 KB that stays lazy, against 2.7 KB added to the always-on set. `paths:`-at-user-level was verified working by probe on 2026-09-10; issue #21858 did not reproduce.
 
 `/verify` is now wired into `/implement` (it was promoted with no caller), and `/implement`'s per-task gate was routing on three verdicts `/test` no longer emits while three current ones had no handling at all. Rule length: aim ≤ 25 lines, **hard cap 50** — soft/hard like the 400/800 file-size caps.
 
@@ -104,17 +104,13 @@ New home: **`<project>/.claude/skill-config/<name>.md`, committed.** `rules/meta
 **Project action:**
 
 - **Any project with template-scaffolded skills** (`build`, `test`, `refactor-code`, `refactor-tests`, `refactor-comments`, `refactor-file-sizes`): **run `/claude-sync`.** Its new Step 3.1b does the migration — it triggers on the now-dead `skills` map, resolves redirector stubs, classifies each project copy as safe-to-delete / needs-review / keep-as-fork, writes the Tier-3 config and removes the copy in one change, and checks `.gitignore` covers `.claude/local/` first. It stops and shows you the diff rather than deleting any copy carrying hand-written content outside `<ProjectSpecific>`.
-- **GridPreviewPoc:** answer "keep as fork" — colleagues depend on those copies, and its `/test` fork is the source global's was harvested from. Its only real cleanup is two mislabelled `config.md` files (`refactor-code`, `refactor-tests`) that recorded template placeholder fills for a flow that no longer exists.
-
 ## v1.1.16 — 2026-09-09 — /verify, verifier, design-scout, and richer /plan
 
-Harvested from GridPreviewPoc as it winds down. New global skill `/verify` (decides whether work holds, distinct from `/test` which measures) and two new agents: `verifier` (read-only by capability, so it cannot launder a failing assertion) and `design-scout` (triages design decisions so only genuinely-open ones become questions). `/plan` gains the design-agreement pass with a `## UI Contract`, plus `**Verify:**` / `**Test:**` / milestone / cold-executable task contracts; `/plan-optimizer` gains verifiability and design-coverage lenses. Two new rules (`wf-check-the-artifact-not-the-self-report`, `wf-repro-test-first`) and two backports. `cq-option-returning-fn-naming` retired — F# is no longer in the stack.
+Harvested from a shared project's forks. New global skill `/verify` (decides whether work holds, distinct from `/test` which measures) and two new agents: `verifier` (read-only by capability, so it cannot launder a failing assertion) and `design-scout` (triages design decisions so only genuinely-open ones become questions). `/plan` gains the design-agreement pass with a `## UI Contract`, plus `**Verify:**` / `**Test:**` / milestone / cold-executable task contracts; `/plan-optimizer` gains verifiability and design-coverage lenses. Two new rules (`wf-check-the-artifact-not-the-self-report`, `wf-repro-test-first`) and two backports. `cq-option-returning-fn-naming` retired — F# is no longer in the stack.
 
 **Project action:**
 
-- **Projects with `plan` or `plan-optimizer` forks (notably GridPreviewPoc):** global is now ahead in a *genericized* form while your fork holds the project-specific original. Do **not** accept a `/claude-sync` overwrite of either — confirm both are registered under `forks` (not `skills`) in `.claude/local/config-version.json` and marked `source`, so they are reported rather than offered for overwrite.
-- **GridPreviewPoc specifically:** `plan-optimizer`, `resolve-audit-findings`, `setup-data`, and `verify` are tracked in neither map, so a sync can silently overwrite them. Register all four before running `/claude-sync` there again.
-- **All other projects:** none. New skills, agents, and rules load automatically.
+- **Projects with `plan` or `plan-optimizer` forks:** global is now ahead in a *genericized* form while your fork holds the project-specific original. Do **not** accept a `/claude-sync` overwrite of either — confirm both are registered under `forks` (not `skills`) in `.claude/local/config-version.json` and marked `source`, so they are reported rather than offered for overwrite.- **All other projects:** none. New skills, agents, and rules load automatically.
 
 ## v1.1.15 — 2026-08-31 — Junction layout retired for real
 

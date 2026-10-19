@@ -8,9 +8,8 @@ $Path = Resolve-Path $Path -ErrorAction Stop
 # Keyed on exact leaf directory name (PowerShell hashtable lookup is case-insensitive),
 # which keeps Eidetic from colliding with the unrelated Eidetics folder.
 $palette = @{
-    'Axioku'         = @{ Base = '#0f3d1f'; Bright = '#1f7a3d' }  # dark green
-    'Eidetic'        = @{ Base = '#0f2d5c'; Bright = '#1f5cb8' }  # dark blue
-    'GridPreviewPoc' = @{ Base = '#000000'; Bright = '#3a3a3a' }  # SeisX - black
+    'Axioku'  = @{ Base = '#0f3d1f'; Bright = '#1f7a3d' }  # dark green
+    'Eidetic' = @{ Base = '#0f2d5c'; Bright = '#1f5cb8' }  # dark blue
 }
 $unlisted = @{ Base = '#8a4a10'; Bright = '#d1741a' }             # orange
 
