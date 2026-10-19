@@ -16,9 +16,13 @@ import {
   planContext,
   processTurn,
   readChat,
+  skillBody,
+  skillInvocation,
+  skillMissingLine,
+  skillPaths,
   takeProposal,
 } from './chatStore'
-import type { SummaryMemo } from './chatStore'
+import type { InvokedSkill, SummaryMemo } from './chatStore'
 import { holdSteer, NO_HELD_STEERS, nextHeldId, nextToSend, refusedLine, withdrawHeld, withStatus } from './heldSteers'
 import {
   answerQuestion,
@@ -342,6 +346,14 @@ const chatContext = async ($: CoreEngineInterface, sessionId: string, prior: rea
   return { summary: undefined, recent: plan.full }
 }
 
+// The first SKILL.md that exists among `skillPaths`, or undefined when neither does.
+const readSkill = async ($: CoreEngineInterface, name: string, args: string): Promise<InvokedSkill | undefined> => {
+  for (const path of skillPaths($.plugin.root, await $.session.cwd(), name)) {
+    if (await $.fs.exists(path)) return { name, body: skillBody(await $.fs.read(path), args) }
+  }
+  return undefined
+}
+
 const askFork = async ($: CoreEngineInterface, sessionId: string, text: string) => {
   // A submitted question is asked, never kept for [Steer].
   draft = ''
@@ -356,9 +368,15 @@ const askFork = async ($: CoreEngineInterface, sessionId: string, text: string) 
   await writeTurn($, sessionId, { role: 'you', text: question })
   // Not a count of 'you' turns: at the 50-turn cap a question can push one out and repeat the count.
   await update($, chatAsked, n => n + 1)
+  const invocation = skillInvocation(question)
+  const skill = invocation === undefined ? undefined : await readSkill($, invocation.name, invocation.args)
+  if (invocation !== undefined && skill === undefined) {
+    await writeTurn($, sessionId, { role: 'error', text: skillMissingLine(invocation.name) })
+    return
+  }
   await startAsk($, sessionId, async toLookup => {
     const context = await chatContext($, sessionId, prior)
-    const reply = await $.model.fork({ prompt: forkPrompt(question, context) })
+    const reply = await $.model.fork({ prompt: forkPrompt(question, context, skill) })
     const lookup = reply.isAnswered ? lookupQuestion(reply.text) : undefined
     if (lookup !== undefined) {
       await lookUp($, sessionId, lookup, toLookup)

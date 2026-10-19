@@ -1,6 +1,7 @@
 ---
 name: audit-architecture
 description: "Deep architecture review — catches overengineering, boundary/coupling violations, and weighs simpler alternatives. Use whenever the user asks for an architecture review, says the code feels overengineered or too abstract, questions whether an abstraction earns its keep, or wants module/dependency-boundary analysis. This is the DEPTH/design review; for a breadth code-quality sweep (naming, dead code, duplication) use /refactor-code instead."
+disable-model-invocation: true
 ---
 
 # Architecture Audit

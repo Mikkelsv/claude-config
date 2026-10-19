@@ -1,6 +1,7 @@
 ---
 name: refactor-tests
 description: "Audit test coverage after a code change and apply trivial test additions directly, deferring heavier gaps to a plan. Use whenever the user asks \"are we covered?\", \"do we need tests?\", adds a new command/handler/type, or after /audit-branch flags a test gap."
+disable-model-invocation: true
 ---
 
 # Test Coverage Review

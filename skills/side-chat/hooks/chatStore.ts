@@ -135,11 +135,45 @@ export const dismissProposal = (store: PluginStore, sessionId: string, note: str
 // so far: a Haiku summary of its older part, if one exists, then the rest verbatim.
 export type ChatContext = { summary: string | undefined; recent: readonly string[] }
 
-export const forkPrompt = (question: string, context: ChatContext) => {
+// A skill the user invoked in the side chat, its body already read from disk (`skillBody`).
+export type InvokedSkill = { name: string; body: string }
+
+export const forkPrompt = (question: string, context: ChatContext, skill?: InvokedSkill) => {
   const summary = context.summary === undefined ? '' : `\n\nEarlier in this side chat (summary): ${context.summary}`
   const recent = context.recent.length === 0 ? '' : `\n\nSide chat so far:\n${context.recent.join('\n')}`
-  return `${FORK_INSTRUCTION}${summary}${recent}\n\nQuestion: ${question}`
+  const invoked = skill === undefined ? '' : `\n\n${skillInstruction(skill)}`
+  return `${FORK_INSTRUCTION}${summary}${recent}${invoked}\n\nQuestion: ${question}`
 }
+
+// The fork has no Skill tool, so a typed `/<name> [args]` is resolved here: the mod reads the
+// SKILL.md and the fork follows it. Names with `:` are plugin skills, not on disk, so not matched.
+const SKILL_LINE = /^\/([a-z0-9][a-z0-9-]*)(?:\s+([\s\S]*\S))?\s*$/
+
+export const skillInvocation = (text: string) => {
+  const match = SKILL_LINE.exec(text)
+  return match === null ? undefined : { name: match[1], args: match[2] ?? '' }
+}
+
+// Global first, then the project's: the engine's own precedence for a same-named skill. The project
+// path is absolute: a relative `$.fs` path resolves against the plugin's folder, not the session's.
+export const skillPaths = (pluginRoot: string, cwd: string, name: string) => [
+  `${pluginRoot}/../${name}/SKILL.md`,
+  `${cwd}/.claude/skills/${name}/SKILL.md`,
+]
+
+const FRONTMATTER = /^---\r?\n[\s\S]*?\r?\n---\r?\n/
+
+export const skillBody = (markdown: string, args: string) =>
+  markdown.replace(FRONTMATTER, '').replaceAll('$ARGUMENTS', args === '' ? '(none)' : args).trim()
+
+export const skillMissingLine = (name: string) => `skill: /${name} not found in the global or project skills folder`
+
+const skillInstruction = (skill: InvokedSkill) =>
+  `The user invoked the /${skill.name} skill. Its full instructions follow; carry them out as your reply, ` +
+  'in full rather than briefly, overriding "Answer briefly" above. You have no tools: gather from this ' +
+  'conversation, and where a step needs files or commands it does not hold, reply with the one LOOKUP line ' +
+  'instead. Skip any step that writes, builds or commits, and say which you skipped.\n\n' +
+  `<skill name="${skill.name}">\n${skill.body}\n</skill>`
 
 // One turn as the fork reads it, a block of one or more lines.
 export const transcriptBlock = (turn: SideChatChatTurn): string => {

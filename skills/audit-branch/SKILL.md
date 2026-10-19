@@ -38,7 +38,7 @@ Abort if `MODE: none`. Pass the captured scope to every sub-agent so each skips 
 
 Sub-skills: `audit-architecture`, `refactor-code`, `refactor-docs`, `refactor-tests`, `audit-file-sizes`, `refactor-comments`, `refactor-file-sizes`. All seven are global; prefer a project fork if one exists.
 
-All sub-skills are always run — resolve each SKILL.md **from disk**, never from the session's invocable-skill list. `disable-model-invocation: true` hides `audit-file-sizes`, `refactor-comments`, and `refactor-file-sizes` from that list, but their files are on disk and this orchestration always spawns them.
+All sub-skills are always run — resolve each SKILL.md **from disk**, never from the session's invocable-skill list. `disable-model-invocation: true` hides every sub-skill except `refactor-code` from that list, but their files are on disk and this orchestration always spawns them.
 
 ## Phase 3a — Parallel Audit
 

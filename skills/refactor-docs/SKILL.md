@@ -1,6 +1,7 @@
 ---
 name: refactor-docs
 description: Review and update project documentation to match code changes
+disable-model-invocation: true
 ---
 
 # Documentation Sync
